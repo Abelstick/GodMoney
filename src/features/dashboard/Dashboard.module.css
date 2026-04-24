@@ -1,0 +1,99 @@
+.page {}
+
+.pageTitle {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-6);
+}
+
+/* ── Filtro de mes ── */
+.monthFilter {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-6);
+  scrollbar-width: none;
+}
+
+.monthFilter::-webkit-scrollbar { display: none; }
+
+.monthBtn {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.monthBtn:hover  { border-color: var(--color-primary); color: var(--color-primary); }
+.monthBtn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+/* ── Grid de stats ── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+@media (min-width: 640px) {
+  .statsGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .statsGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ── Sección con 2 columnas ── */
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .twoCol { grid-template-columns: 1.4fr 1fr; }
+}
+
+.mb4 { margin-bottom: var(--space-4); }
+.mb6 { margin-bottom: var(--space-6); }
+
+/* ── Profit card destacado ── */
+.profitCard {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+}
+
+.profitLabel {
+  font-size: var(--text-sm);
+  opacity: 0.85;
+  margin-bottom: var(--space-2);
+}
+
+.profitAmount {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.03em;
+}

@@ -1,0 +1,53 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--budget-color, var(--color-primary));
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.name {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.period {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.amounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.amountItem { display: flex; flex-direction: column; gap: 2px; }
+.amountLabel { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.amountValue { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.over { color: var(--color-danger) !important; }
+
+.actions { display: flex; gap: var(--space-2); }
+.actions > * { flex: 1; }
