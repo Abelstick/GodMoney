@@ -9,13 +9,17 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node server.js"
   },
   "dependencies": {
+    "@google/genai": "^1.50.1",
     "@mantine/core": "^7.17.8",
     "@mantine/hooks": "^7.17.8",
     "@supabase/supabase-js": "^2.45.0",
+    "@tabler/icons-react": "^3.41.1",
     "date-fns": "^3.6.0",
+    "express": "^5.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
@@ -27,6 +31,7 @@
     "postcss": "^8.5.10",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }

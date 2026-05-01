@@ -1,28 +1,42 @@
 import { NavLink } from 'react-router-dom'
+import {
+  IconLayoutDashboard,
+  IconCashBanknote,
+  IconShoppingCart,
+  IconFlag,
+  IconTrendingUp,
+} from '@tabler/icons-react'
 import styles from './BottomNav.module.css'
 
-const NAV_ITEMS = [
-  { to: '/',            icon: '🏠', label: 'Inicio' },
-  { to: '/ingresos',    icon: '💰', label: 'Ingresos' },
-  { to: '/gastos',      icon: '💸', label: 'Gastos' },
-  { to: '/objetivos',   icon: '🎯', label: 'Metas' },
-  { to: '/predicciones',icon: '📈', label: 'Tendencias' },
+const TABS = [
+  { to: '/',             icon: IconLayoutDashboard, label: 'Inicio'     },
+  { to: '/ingresos',     icon: IconCashBanknote,    label: 'Ingresos'   },
+  { to: '/gastos',       icon: IconShoppingCart,    label: 'Gastos'     },
+  { to: '/objetivos',    icon: IconFlag,            label: 'Objetivos'  },
+  { to: '/predicciones', icon: IconTrendingUp,      label: 'Tendencias' },
 ]
 
 export function BottomNav() {
   return (
     <nav className={styles.nav}>
-      {NAV_ITEMS.map(({ to, icon, label }) => (
+      {TABS.map(({ to, icon: Icon, label }) => (
         <NavLink
           key={to}
           to={to}
           end={to === '/'}
           className={({ isActive }) =>
-            `${styles.item} ${isActive ? styles.active : ''}`
+            `${styles.tab} ${isActive ? styles.active : ''}`
           }
         >
-          <span className={styles.icon}>{icon}</span>
-          <span>{label}</span>
+          {({ isActive }) => (
+            <>
+              <span className={styles.iconWrap}>
+                <Icon size={20} stroke={isActive ? 2 : 1.5} />
+                {isActive && <span className={styles.activeDot} />}
+              </span>
+              <span className={styles.label}>{label}</span>
+            </>
+          )}
         </NavLink>
       ))}
     </nav>

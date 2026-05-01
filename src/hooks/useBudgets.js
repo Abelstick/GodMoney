@@ -4,7 +4,6 @@ import { useMonthFilter } from './useMonthFilter'
 
 export function useBudgets() {
   const { from, to } = useMonthFilter()
-
   const budgets             = useStore((s) => s.budgets)
   const budgetsSpent        = useStore((s) => s.budgetsSpent)
   const loading             = useStore((s) => s.budgetsLoading)

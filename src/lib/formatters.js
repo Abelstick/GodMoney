@@ -1,8 +1,8 @@
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-export function formatCurrency(amount, currency = 'USD') {
-  return new Intl.NumberFormat('es-ES', {
+export function formatCurrency(amount, currency = 'PEN') {
+  return new Intl.NumberFormat('es-PE', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

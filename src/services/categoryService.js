@@ -1,10 +1,18 @@
 import { supabase } from '@/lib/supabase'
 
+async function getUserId() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('No hay sesión activa')
+  return session.user.id
+}
+
 export const categoryService = {
   async getAll(type = null) {
+    const user_id = await getUserId()
     let query = supabase
       .from('categories')
       .select('*')
+      .eq('user_id', user_id)
       .order('name')
 
     if (type) {
@@ -17,9 +25,10 @@ export const categoryService = {
   },
 
   async create(payload) {
+    const user_id = await getUserId()
     const { data, error } = await supabase
       .from('categories')
-      .insert(payload)
+      .insert({ ...payload, user_id })
       .select()
       .single()
     if (error) throw error

@@ -18,6 +18,23 @@ const DEFAULT_CATEGORIES = [
 ]
 
 export const profileService = {
+  async getProfile(userId) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('gemini_api_key')
+      .eq('id', userId)
+      .single()
+    return data
+  },
+
+  async saveGeminiApiKey(userId, apiKey) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ gemini_api_key: apiKey })
+      .eq('id', userId)
+    if (error) throw error
+  },
+
   async ensureProfile(userId) {
     // Crear profile si no existe
     const { error: profileError } = await supabase

@@ -1,21 +1,133 @@
 .page {}
+
 .header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-3);
 }
-.title { font-size: var(--text-2xl); font-weight: var(--weight-bold); letter-spacing: -0.02em; }
+
+.title {
+  font-size: var(--text-2xl); font-weight: var(--weight-bold); letter-spacing: -0.02em;
+}
+
+/* ── Filtro de mes ── */
+.monthFilter {
+  display: flex; gap: var(--space-2); overflow-x: auto;
+  padding-bottom: var(--space-2); margin-bottom: var(--space-6);
+  scrollbar-width: none;
+}
+.monthFilter::-webkit-scrollbar { display: none; }
+
+.monthBtn {
+  flex-shrink: 0; padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 500;
+  border: 1.5px solid var(--color-border); background: var(--color-surface);
+  color: var(--color-text-secondary); cursor: pointer; white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+.monthBtn:hover  { border-color: var(--color-primary); color: var(--color-primary); }
+.monthActive     { background: var(--color-primary) !important; border-color: var(--color-primary) !important; color: #fff !important; }
+
+/* ── Stats ── */
 .summary {
   display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);
   margin-bottom: var(--space-6);
 }
 @media (min-width: 640px) { .summary { grid-template-columns: repeat(3, 1fr); } }
 
-/* Gráfico de dona por categoría */
+/* ── Grid principal ── */
 .catGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3);
+  display: grid; grid-template-columns: 1fr; gap: var(--space-4);
 }
-@media (min-width: 768px) {
-  .catGrid { grid-template-columns: 1fr 1fr; }
+@media (min-width: 860px) {
+  .catGrid { grid-template-columns: minmax(300px, 2fr) 3fr; align-items: start; }
+}
+
+/* ── Pie chart ── */
+.pieWrap {
+  position: relative;
+}
+
+.pieCenter {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: none;
+}
+
+.pieCenterLabel {
+  font-size: var(--text-xs); color: var(--color-text-muted);
+  font-weight: var(--weight-medium); text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pieCenterAmount {
+  font-size: var(--text-base); font-weight: var(--weight-bold);
+  color: var(--color-text-primary); margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ── Custom tooltip ── */
+.tooltip {
+  display: flex; align-items: center; gap: var(--space-2);
+  background: var(--color-surface); border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-2) var(--space-3);
+  box-shadow: var(--shadow-md); font-size: var(--text-sm);
+}
+
+.tooltipDot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+.tooltipName { color: var(--color-text-secondary); flex: 1; }
+
+.tooltipAmount { font-weight: var(--weight-bold); color: var(--color-text-primary); margin-left: var(--space-2); }
+
+/* ── Legend ── */
+.pieLegend {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: var(--space-4);
+  max-height: 200px; overflow-y: auto;
+}
+
+.legendItem {
+  display: grid;
+  grid-template-columns: 10px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  padding: 3px 0;
+}
+
+.legendDot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+
+.legendName {
+  color: var(--color-text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.legendPct {
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  min-width: 32px; text-align: right;
+}
+
+.legendAmount {
+  color: var(--color-text-muted);
+  min-width: 80px; text-align: right;
+}
+
+/* ── List header ── */
+.listHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  border-bottom: 0.5px solid var(--color-border);
+  font-size: var(--text-sm); font-weight: var(--weight-semibold);
+}
+
+.listCount {
+  font-size: var(--text-xs); color: var(--color-text-muted);
+  font-weight: var(--weight-normal);
 }
