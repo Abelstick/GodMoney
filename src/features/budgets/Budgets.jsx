@@ -1,18 +1,26 @@
 import { useState } from 'react'
-import { useBudgets }  from '@/hooks/useBudgets'
-import { Button }      from '@/components/ui/Button/Button'
-import { Modal }       from '@/components/common/Modal/Modal'
-import { EmptyState }  from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
-import { BudgetCard }  from './components/BudgetCard'
-import { BudgetForm }  from './components/BudgetForm'
+import { format } from 'date-fns'
+import { useBudgets }      from '@/hooks/useBudgets'
+import { useMonthFilter }  from '@/hooks/useMonthFilter'
+import { Button }          from '@/components/ui/Button/Button'
+import { Modal }           from '@/components/common/Modal/Modal'
+import { EmptyState }      from '@/components/common/EmptyState/EmptyState'
+import { LoadingSpinner }  from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { exportBudgetCSV, printBudgets } from '@/lib/exportBudgets'
+import { BudgetCard }      from './components/BudgetCard'
+import { BudgetForm }      from './components/BudgetForm'
+import { BudgetSummary }   from './components/BudgetSummary'
+import { BudgetAlerts }    from './components/BudgetAlerts'
 import styles from './Budgets.module.css'
 
 export function Budgets() {
   const { budgets, loading, addBudget, updateBudget, removeBudget } = useBudgets()
+  const { activeMonth } = useMonthFilter()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState(null)
   const [saving,    setSaving]    = useState(false)
+
+  const isCurrentMonth = activeMonth === format(new Date(), 'yyyy-MM')
 
   async function handleSubmit(payload) {
     setSaving(true)
@@ -30,7 +38,29 @@ export function Budgets() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Presupuestos</h1>
-        <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nuevo presupuesto</Button>
+        <div className={styles.headerActions}>
+          {budgets.length > 0 && (
+            <>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => exportBudgetCSV(budgets, activeMonth)}
+              >
+                Exportar CSV
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={printBudgets}
+              >
+                Imprimir / PDF
+              </Button>
+            </>
+          )}
+          <Button onClick={() => { setEditing(null); setModalOpen(true) }}>
+            + Nuevo presupuesto
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -43,16 +73,22 @@ export function Budgets() {
           action={<Button onClick={() => setModalOpen(true)}>Crear presupuesto</Button>}
         />
       ) : (
-        <div className={styles.grid}>
-          {budgets.map((budget) => (
-            <BudgetCard
-              key={budget.id}
-              budget={budget}
-              onEdit={(b) => { setEditing(b); setModalOpen(true) }}
-              onDelete={removeBudget}
-            />
-          ))}
-        </div>
+        <>
+          <BudgetSummary budgets={budgets} />
+          <BudgetAlerts  budgets={budgets} />
+
+          <div className={styles.grid}>
+            {budgets.map((budget) => (
+              <BudgetCard
+                key={budget.id}
+                budget={budget}
+                isCurrentMonth={isCurrentMonth}
+                onEdit={(b) => { setEditing(b); setModalOpen(true) }}
+                onDelete={removeBudget}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       <Modal
