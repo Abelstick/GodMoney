@@ -11,16 +11,20 @@ import { BudgetCard }      from './components/BudgetCard'
 import { BudgetForm }      from './components/BudgetForm'
 import { BudgetSummary }   from './components/BudgetSummary'
 import { BudgetAlerts }    from './components/BudgetAlerts'
+import { ConfirmDialog }   from '@/components/common/ConfirmDialog/ConfirmDialog'
 import styles from './Budgets.module.css'
 
 export function Budgets() {
   const { budgets, loading, addBudget, updateBudget, removeBudget } = useBudgets()
   const { activeMonth } = useMonthFilter()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing,   setEditing]   = useState(null)
-  const [saving,    setSaving]    = useState(false)
+  const [modalOpen,   setModalOpen]   = useState(false)
+  const [editing,     setEditing]     = useState(null)
+  const [saving,      setSaving]      = useState(false)
+  const [deletingId,  setDeletingId]  = useState(null)
+  const [deleting,    setDeleting]    = useState(false)
 
   const isCurrentMonth = activeMonth === format(new Date(), 'yyyy-MM')
+  const deletingBudget = budgets.find((b) => b.id === deletingId)
 
   async function handleSubmit(payload) {
     setSaving(true)
@@ -31,6 +35,17 @@ export function Budgets() {
       setEditing(null)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingId) return
+    setDeleting(true)
+    try {
+      await removeBudget(deletingId)
+      setDeletingId(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -84,12 +99,25 @@ export function Budgets() {
                 budget={budget}
                 isCurrentMonth={isCurrentMonth}
                 onEdit={(b) => { setEditing(b); setModalOpen(true) }}
-                onDelete={removeBudget}
+                onDelete={(id) => setDeletingId(id)}
               />
             ))}
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+        title="Eliminar presupuesto"
+        description={
+          deletingBudget
+            ? `¿Eliminar el presupuesto "${deletingBudget.name}"? Esta acción no se puede deshacer.`
+            : '¿Eliminar este presupuesto? Esta acción no se puede deshacer.'
+        }
+      />
 
       <Modal
         isOpen={modalOpen}
