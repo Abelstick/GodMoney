@@ -1,32 +1,68 @@
 import { usePredictions } from '@/hooks/usePredictions'
 import { formatCurrency }  from '@/lib/formatters'
+import { getPredictionConfidence, PREDICTION_CONFIDENCE_META } from './utils/predictionAlgorithms'
 import { Card }            from '@/components/ui/Card/Card'
 import { StatCard }        from '@/components/ui/StatCard/StatCard'
+import { Badge }           from '@/components/ui/Badge/Badge'
 import { LoadingSpinner }  from '@/components/common/LoadingSpinner/LoadingSpinner'
 import { PredictionChart } from './components/PredictionChart'
 import styles from './Predictions.module.css'
+
+function trendProps(value) {
+  if (value === null) return {}
+  return { trend: `${Math.abs(value)}% vs promedio`, trendUp: value >= 0 }
+}
+
+function subtitleText(noData, monthsOfData) {
+  if (noData) return 'Basado en tu historial usando promedios móviles y regresión lineal'
+  const unit = monthsOfData === 1 ? 'mes' : 'meses'
+  return `Basado en tu historial de los últimos ${monthsOfData} ${unit} usando promedios móviles y regresión lineal`
+}
+
+function GoalEta({ goal }) {
+  if (goal.status === 'completed') return <span className={styles.goalCompleted}>✓ Completado</span>
+  if (!Number.isFinite(goal.monthsLeft)) return <span className={styles.goalNoSaving}>Sin ahorro positivo</span>
+  if (goal.monthsLeft === 0) return <span className={styles.goalCompleted}>¡Listo!</span>
+  return (
+    <>
+      Faltan{' '}
+      <span className={styles.goalEtaHighlight}>
+        {goal.monthsLeft} {goal.monthsLeft === 1 ? 'mes' : 'meses'}
+      </span>
+    </>
+  )
+}
 
 export function Predictions() {
   const {
     loading,
     chartData,
+    monthsOfData,
     projectedIncome,
     projectedExpense,
     projectedProfit,
     avgMonthlySaving,
+    incomeTrend,
+    expenseTrend,
+    profitTrend,
     goalsProjection,
   } = usePredictions()
 
   if (loading) return <LoadingSpinner />
 
   const noData = chartData.length === 0
+  const confidence = getPredictionConfidence(monthsOfData)
+  const confidenceMeta = PREDICTION_CONFIDENCE_META[confidence]
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Predicciones financieras</h1>
-      <p className={styles.subtitle}>
-        Basado en tu historial de los últimos 6 meses usando promedios móviles y regresión lineal
-      </p>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Predicciones financieras</h1>
+          <p className={styles.subtitle}>{subtitleText(noData, monthsOfData)}</p>
+        </div>
+        {!noData && <Badge color={confidenceMeta.color}>{confidenceMeta.label}</Badge>}
+      </div>
 
       {noData ? (
         <div className={styles.infoBox}>
@@ -34,6 +70,12 @@ export function Predictions() {
         </div>
       ) : (
         <>
+          {confidence === 'low' && (
+            <div className={styles.warnBox}>
+              Con pocos meses de historial estas proyecciones son menos precisas. Ganarán exactitud a medida que registres más meses.
+            </div>
+          )}
+
           {/* ── Stats proyectados próximo mes ── */}
           <div className={styles.statsGrid}>
             <StatCard
@@ -41,18 +83,22 @@ export function Predictions() {
               amount={formatCurrency(projectedIncome)}
               icon="💰"
               iconBg="rgba(16,185,129,0.12)"
+              {...trendProps(incomeTrend)}
             />
             <StatCard
               label="Gasto estimado (próx. mes)"
               amount={formatCurrency(projectedExpense)}
               icon="💸"
               iconBg="rgba(239,68,68,0.12)"
+              invertTrendColor
+              {...trendProps(expenseTrend)}
             />
             <StatCard
               label="Ahorro estimado (próx. mes)"
               amount={formatCurrency(projectedProfit)}
               icon={projectedProfit >= 0 ? '📈' : '📉'}
               iconBg={projectedProfit >= 0 ? 'rgba(99,102,241,0.12)' : 'rgba(239,68,68,0.12)'}
+              {...trendProps(profitTrend)}
             />
             <StatCard
               label="Ahorro mensual promedio"
@@ -81,25 +127,12 @@ export function Predictions() {
                   <div key={g.id} className={styles.goalRow}>
                     <div>
                       <div className={styles.goalName}>{g.name}</div>
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                      <div className={styles.goalAmounts}>
                         {formatCurrency(g.current_amount)} / {formatCurrency(g.target_amount)}
                       </div>
                     </div>
                     <div className={styles.goalEta}>
-                      {g.status === 'completed' ? (
-                        <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>✓ Completado</span>
-                      ) : !isFinite(g.monthsLeft) ? (
-                        <span style={{ color: 'var(--color-danger)' }}>Sin ahorro positivo</span>
-                      ) : g.monthsLeft === 0 ? (
-                        <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>¡Listo!</span>
-                      ) : (
-                        <>
-                          Faltan{' '}
-                          <span className={styles.goalEtaHighlight}>
-                            {g.monthsLeft} {g.monthsLeft === 1 ? 'mes' : 'meses'}
-                          </span>
-                        </>
-                      )}
+                      <GoalEta goal={g} />
                     </div>
                   </div>
                 ))}

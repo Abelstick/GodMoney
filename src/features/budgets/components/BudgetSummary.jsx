@@ -1,4 +1,5 @@
 import { formatCurrency } from '@/lib/formatters'
+import { BUDGET_STATUS } from '@/lib/budgetStatus'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -17,7 +18,7 @@ export function BudgetSummary({ budgets }) {
 
   const globalPercent =
     totals.limit > 0 ? Math.min(Math.round((totals.spent / totals.limit) * 100), 100) : 0
-  const exceededCount = budgets.filter((b) => b.percent >= 100).length
+  const exceededCount = budgets.filter((b) => b.status === BUDGET_STATUS.EXCEEDED).length
 
   const chartData = budgets.map((b) => ({
     name: b.name.length > 14 ? b.name.slice(0, 14) + '…' : b.name,

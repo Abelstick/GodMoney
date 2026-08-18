@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '@/store'
 import { useMonthFilter } from './useMonthFilter'
+import { getBudgetStatus } from '@/lib/budgetStatus'
 
 export function useBudgets() {
   const { from, to } = useMonthFilter()
@@ -21,15 +22,19 @@ export function useBudgets() {
     if (budgets.length) fetchBudgetsSpent(from, to)
   }, [budgets.length, from, to])
 
-  const budgetsWithSpent = budgets.map((b) => ({
-    ...b,
-    spent: budgetsSpent[b.category_id] ?? 0,
-    remaining: Math.max(b.amount - (budgetsSpent[b.category_id] ?? 0), 0),
-    percent: Math.min(
-      Math.round(((budgetsSpent[b.category_id] ?? 0) / b.amount) * 100),
-      100
-    ),
-  }))
+  const budgetsWithSpent = budgets.map((b) => {
+    const spent  = budgetsSpent[b.category_id] ?? 0
+    const amount = Number(b.amount)
+
+    return {
+      ...b,
+      spent,
+      remaining: Math.max(amount - spent, 0),
+      overBy:    Math.max(spent - amount, 0),
+      percent:   amount > 0 ? Math.round((spent / amount) * 100) : 0,
+      status:    getBudgetStatus(spent, amount),
+    }
+  })
 
   return { budgets: budgetsWithSpent, loading, addBudget, updateBudget, removeBudget }
 }

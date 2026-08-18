@@ -1,4 +1,4 @@
-import { formatCurrency } from './formatters'
+import { BUDGET_STATUS_META } from './budgetStatus'
 
 const PERIOD_LABELS = { monthly: 'Mensual', weekly: 'Semanal', yearly: 'Anual' }
 
@@ -12,7 +12,7 @@ export function exportBudgetCSV(budgets, monthLabel = '') {
     b.spent.toFixed(2),
     b.remaining.toFixed(2),
     `${b.percent}%`,
-    b.percent >= 100 ? 'Excedido' : b.percent >= 80 ? 'En riesgo' : 'Normal',
+    BUDGET_STATUS_META[b.status]?.label ?? 'Normal',
   ])
 
   const csv = [header, ...rows].map((r) => r.join(',')).join('\n')

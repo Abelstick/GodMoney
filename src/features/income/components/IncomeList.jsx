@@ -1,21 +1,58 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
-import { IconSearch } from '@tabler/icons-react'
+import { IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload } from '@tabler/icons-react'
 import { formatCurrency, formatDate } from '@/lib/formatters'
+import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import styles from './IncomeList.module.css'
 
 const PAGE_SIZE = 8
 
+function IncomeItem({ income, onEdit, onDelete }) {
+  return (
+    <div className={styles.item}>
+      <div
+        className={styles.iconWrap}
+        style={{ background: (income.category?.color ?? '#10b981') + '20' }}
+      >
+        💰
+      </div>
+      <div className={styles.info}>
+        <div className={styles.description}>
+          {income.description || income.category?.name || 'Sin descripción'}
+        </div>
+        <div className={styles.meta}>
+          <span>{formatDate(income.date)}</span>
+          {income.category && (
+            <Badge color={income.category.color}>{income.category.name}</Badge>
+          )}
+          {income.is_recurring && (
+            <Badge color="var(--color-info)">Recurrente</Badge>
+          )}
+        </div>
+      </div>
+      <div className={styles.right}>
+        <span className={styles.amount}>+{formatCurrency(income.amount)}</span>
+        <div className={styles.actions}>
+          <button className={styles.actionBtn} onClick={() => onEdit(income)}>✏️</button>
+          <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(income.id)}>🗑️</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function IncomeList({ incomes, onEdit, onDelete }) {
-  const [page,          setPage]          = useState(1)
   const [query,         setQuery]         = useState('')
   const [activeCats,    setActiveCats]    = useState(new Set())
   const [onlyRecurring, setOnlyRecurring] = useState(false)
+  const [grouped,       setGrouped]       = useState(true)
+  const [collapsed,     setCollapsed]     = useState(new Set())
+  const [page,          setPage]          = useState(1)
 
-  useEffect(() => { setPage(1) }, [query, activeCats, onlyRecurring])
-  useEffect(() => { setPage(1); setActiveCats(new Set()); setOnlyRecurring(false) }, [incomes])
+  useEffect(() => { setActiveCats(new Set()); setOnlyRecurring(false); setCollapsed(new Set()); setPage(1) }, [incomes])
+  useEffect(() => { setPage(1) }, [query, activeCats, onlyRecurring, grouped])
 
   const categories = useMemo(() => {
     const map = new Map()
@@ -41,10 +78,38 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
     })
   }, [incomes, query, activeCats, onlyRecurring])
 
+  // Montos agrupados por categoría, recalculados con cada búsqueda/filtro aplicado
+  const groups = useMemo(() => {
+    const map = new Map()
+    filtered.forEach((i) => {
+      const name  = i.category?.name ?? 'Sin categoría'
+      const color = i.category?.color ?? '#94a3b8'
+      if (!map.has(name)) map.set(name, { name, color, total: 0, count: 0, items: [] })
+      const g = map.get(name)
+      g.total += Number(i.amount)
+      g.count += 1
+      g.items.push(i)
+    })
+    return [...map.values()].sort((a, b) => b.total - a.total)
+  }, [filtered])
+
+  const filteredTotal = useMemo(() => filtered.reduce((a, i) => a + Number(i.amount), 0), [filtered])
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const flatSlice  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   const hasActiveFilters = query || activeCats.size > 0 || onlyRecurring
 
   function toggleCat(name) {
     setActiveCats((prev) => {
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next
+    })
+  }
+
+  function toggleCollapse(name) {
+    setCollapsed((prev) => {
       const next = new Set(prev)
       next.has(name) ? next.delete(name) : next.add(name)
       return next
@@ -57,14 +122,19 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
     setOnlyRecurring(false)
   }
 
+  function handleExport() {
+    exportTransactionsCSV(filtered, {
+      filename: `ingresos-${new Date().toISOString().slice(0, 10)}.csv`,
+      flagLabel: 'Recurrente',
+      flagValue: (i) => i.is_recurring,
+    })
+  }
+
   if (!incomes.length) {
     return (
       <EmptyState icon="💰" title="Sin ingresos este mes" description="Registra tu primer ingreso del mes" />
     )
   }
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const slice      = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className={styles.root}>
@@ -121,48 +191,76 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
         <EmptyState icon="🔍" title="Sin resultados" description="Prueba con otros filtros" />
       ) : (
         <>
-          <div className={styles.list}>
-            {slice.map((income) => (
-              <div key={income.id} className={styles.item}>
-                <div
-                  className={styles.iconWrap}
-                  style={{ background: (income.category?.color ?? '#10b981') + '20' }}
-                >
-                  💰
-                </div>
-                <div className={styles.info}>
-                  <div className={styles.description}>
-                    {income.description || income.category?.name || 'Sin descripción'}
-                  </div>
-                  <div className={styles.meta}>
-                    <span>{formatDate(income.date)}</span>
-                    {income.category && (
-                      <Badge color={income.category.color}>{income.category.name}</Badge>
-                    )}
-                    {income.is_recurring && (
-                      <Badge color="var(--color-info)">Recurrente</Badge>
-                    )}
-                  </div>
-                </div>
-                <div className={styles.right}>
-                  <span className={styles.amount}>+{formatCurrency(income.amount)}</span>
-                  <div className={styles.actions}>
-                    <button className={styles.actionBtn} onClick={() => onEdit(income)}>✏️</button>
-                    <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(income.id)}>🗑️</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className={styles.paginationWrap}>
-              <span className={styles.paginationInfo}>
-                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}
+          {/* Resumen del monto agrupado según los filtros activos + controles de vista */}
+          <div className={styles.filterSummary}>
+            <div className={styles.filterSummaryInfo}>
+              <span className={styles.filterSummaryLabel}>
+                {filtered.length} movimiento{filtered.length !== 1 ? 's' : ''}
                 {hasActiveFilters && ` (de ${incomes.length})`}
               </span>
-              <Pagination total={totalPages} value={page} onChange={setPage} size="sm" color="violet" radius="md" />
+              <span className={styles.filterSummaryAmount}>+{formatCurrency(filteredTotal)}</span>
             </div>
+            <div className={styles.filterSummaryActions}>
+              <button
+                className={styles.viewToggle}
+                onClick={() => setGrouped((v) => !v)}
+                title={grouped ? 'Ver como lista' : 'Agrupar por categoría'}
+              >
+                {grouped ? <IconList size={15} stroke={1.75} /> : <IconLayoutGrid size={15} stroke={1.75} />}
+                {grouped ? 'Lista' : 'Agrupar'}
+              </button>
+              <button className={styles.exportBtn} onClick={handleExport} title="Descargar en Excel (CSV)">
+                <IconDownload size={15} stroke={1.75} />
+                Excel
+              </button>
+            </div>
+          </div>
+
+          {grouped ? (
+            <div className={styles.groups}>
+              {groups.map((g) => {
+                const isCollapsed = collapsed.has(g.name)
+                return (
+                  <div key={g.name} className={styles.group}>
+                    <button className={styles.groupHeader} onClick={() => toggleCollapse(g.name)}>
+                      <span className={styles.groupDot} style={{ background: g.color }} />
+                      <span className={styles.groupName}>{g.name}</span>
+                      <span className={styles.groupCount}>{g.count}</span>
+                      <span className={styles.groupTotal}>+{formatCurrency(g.total)}</span>
+                      <IconChevronDown
+                        size={15}
+                        stroke={1.75}
+                        className={`${styles.groupChevron} ${isCollapsed ? styles.groupChevronCollapsed : ''}`}
+                      />
+                    </button>
+                    {!isCollapsed && (
+                      <div className={styles.list}>
+                        {g.items.map((income) => (
+                          <IncomeItem key={income.id} income={income} onEdit={onEdit} onDelete={onDelete} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <>
+              <div className={styles.list}>
+                {flatSlice.map((income) => (
+                  <IncomeItem key={income.id} income={income} onEdit={onEdit} onDelete={onDelete} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className={styles.paginationWrap}>
+                  <span className={styles.paginationInfo}>
+                    {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}
+                  </span>
+                  <Pagination total={totalPages} value={page} onChange={setPage} size="sm" color="violet" radius="md" />
+                </div>
+              )}
+            </>
           )}
         </>
       )}

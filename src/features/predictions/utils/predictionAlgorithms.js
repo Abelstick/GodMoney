@@ -46,13 +46,43 @@ export function linearRegression(values) {
 }
 
 // ── Proyección N meses hacia adelante ─────────────────────────────────────
+// Con pocos meses de historial, la regresión lineal puede extrapolar de forma
+// poco realista (una sola variación grande dispara la pendiente). Para
+// estabilizar, se mezcla la tendencia lineal con el promedio reciente: el
+// peso de la tendencia crece con la cantidad de datos disponibles (hasta 6
+// meses = 100% tendencia).
 export function projectMonths(values, months = 3) {
-  const { slope, intercept } = linearRegression(values)
   const n = values.length
+  const { slope, intercept } = linearRegression(values)
+  const recentAvg = simpleMean(values.slice(-3))
+  const trendWeight = Math.min(n / 6, 1)
+
   return Array.from({ length: months }, (_, i) => {
     const x = n + i
-    return Math.max(intercept + slope * x, 0)
+    const trendValue = intercept + slope * x
+    const blended = trendWeight * trendValue + (1 - trendWeight) * recentAvg
+    return Math.max(blended, 0)
   })
+}
+
+// ── Variación porcentual entre una proyección y un valor base ────────────
+// Devuelve null cuando no hay base válida para comparar (evita división por 0).
+export function percentChange(current, base) {
+  if (!base) return null
+  return Math.round(((current - base) / Math.abs(base)) * 100)
+}
+
+// ── Nivel de confianza según la cantidad de meses de historial usados ────
+export const PREDICTION_CONFIDENCE_META = {
+  high:   { label: 'Confianza alta',  color: 'var(--color-success)' },
+  medium: { label: 'Confianza media', color: 'var(--color-warning)' },
+  low:    { label: 'Confianza baja',  color: 'var(--color-danger)'  },
+}
+
+export function getPredictionConfidence(monthsOfData) {
+  if (monthsOfData >= 5) return 'high'
+  if (monthsOfData >= 3) return 'medium'
+  return 'low'
 }
 
 // ── Proyección de objetivo financiero ─────────────────────────────────────

@@ -1,21 +1,54 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
-import { IconSearch } from '@tabler/icons-react'
+import { IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload } from '@tabler/icons-react'
 import { formatCurrency, formatDate } from '@/lib/formatters'
+import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import styles from './ExpenseList.module.css'
 
 const PAGE_SIZE = 8
 
+function ExpenseItem({ expense, onEdit, onDelete }) {
+  return (
+    <div className={styles.item}>
+      <div
+        className={styles.iconWrap}
+        style={{ background: (expense.category?.color ?? '#ef4444') + '20' }}
+      >
+        💸
+      </div>
+      <div className={styles.info}>
+        <div className={styles.description}>
+          {expense.description || expense.category?.name || 'Sin descripción'}
+        </div>
+        <div className={styles.meta}>
+          <span>{formatDate(expense.date)}</span>
+          {expense.category && <Badge color={expense.category.color}>{expense.category.name}</Badge>}
+          {expense.is_fixed && <Badge color="var(--color-warning)">Fijo</Badge>}
+        </div>
+      </div>
+      <div className={styles.right}>
+        <span className={styles.amount}>-{formatCurrency(expense.amount)}</span>
+        <div className={styles.actions}>
+          <button className={styles.actionBtn} onClick={() => onEdit(expense)}>✏️</button>
+          <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(expense.id)}>🗑️</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ExpenseList({ expenses, onEdit, onDelete }) {
-  const [page,       setPage]       = useState(1)
   const [query,      setQuery]      = useState('')
   const [activeCats, setActiveCats] = useState(new Set())
   const [onlyFixed,  setOnlyFixed]  = useState(false)
+  const [grouped,    setGrouped]    = useState(true)
+  const [collapsed,  setCollapsed]  = useState(new Set())
+  const [page,       setPage]       = useState(1)
 
-  useEffect(() => { setPage(1) }, [query, activeCats, onlyFixed])
-  useEffect(() => { setPage(1); setActiveCats(new Set()); setOnlyFixed(false) }, [expenses])
+  useEffect(() => { setActiveCats(new Set()); setOnlyFixed(false); setCollapsed(new Set()); setPage(1) }, [expenses])
+  useEffect(() => { setPage(1) }, [query, activeCats, onlyFixed, grouped])
 
   // Categorías únicas derivadas de la lista completa
   const categories = useMemo(() => {
@@ -42,10 +75,38 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
     })
   }, [expenses, query, activeCats, onlyFixed])
 
+  // Montos agrupados por categoría, recalculados con cada búsqueda/filtro aplicado
+  const groups = useMemo(() => {
+    const map = new Map()
+    filtered.forEach((e) => {
+      const name  = e.category?.name ?? 'Sin categoría'
+      const color = e.category?.color ?? '#94a3b8'
+      if (!map.has(name)) map.set(name, { name, color, total: 0, count: 0, items: [] })
+      const g = map.get(name)
+      g.total += Number(e.amount)
+      g.count += 1
+      g.items.push(e)
+    })
+    return [...map.values()].sort((a, b) => b.total - a.total)
+  }, [filtered])
+
+  const filteredTotal = useMemo(() => filtered.reduce((a, e) => a + Number(e.amount), 0), [filtered])
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const flatSlice  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   const hasActiveFilters = query || activeCats.size > 0 || onlyFixed
 
   function toggleCat(name) {
     setActiveCats((prev) => {
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next
+    })
+  }
+
+  function toggleCollapse(name) {
+    setCollapsed((prev) => {
       const next = new Set(prev)
       next.has(name) ? next.delete(name) : next.add(name)
       return next
@@ -58,14 +119,19 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
     setOnlyFixed(false)
   }
 
+  function handleExport() {
+    exportTransactionsCSV(filtered, {
+      filename: `gastos-${new Date().toISOString().slice(0, 10)}.csv`,
+      flagLabel: 'Fijo',
+      flagValue: (e) => e.is_fixed,
+    })
+  }
+
   if (!expenses.length) {
     return (
       <EmptyState icon="💸" title="Sin gastos este mes" description="Registra tu primer gasto del mes" />
     )
   }
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const slice      = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className={styles.root}>
@@ -122,44 +188,76 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
         <EmptyState icon="🔍" title="Sin resultados" description="Prueba con otros filtros" />
       ) : (
         <>
-          <div className={styles.list}>
-            {slice.map((expense) => (
-              <div key={expense.id} className={styles.item}>
-                <div
-                  className={styles.iconWrap}
-                  style={{ background: (expense.category?.color ?? '#ef4444') + '20' }}
-                >
-                  💸
-                </div>
-                <div className={styles.info}>
-                  <div className={styles.description}>
-                    {expense.description || expense.category?.name || 'Sin descripción'}
-                  </div>
-                  <div className={styles.meta}>
-                    <span>{formatDate(expense.date)}</span>
-                    {expense.category && <Badge color={expense.category.color}>{expense.category.name}</Badge>}
-                    {expense.is_fixed && <Badge color="var(--color-warning)">Fijo</Badge>}
-                  </div>
-                </div>
-                <div className={styles.right}>
-                  <span className={styles.amount}>-{formatCurrency(expense.amount)}</span>
-                  <div className={styles.actions}>
-                    <button className={styles.actionBtn} onClick={() => onEdit(expense)}>✏️</button>
-                    <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(expense.id)}>🗑️</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className={styles.paginationWrap}>
-              <span className={styles.paginationInfo}>
-                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}
+          {/* Resumen del monto agrupado según los filtros activos + controles de vista */}
+          <div className={styles.filterSummary}>
+            <div className={styles.filterSummaryInfo}>
+              <span className={styles.filterSummaryLabel}>
+                {filtered.length} movimiento{filtered.length !== 1 ? 's' : ''}
                 {hasActiveFilters && ` (de ${expenses.length})`}
               </span>
-              <Pagination total={totalPages} value={page} onChange={setPage} size="sm" color="violet" radius="md" />
+              <span className={styles.filterSummaryAmount}>-{formatCurrency(filteredTotal)}</span>
             </div>
+            <div className={styles.filterSummaryActions}>
+              <button
+                className={styles.viewToggle}
+                onClick={() => setGrouped((v) => !v)}
+                title={grouped ? 'Ver como lista' : 'Agrupar por categoría'}
+              >
+                {grouped ? <IconList size={15} stroke={1.75} /> : <IconLayoutGrid size={15} stroke={1.75} />}
+                {grouped ? 'Lista' : 'Agrupar'}
+              </button>
+              <button className={styles.exportBtn} onClick={handleExport} title="Descargar en Excel (CSV)">
+                <IconDownload size={15} stroke={1.75} />
+                Excel
+              </button>
+            </div>
+          </div>
+
+          {grouped ? (
+            <div className={styles.groups}>
+              {groups.map((g) => {
+                const isCollapsed = collapsed.has(g.name)
+                return (
+                  <div key={g.name} className={styles.group}>
+                    <button className={styles.groupHeader} onClick={() => toggleCollapse(g.name)}>
+                      <span className={styles.groupDot} style={{ background: g.color }} />
+                      <span className={styles.groupName}>{g.name}</span>
+                      <span className={styles.groupCount}>{g.count}</span>
+                      <span className={styles.groupTotal}>-{formatCurrency(g.total)}</span>
+                      <IconChevronDown
+                        size={15}
+                        stroke={1.75}
+                        className={`${styles.groupChevron} ${isCollapsed ? styles.groupChevronCollapsed : ''}`}
+                      />
+                    </button>
+                    {!isCollapsed && (
+                      <div className={styles.list}>
+                        {g.items.map((expense) => (
+                          <ExpenseItem key={expense.id} expense={expense} onEdit={onEdit} onDelete={onDelete} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <>
+              <div className={styles.list}>
+                {flatSlice.map((expense) => (
+                  <ExpenseItem key={expense.id} expense={expense} onEdit={onEdit} onDelete={onDelete} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className={styles.paginationWrap}>
+                  <span className={styles.paginationInfo}>
+                    {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}
+                  </span>
+                  <Pagination total={totalPages} value={page} onChange={setPage} size="sm" color="violet" radius="md" />
+                </div>
+              )}
+            </>
           )}
         </>
       )}

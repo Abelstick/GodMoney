@@ -7,6 +7,7 @@ import {
   smoothedSeries,
   simpleMean,
   monthsToGoal,
+  percentChange,
 } from '@/features/predictions/utils/predictionAlgorithms'
 import { MONTHS_HISTORY } from '@/lib/constants'
 
@@ -48,12 +49,27 @@ export function usePredictions() {
 
   const projectedProfit  = projectedIncome - projectedExpense
 
+  const historicalData = useMemo(() => chartData.filter((d) => !d.projected), [chartData])
+  const monthsOfData    = historicalData.length
+
   // Ahorro mensual promedio histórico (profit medio real)
   const avgMonthlySaving = useMemo(() => {
-    const historical = chartData.filter((d) => !d.projected)
-    if (!historical.length) return 0
-    return simpleMean(historical.map((d) => d.profit))
-  }, [chartData])
+    if (!historicalData.length) return 0
+    return simpleMean(historicalData.map((d) => d.profit))
+  }, [historicalData])
+
+  const avgHistoricalIncome  = useMemo(() => (
+    historicalData.length ? simpleMean(historicalData.map((d) => d.income)) : 0
+  ), [historicalData])
+
+  const avgHistoricalExpense = useMemo(() => (
+    historicalData.length ? simpleMean(historicalData.map((d) => d.expense)) : 0
+  ), [historicalData])
+
+  // Variación de la proyección respecto al promedio histórico (para las flechas de tendencia)
+  const incomeTrend  = percentChange(projectedIncome, avgHistoricalIncome)
+  const expenseTrend = percentChange(projectedExpense, avgHistoricalExpense)
+  const profitTrend  = percentChange(projectedProfit, avgMonthlySaving)
 
   // Proyección de objetivos: cuántos meses faltan
   const goalsProjection = useMemo(() =>
@@ -71,10 +87,14 @@ export function usePredictions() {
   return {
     loading,
     chartData,
+    monthsOfData,
     projectedIncome,
     projectedExpense,
     projectedProfit,
     avgMonthlySaving,
+    incomeTrend,
+    expenseTrend,
+    profitTrend,
     goalsProjection,
   }
 }
