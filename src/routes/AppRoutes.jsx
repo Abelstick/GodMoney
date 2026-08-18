@@ -6,6 +6,7 @@ import { Expenses }    from '@/features/expenses/Expenses'
 import { Goals }       from '@/features/goals/Goals'
 import { Budgets }     from '@/features/budgets/Budgets'
 import { Predictions } from '@/features/predictions/Predictions'
+import { Insights }    from '@/features/insights/Insights'
 import { Categories }  from '@/features/categories/Categories'
 import { Settings }    from '@/features/settings/Settings'
 import { LoginPage }   from '@/features/auth/LoginPage'
@@ -29,6 +30,7 @@ export function AppRoutes() {
         <Route path="objetivos"        element={<Goals />} />
         <Route path="presupuestos"     element={<Budgets />} />
         <Route path="predicciones"     element={<Predictions />} />
+        <Route path="inteligencia"     element={<Insights />} />
         <Route path="categorias"       element={<Categories />} />
         <Route path="configuracion"    element={<Settings />} />
         <Route path="*"                element={<Navigate to="/" replace />} />
