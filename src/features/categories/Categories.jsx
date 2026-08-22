@@ -15,7 +15,7 @@ const ICONS_MAP = {
   home: '🏠', 'shopping-cart': '🛒', car: '🚗', heart: '❤️', music: '🎵',
   book: '📚', shirt: '👕', gift: '🎁', tag: '🏷️', target: '🎯',
   'more-horizontal': '➕', coffee: '☕', plane: '✈️', phone: '📱',
-  zap: '⚡', star: '⭐',
+  zap: '⚡', star: '⭐', percentage: '💹',
 }
 
 const TYPES = [

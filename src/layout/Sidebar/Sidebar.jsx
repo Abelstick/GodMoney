@@ -6,6 +6,7 @@ import {
   IconMoon, IconSun, IconLogout, IconMenu2, IconX,
   IconCashBanknote, IconShoppingCart, IconFlag,
   IconClipboard, IconTrendingUp, IconTag, IconKey, IconBulb,
+  IconHandGrab, IconWallet,
 } from '@tabler/icons-react'
 import { useMantineColorScheme } from '@mantine/core'
 import { useStore } from '@/store'
@@ -35,6 +36,7 @@ const NAV = [
     items: [
       { to: '/objetivos',    icon: IconFlag,      label: 'Objetivos'    },
       { to: '/presupuestos', icon: IconClipboard, label: 'Presupuestos' },
+      { to: '/prestamos',    icon: IconHandGrab,  label: 'Préstamos'    },
     ],
   },
   {
@@ -51,6 +53,7 @@ const NAV = [
     icon: IconSettings2,
     label: 'Mantenimiento',
     items: [
+      { to: '/cuentas',       icon: IconWallet, label: 'Cuentas'    },
       { to: '/categorias',    icon: IconTag, label: 'Categorías'  },
       { to: '/configuracion', icon: IconKey, label: 'Configuración' },
     ],

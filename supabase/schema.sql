@@ -156,3 +156,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- CREATE TRIGGER on_auth_user_created
 --   AFTER INSERT ON auth.users
 --   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- ============================================================
+-- MÓDULO: Cuentas + Préstamos y Deudas
+-- Ver supabase/migrations/002_loans_and_accounts.sql para el detalle
+-- completo (tablas, políticas RLS y funciones). Ese mismo archivo debe
+-- ejecutarse tal cual sobre una base de datos existente; aquí solo se
+-- referencia para que una instalación nueva desde este schema.sql sepa
+-- que falta aplicarlo.
+-- ============================================================
+

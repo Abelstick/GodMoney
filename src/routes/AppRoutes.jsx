@@ -5,6 +5,8 @@ import { Income }      from '@/features/income/Income'
 import { Expenses }    from '@/features/expenses/Expenses'
 import { Goals }       from '@/features/goals/Goals'
 import { Budgets }     from '@/features/budgets/Budgets'
+import { Loans }       from '@/features/loans/Loans'
+import { Accounts }    from '@/features/accounts/Accounts'
 import { Predictions } from '@/features/predictions/Predictions'
 import { Insights }    from '@/features/insights/Insights'
 import { Categories }  from '@/features/categories/Categories'
@@ -29,6 +31,8 @@ export function AppRoutes() {
         <Route path="gastos"           element={<Expenses />} />
         <Route path="objetivos"        element={<Goals />} />
         <Route path="presupuestos"     element={<Budgets />} />
+        <Route path="prestamos"        element={<Loans />} />
+        <Route path="cuentas"          element={<Accounts />} />
         <Route path="predicciones"     element={<Predictions />} />
         <Route path="inteligencia"     element={<Insights />} />
         <Route path="categorias"       element={<Categories />} />

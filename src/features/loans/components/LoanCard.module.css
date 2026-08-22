@@ -1,0 +1,47 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-md); }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+
+.person { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.avatar {
+  width: 36px; height: 36px; border-radius: var(--radius-full);
+  background: var(--color-primary-alpha); color: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: var(--weight-bold); font-size: var(--text-sm); flex-shrink: 0;
+}
+.name { font-size: var(--text-base); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
+.description { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+
+.amounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-2);
+}
+.amountItem { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.amountLabel { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.amountValue { font-size: var(--text-sm); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
+.emphasis { color: var(--color-primary); }
+
+.actions { display: flex; gap: var(--space-2); }
+.actions > * { flex: 1; }
+
+@media (max-width: 640px) {
+  .card { padding: var(--space-4); gap: var(--space-3); }
+  /* Prioriza saldo pendiente / próxima cuota / estado / acción, como pide el spec mobile */
+  .description { display: none; }
+  .amounts { grid-template-columns: 1fr 1fr; }
+  .amounts .amountItem:first-child { display: none; }
+  .actions > * { min-height: 40px; }
+}

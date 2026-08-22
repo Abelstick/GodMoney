@@ -15,6 +15,8 @@ const DEFAULT_CATEGORIES = [
   { name: 'Pareja',         type: 'expense', color: '#f43f5e', icon: 'heart'          },
   { name: 'Regalos',        type: 'expense', color: '#a855f7', icon: 'gift'           },
   { name: 'Otros gastos',   type: 'expense', color: '#64748b', icon: 'more-horizontal'},
+  { name: 'Interés pagado', type: 'expense', color: '#f97316', icon: 'percentage'     },
+  { name: 'Interés ganado', type: 'income',  color: '#22c55e', icon: 'percentage'     },
 ]
 
 export const profileService = {

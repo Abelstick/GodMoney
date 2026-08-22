@@ -1,0 +1,30 @@
+.form { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.hint {
+  font-size: var(--text-sm); color: var(--color-text-secondary);
+  background: var(--color-surface-2); padding: var(--space-3); border-radius: var(--radius-md);
+}
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+
+.totalRow {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: var(--text-sm); color: var(--color-text-secondary);
+  padding: var(--space-3); background: var(--color-surface-2); border-radius: var(--radius-md);
+}
+.totalRow strong { font-size: var(--text-lg); color: var(--color-text-primary); }
+
+.errorText { color: var(--color-danger); font-size: var(--text-xs); }
+
+.overpayWarning {
+  font-size: var(--text-xs); color: #b45309; background: #f59e0b12;
+  border: 1px solid #f59e0b44; padding: var(--space-3); border-radius: var(--radius-md);
+}
+
+.actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+@media (max-width: 640px) {
+  .row2 { grid-template-columns: 1fr; }
+  .actions { flex-direction: column-reverse; }
+  .actions > * { width: 100%; }
+}

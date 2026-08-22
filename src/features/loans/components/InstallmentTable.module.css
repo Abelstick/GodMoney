@@ -1,0 +1,25 @@
+.wrapper { display: flex; flex-direction: column; gap: var(--space-2); max-height: 320px; overflow-y: auto; }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.number { font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--color-text-muted); width: 28px; flex-shrink: 0; }
+.due { font-size: var(--text-xs); color: var(--color-text-secondary); width: 80px; flex-shrink: 0; }
+
+.amounts { display: flex; gap: var(--space-4); flex: 1; flex-wrap: wrap; }
+.amountItem { display: flex; flex-direction: column; gap: 1px; font-size: var(--text-xs); }
+.amountLabel { font-size: 9px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+@media (max-width: 480px) {
+  .wrapper { max-height: 260px; }
+  .row { flex-wrap: wrap; }
+  .due { width: auto; }
+  .amounts { gap: var(--space-3); }
+}

@@ -26,6 +26,7 @@ const ICONS = [
   { value: 'phone',          emoji: '📱' },
   { value: 'zap',            emoji: '⚡' },
   { value: 'star',           emoji: '⭐' },
+  { value: 'percentage',     emoji: '💹' },
 ]
 
 const EMPTY = { name: '', type: 'expense', color: '#6366f1', icon: 'tag' }

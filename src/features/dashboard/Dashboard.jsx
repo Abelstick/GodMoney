@@ -1,8 +1,14 @@
-import { useStore, selectTotalIncome, selectTotalExpense, selectProfit } from '@/store'
+import { Link } from 'react-router-dom'
+import {
+  useStore, selectTotalIncome, selectTotalExpense, selectProfit,
+  selectAvailableMoney, selectReceivable, selectPayable, selectNetWorth,
+} from '@/store'
 import { useIncome }     from '@/hooks/useIncome'
 import { useExpenses }   from '@/hooks/useExpenses'
 import { useGoals }      from '@/hooks/useGoals'
 import { useBudgets }    from '@/hooks/useBudgets'
+import { useAccounts }   from '@/hooks/useAccounts'
+import { useLoans }      from '@/hooks/useLoans'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
 import { formatCurrency, formatMonth } from '@/lib/formatters'
 import { getPastMonths } from '@/lib/formatters'
@@ -28,10 +34,16 @@ export function Dashboard() {
   const { expenses, loading: expLoading } = useExpenses()
   const { goals }   = useGoals()
   const { budgets } = useBudgets()
+  useAccounts()
+  useLoans()
 
   const totalIncome  = useStore(selectTotalIncome)
   const totalExpense = useStore(selectTotalExpense)
   const profit       = useStore(selectProfit)
+  const availableMoney = useStore(selectAvailableMoney)
+  const receivable      = useStore(selectReceivable)
+  const payable          = useStore(selectPayable)
+  const netWorth          = useStore(selectNetWorth)
 
   // Datos históricos para el gráfico de barras del dashboard
   const [histIncome,  setHistIncome]  = useState([])
@@ -108,6 +120,23 @@ export function Dashboard() {
           iconBg="rgba(245,158,11,0.12)"
         />
       </div>
+
+      {/* ── Patrimonio: cuentas + préstamos ── */}
+      <Card className={styles.mb6}>
+        <Card.Header
+          action={
+            <Link to="/prestamos" className={styles.netWorthLink}>Ver préstamos →</Link>
+          }
+        >
+          Patrimonio
+        </Card.Header>
+        <div className={styles.statsGrid}>
+          <StatCard label="Dinero disponible" amount={formatCurrency(availableMoney)} icon="🏦" iconBg="rgba(99,102,241,0.12)" />
+          <StatCard label="Por cobrar"         amount={formatCurrency(receivable)}     icon="🤝" iconBg="rgba(16,185,129,0.12)" />
+          <StatCard label="Deudas"             amount={formatCurrency(payable)}        icon="📄" iconBg="rgba(239,68,68,0.12)" />
+          <StatCard label="Patrimonio neto"    amount={formatCurrency(netWorth)}        icon="✨" iconBg="rgba(245,158,11,0.12)" />
+        </div>
+      </Card>
 
       {/* ── Gráfico + Transacciones recientes ── */}
       <div className={styles.twoCol}>
