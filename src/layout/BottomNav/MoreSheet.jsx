@@ -25,13 +25,13 @@ export function MoreSheet({ opened, onClose }) {
       onClose={onClose}
       position="bottom"
       size="auto"
-      withCloseButton={false}
       title="Más opciones"
       classNames={{
         content: styles.drawer,
         header:  styles.header,
         title:   styles.title,
         body:    styles.body,
+        close:   styles.closeBtn,
       }}
     >
       <div className={styles.list}>

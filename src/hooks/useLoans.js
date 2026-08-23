@@ -9,6 +9,7 @@ export function useLoans() {
   const addLoan             = useStore((s) => s.addLoan)
   const updateLoan          = useStore((s) => s.updateLoan)
   const cancelLoan          = useStore((s) => s.cancelLoan)
+  const removeLoan          = useStore((s) => s.removeLoan)
   const registerLoanPayment = useStore((s) => s.registerLoanPayment)
   const fetchLoanDetail     = useStore((s) => s.fetchLoanDetail)
   const installmentsByLoan  = useStore((s) => s.installmentsByLoan)
@@ -25,6 +26,7 @@ export function useLoans() {
     addLoan,
     updateLoan,
     cancelLoan,
+    removeLoan,
     registerLoanPayment,
     fetchLoanDetail,
     installmentsByLoan,

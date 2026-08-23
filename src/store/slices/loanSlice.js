@@ -59,9 +59,30 @@ export const createLoanSlice = (set, get) => ({
   cancelLoan: async (id) => {
     const data = await loanService.cancel(id)
     set((s) => ({ loans: s.loans.map((l) => (l.id === id ? data : l)) }))
-    get().showToast('Préstamo cancelado', 'info')
+    get().showToast('Préstamo perdonado', 'info')
     get().syncLoanAlerts()
     return data
+  },
+
+  removeLoan: async (id) => {
+    await loanService.remove(id)
+    set((s) => {
+      const installmentsByLoan = { ...s.installmentsByLoan }
+      const paymentsByLoan = { ...s.paymentsByLoan }
+      delete installmentsByLoan[id]
+      delete paymentsByLoan[id]
+      return {
+        loans: s.loans.filter((l) => l.id !== id),
+        installmentsByLoan,
+        paymentsByLoan,
+      }
+    })
+    await get().fetchAccounts()
+    get().showToast('Préstamo eliminado', 'info')
+
+    const pendingInstallments = await loanService.getPendingInstallments()
+    set({ pendingInstallments })
+    get().syncLoanAlerts()
   },
 
   registerLoanPayment: async (payload) => {

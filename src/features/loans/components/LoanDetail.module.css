@@ -18,6 +18,13 @@
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .actions > * { flex: 1; min-width: 120px; }
 
+.dangerZone {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+}
+
 .section { border-top: 1px solid var(--color-border); padding-top: var(--space-4); }
 .sectionTitle { font-size: var(--text-sm); font-weight: var(--weight-semibold); margin-bottom: var(--space-3); }
 .emptyText { font-size: var(--text-sm); color: var(--color-text-muted); }

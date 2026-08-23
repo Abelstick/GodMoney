@@ -102,9 +102,10 @@ export const loanService = {
     return data
   },
 
+  // "Perdonar préstamo" en la UI — el status en BD sigue siendo CANCELLED.
   async cancel(id) {
-    // Un préstamo cancelado ya no debe mostrar saldo pendiente en ninguna
-    // parte (tarjetas, detalle, resumen): al cancelar, se da por saldado.
+    // Un préstamo perdonado ya no debe mostrar saldo pendiente en ninguna
+    // parte (tarjetas, detalle, resumen): al perdonar, se da por saldado.
     // Esto NO revierte el saldo de la cuenta ni los intereses ya cobrados/
     // pagados — solo dice "ya no espero/debo más de este préstamo".
     const { data, error } = await supabase
@@ -120,6 +121,14 @@ export const loanService = {
       .single()
     if (error) throw error
     return data
+  },
+
+  // Elimina el préstamo por completo y revierte su efecto real en las
+  // cuentas (creación + cada pago). A diferencia de cancel(), no queda
+  // ningún rastro — se trata como si nunca hubiera existido.
+  async remove(id) {
+    const { error } = await supabase.rpc('delete_loan_reversed', { p_loan_id: id })
+    if (error) throw error
   },
 
   async registerPayment(payload) {

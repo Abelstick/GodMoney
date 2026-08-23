@@ -29,7 +29,7 @@ export const LOAN_STATUS_META = {
   [LOAN_STATUS.ACTIVE]:    { label: 'Activo',     color: 'var(--color-info)'    },
   [LOAN_STATUS.PAID]:      { label: 'Pagado',      color: 'var(--color-success)' },
   [LOAN_STATUS.OVERDUE]:   { label: 'Vencido',     color: 'var(--color-danger)'  },
-  [LOAN_STATUS.CANCELLED]: { label: 'Cancelado',   color: 'var(--color-text-muted)' },
+  [LOAN_STATUS.CANCELLED]: { label: 'Perdonado',   color: 'var(--color-text-muted)' },
 }
 
 export const INSTALLMENT_STATUS = {

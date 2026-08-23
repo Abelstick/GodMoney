@@ -11,12 +11,14 @@ import {
   LOAN_STATUS_META, LOAN_TYPE, LOAN_TYPE_META,
 } from '@/lib/loanStatus'
 import { useLoans } from '@/hooks/useLoans'
+import { useAccounts } from '@/hooks/useAccounts'
 import { InstallmentTable } from './InstallmentTable'
 import { LoanPaymentForm } from './LoanPaymentForm'
 import styles from './LoanDetail.module.css'
 
 export function LoanDetail({ loan, isOpen, onClose }) {
-  const { fetchLoanDetail, installmentsByLoan, paymentsByLoan, updateLoan, cancelLoan, registerLoanPayment } = useLoans()
+  const { fetchLoanDetail, installmentsByLoan, paymentsByLoan, updateLoan, cancelLoan, removeLoan, registerLoanPayment } = useLoans()
+  const { accounts } = useAccounts()
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [payingLoading, setPayingLoading] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -24,6 +26,8 @@ export function LoanDetail({ loan, isOpen, onClose }) {
   const [editSaving, setEditSaving] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (isOpen && loan) fetchLoanDetail(loan.id)
@@ -36,6 +40,36 @@ export function LoanDetail({ loan, isOpen, onClose }) {
     () => installments.reduce((acc, i) => acc + Number(i.interest_amount), 0),
     [installments]
   )
+
+  const accountsById = useMemo(
+    () => Object.fromEntries(accounts.map((a) => [a.id, a])),
+    [accounts]
+  )
+
+  // Vista previa de lo que revertirá el borrado: por cada cuenta afectada
+  // (la de creación del préstamo + la de cada pago, que pueden diferir),
+  // cuánto cambiará su saldo si se elimina todo.
+  const deletePreview = useMemo(() => {
+    if (!loan) return { lines: [], paymentsCount: 0, totalInterest: 0 }
+    const deltas = {}
+    const creationDelta = loan.type === LOAN_TYPE.BORROWED ? -Number(loan.principal_amount) : Number(loan.principal_amount)
+    deltas[loan.account_id] = (deltas[loan.account_id] ?? 0) + creationDelta
+
+    let totalInterest = 0
+    for (const p of payments) {
+      const delta = loan.type === LOAN_TYPE.BORROWED ? Number(p.amount) : -Number(p.amount)
+      deltas[p.account_id] = (deltas[p.account_id] ?? 0) + delta
+      totalInterest += Number(p.interest_amount)
+    }
+
+    const lines = Object.entries(deltas).map(([accId, delta]) => {
+      const name = accountsById[accId]?.name ?? 'una cuenta eliminada'
+      const sign = delta >= 0 ? '+' : '-'
+      return `${name}: ${sign}${formatCurrency(Math.abs(delta))}`
+    })
+
+    return { lines, paymentsCount: payments.length, totalInterest }
+  }, [loan, payments, accountsById])
 
   if (!loan) return null
 
@@ -91,6 +125,17 @@ export function LoanDetail({ loan, isOpen, onClose }) {
       setCancelOpen(false)
     } finally {
       setCancelling(false)
+    }
+  }
+
+  async function handleDeleteLoan() {
+    setDeleting(true)
+    try {
+      await removeLoan(loan.id)
+      setDeleteOpen(false)
+      onClose()
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -155,9 +200,15 @@ export function LoanDetail({ loan, isOpen, onClose }) {
             <div className={styles.actions}>
               <Button onClick={() => setPaymentOpen(true)}>Registrar pago</Button>
               <Button variant="secondary" onClick={startEdit}>Editar</Button>
-              <Button variant="danger" onClick={() => setCancelOpen(true)}>Cancelar préstamo</Button>
+              <Button variant="danger" onClick={() => setCancelOpen(true)}>Perdonar préstamo</Button>
             </div>
           )}
+
+          <div className={styles.dangerZone}>
+            <Button size="sm" variant="danger" onClick={() => setDeleteOpen(true)}>
+              Eliminar préstamo por completo
+            </Button>
+          </div>
 
           {installments.length > 0 && (
             <div className={styles.section}>
@@ -231,9 +282,26 @@ export function LoanDetail({ loan, isOpen, onClose }) {
         onClose={() => setCancelOpen(false)}
         onConfirm={handleCancelLoan}
         loading={cancelling}
-        title="Cancelar préstamo"
-        description={`¿Cancelar el préstamo con ${loan.person_name}? El saldo pendiente (${formatCurrency(Number(loan.remaining_principal) + Number(loan.remaining_interest))}) quedará en S/ 0 — ya no se contará como deuda ni en "Me deben"/"Yo debo". Esto NO revierte el saldo de la cuenta ni los pagos ya registrados, solo da por saldado lo que faltaba.`}
-        confirmLabel="Cancelar préstamo"
+        title="Perdonar préstamo"
+        description={`¿Perdonar el préstamo con ${loan.person_name}? El saldo pendiente (${formatCurrency(Number(loan.remaining_principal) + Number(loan.remaining_interest))}) quedará en S/ 0 — ya no se contará como deuda ni en "Me deben"/"Yo debo". Esto NO revierte el saldo de la cuenta ni los pagos ya registrados (el dinero ya se movió de verdad), solo da por perdonado lo que faltaba.`}
+        confirmLabel="Perdonar préstamo"
+      />
+
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDeleteLoan}
+        loading={deleting}
+        title="Eliminar préstamo por completo"
+        description={
+          `Se borrará el préstamo con ${loan.person_name} y su historial completo (${deletePreview.paymentsCount} pago${deletePreview.paymentsCount !== 1 ? 's' : ''} registrado${deletePreview.paymentsCount !== 1 ? 's' : ''}). ` +
+          `Saldos que cambiarán: ${deletePreview.lines.join(', ')}. ` +
+          (deletePreview.totalInterest > 0
+            ? `También se eliminarán ${formatCurrency(deletePreview.totalInterest)} en ingresos/gastos de interés ya registrados por este préstamo. `
+            : '') +
+          'Esta acción no se puede deshacer.'
+        }
+        confirmLabel="Eliminar definitivamente"
       />
     </>
   )
