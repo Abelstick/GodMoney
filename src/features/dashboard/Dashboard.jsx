@@ -157,20 +157,21 @@ export function Dashboard() {
           <Card.Header>Objetivos en curso</Card.Header>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             {activeGoals.slice(0, 3).map((g) => {
-              const pct = Math.min(Math.round((g.current_amount / g.target_amount) * 100), 100)
+              const amount = g.progressAmount ?? g.current_amount
+              const pct = Math.min(Math.round((amount / g.target_amount) * 100), 100)
               return (
                 <div key={g.id}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 'var(--text-sm)' }}>
                     <span style={{ fontWeight: 600 }}>{g.name}</span>
                     <span style={{ color: 'var(--color-text-muted)' }}>
-                      {formatCurrency(g.current_amount)} / {formatCurrency(g.target_amount)}
+                      {formatCurrency(amount)} / {formatCurrency(g.target_amount)}
                     </span>
                   </div>
                   <ProgressBar
                     percent={pct}
                     color={g.color}
                     leftLabel={`${pct}%`}
-                    rightLabel={formatCurrency(g.target_amount - g.current_amount) + ' restante'}
+                    rightLabel={formatCurrency(g.target_amount - amount) + ' restante'}
                   />
                 </div>
               )

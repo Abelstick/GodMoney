@@ -15,7 +15,10 @@ const TABS = [
 ]
 
 export function Goals() {
-  const { goals, loading, addGoal, updateGoal, addGoalProgress, removeGoal } = useGoals()
+  const {
+    goals, loading, addGoal, updateGoal, addGoalProgress, removeGoal,
+    accounts, goalAccountLinks, linkGoalAccount, unlinkGoalAccount,
+  } = useGoals()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState(null)
   const [saving,    setSaving]    = useState(false)
@@ -74,6 +77,10 @@ export function Goals() {
               onEdit={(g) => { setEditing(g); setModalOpen(true) }}
               onDelete={removeGoal}
               onAddProgress={addGoalProgress}
+              accounts={accounts}
+              goalAccountLinks={goalAccountLinks}
+              onLinkAccount={linkGoalAccount}
+              onUnlinkAccount={unlinkGoalAccount}
             />
           ))}
         </div>
@@ -95,6 +102,7 @@ export function Goals() {
           onSubmit={handleSubmit}
           onCancel={() => { setModalOpen(false); setEditing(null) }}
           loading={saving}
+          isLinked={!!editing?.isAccountLinked}
         />
       </Modal>
     </div>

@@ -16,6 +16,12 @@ export function formatDate(dateStr) {
   return format(date, 'd MMM yyyy', { locale: es })
 }
 
+export function formatDateTime(dateStr) {
+  if (!dateStr) return ''
+  const date = typeof dateStr === 'string' ? parseISO(dateStr) : dateStr
+  return format(date, "d MMM yyyy, HH:mm", { locale: es })
+}
+
 export function formatMonth(dateStr) {
   if (!dateStr) return ''
   const date = typeof dateStr === 'string' ? parseISO(dateStr) : dateStr

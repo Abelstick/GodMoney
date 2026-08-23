@@ -89,3 +89,18 @@ export function getNextInstallment(installments = []) {
     .filter((i) => getEffectiveInstallmentStatus(i) !== INSTALLMENT_STATUS.PAID)
     .sort((a, b) => a.due_date.localeCompare(b.due_date))[0] ?? null
 }
+
+/**
+ * Cuánto cambiaría el saldo de una cuenta si todos sus préstamos ACTIVOS
+ * se liquidaran hoy: lo que te deben (LENT) suma, lo que debes (BORROWED)
+ * resta. Se usa para mostrar el "monto potencial" de un objetivo vinculado
+ * a esa cuenta si te devolvieran/pagaras todo lo pendiente.
+ */
+export function getAccountLoanImpact(accountId, loans = []) {
+  return loans
+    .filter((l) => l.account_id === accountId && l.status === LOAN_STATUS.ACTIVE)
+    .reduce((acc, l) => {
+      const remaining = Number(l.remaining_principal) + Number(l.remaining_interest)
+      return acc + (l.type === LOAN_TYPE.LENT ? remaining : -remaining)
+    }, 0)
+}

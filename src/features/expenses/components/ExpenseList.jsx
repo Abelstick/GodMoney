@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
-import { IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload } from '@tabler/icons-react'
-import { formatCurrency, formatDate } from '@/lib/formatters'
+import { IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown } from '@tabler/icons-react'
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
+import { SORT_OPTIONS, sortTransactions } from '@/lib/transactionSort'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import styles from './ExpenseList.module.css'
@@ -27,6 +28,9 @@ function ExpenseItem({ expense, onEdit, onDelete }) {
           {expense.category && <Badge color={expense.category.color}>{expense.category.name}</Badge>}
           {expense.is_fixed && <Badge color="var(--color-warning)">Fijo</Badge>}
         </div>
+        {expense.created_at && (
+          <div className={styles.registeredAt}>Registrado el {formatDateTime(expense.created_at)}</div>
+        )}
       </div>
       <div className={styles.right}>
         <span className={styles.amount}>-{formatCurrency(expense.amount)}</span>
@@ -43,12 +47,15 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
   const [query,      setQuery]      = useState('')
   const [activeCats, setActiveCats] = useState(new Set())
   const [onlyFixed,  setOnlyFixed]  = useState(false)
-  const [grouped,    setGrouped]    = useState(true)
+  const [grouped,    setGrouped]    = useState(false)
   const [collapsed,  setCollapsed]  = useState(new Set())
   const [page,       setPage]       = useState(1)
+  // Por defecto: orden por fecha de registro, ascendente (lo más reciente al final).
+  const [sortBy,     setSortBy]     = useState('created_at')
+  const [sortDir,    setSortDir]    = useState('asc')
 
   useEffect(() => { setActiveCats(new Set()); setOnlyFixed(false); setCollapsed(new Set()); setPage(1) }, [expenses])
-  useEffect(() => { setPage(1) }, [query, activeCats, onlyFixed, grouped])
+  useEffect(() => { setPage(1) }, [query, activeCats, onlyFixed, grouped, sortBy, sortDir])
 
   // Categorías únicas derivadas de la lista completa
   const categories = useMemo(() => {
@@ -75,10 +82,15 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
     })
   }, [expenses, query, activeCats, onlyFixed])
 
+  const sorted = useMemo(
+    () => sortTransactions(filtered, sortBy, sortDir),
+    [filtered, sortBy, sortDir]
+  )
+
   // Montos agrupados por categoría, recalculados con cada búsqueda/filtro aplicado
   const groups = useMemo(() => {
     const map = new Map()
-    filtered.forEach((e) => {
+    sorted.forEach((e) => {
       const name  = e.category?.name ?? 'Sin categoría'
       const color = e.category?.color ?? '#94a3b8'
       if (!map.has(name)) map.set(name, { name, color, total: 0, count: 0, items: [] })
@@ -88,12 +100,12 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
       g.items.push(e)
     })
     return [...map.values()].sort((a, b) => b.total - a.total)
-  }, [filtered])
+  }, [sorted])
 
   const filteredTotal = useMemo(() => filtered.reduce((a, e) => a + Number(e.amount), 0), [filtered])
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const flatSlice  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
+  const flatSlice  = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const hasActiveFilters = query || activeCats.size > 0 || onlyFixed
 
@@ -182,6 +194,27 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
           )}
         </div>
       )}
+
+      {/* Ordenamiento */}
+      <div className={styles.sortRow}>
+        <span className={styles.sortLabel}>Ordenar por</span>
+        {SORT_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            className={`${styles.chip} ${sortBy === opt.value ? styles.chipActive : ''}`}
+            onClick={() => setSortBy(opt.value)}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <button
+          className={styles.sortDirBtn}
+          onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+          title={sortDir === 'asc' ? 'Ascendente' : 'Descendente'}
+        >
+          {sortDir === 'asc' ? <IconArrowUp size={15} stroke={1.75} /> : <IconArrowDown size={15} stroke={1.75} />}
+        </button>
+      </div>
 
       {/* Lista o vacío */}
       {filtered.length === 0 ? (

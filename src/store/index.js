@@ -7,6 +7,7 @@ import { createGoalSlice }    from './slices/goalSlice'
 import { createBudgetSlice }  from './slices/budgetSlice'
 import { createAccountSlice } from './slices/accountSlice'
 import { createLoanSlice }    from './slices/loanSlice'
+import { createGoalLinkSlice } from './slices/goalLinkSlice'
 
 /*
  * Composición del store con el patrón de slices de Zustand.
@@ -25,6 +26,7 @@ export const useStore = create(
       ...createBudgetSlice(set, get),
       ...createAccountSlice(set, get),
       ...createLoanSlice(set, get),
+      ...createGoalLinkSlice(set, get),
     }),
     { name: 'GodMoney' }
   )
