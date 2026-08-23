@@ -232,7 +232,7 @@ export function LoanDetail({ loan, isOpen, onClose }) {
         onConfirm={handleCancelLoan}
         loading={cancelling}
         title="Cancelar préstamo"
-        description={`¿Cancelar el préstamo con ${loan.person_name}? Esto no revierte los movimientos de cuenta ya realizados, solo marca el préstamo como cancelado.`}
+        description={`¿Cancelar el préstamo con ${loan.person_name}? El saldo pendiente (${formatCurrency(Number(loan.remaining_principal) + Number(loan.remaining_interest))}) quedará en S/ 0 — ya no se contará como deuda ni en "Me deben"/"Yo debo". Esto NO revierte el saldo de la cuenta ni los pagos ya registrados, solo da por saldado lo que faltaba.`}
         confirmLabel="Cancelar préstamo"
       />
     </>

@@ -103,9 +103,18 @@ export const loanService = {
   },
 
   async cancel(id) {
+    // Un préstamo cancelado ya no debe mostrar saldo pendiente en ninguna
+    // parte (tarjetas, detalle, resumen): al cancelar, se da por saldado.
+    // Esto NO revierte el saldo de la cuenta ni los intereses ya cobrados/
+    // pagados — solo dice "ya no espero/debo más de este préstamo".
     const { data, error } = await supabase
       .from('loans')
-      .update({ status: 'CANCELLED', updated_at: new Date().toISOString() })
+      .update({
+        status: 'CANCELLED',
+        remaining_principal: 0,
+        remaining_interest: 0,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id)
       .select('*, account:accounts(id,name,color,icon)')
       .single()
