@@ -9,6 +9,7 @@ import { Loans }       from '@/features/loans/Loans'
 import { Accounts }    from '@/features/accounts/Accounts'
 import { Predictions } from '@/features/predictions/Predictions'
 import { Insights }    from '@/features/insights/Insights'
+import { CreditScore } from '@/features/creditScore/CreditScore'
 import { Categories }  from '@/features/categories/Categories'
 import { Settings }    from '@/features/settings/Settings'
 import { LoginPage }   from '@/features/auth/LoginPage'
@@ -35,6 +36,7 @@ export function AppRoutes() {
         <Route path="cuentas"          element={<Accounts />} />
         <Route path="predicciones"     element={<Predictions />} />
         <Route path="inteligencia"     element={<Insights />} />
+        <Route path="score-crediticio" element={<CreditScore />} />
         <Route path="categorias"       element={<Categories />} />
         <Route path="configuracion"    element={<Settings />} />
         <Route path="*"                element={<Navigate to="/" replace />} />

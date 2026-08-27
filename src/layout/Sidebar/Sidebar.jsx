@@ -6,7 +6,7 @@ import {
   IconMoon, IconSun, IconLogout, IconMenu2, IconX,
   IconCashBanknote, IconShoppingCart, IconFlag,
   IconClipboard, IconTrendingUp, IconTag, IconKey, IconBulb,
-  IconHandGrab, IconWallet,
+  IconHandGrab, IconWallet, IconReportAnalytics,
 } from '@tabler/icons-react'
 import { useMantineColorScheme } from '@mantine/core'
 import { useStore } from '@/store'
@@ -44,8 +44,9 @@ const NAV = [
     icon: IconChartBar,
     label: 'Análisis',
     items: [
-      { to: '/inteligencia', icon: IconBulb,       label: 'Inteligencia'  },
-      { to: '/predicciones', icon: IconTrendingUp, label: 'Predicciones' },
+      { to: '/inteligencia',     icon: IconBulb,             label: 'Inteligencia'   },
+      { to: '/predicciones',     icon: IconTrendingUp,       label: 'Predicciones'   },
+      { to: '/score-crediticio', icon: IconReportAnalytics,  label: 'Score crediticio' },
     ],
   },
   {

@@ -14,6 +14,15 @@
   --color-info:           #3b82f6;
   --color-info-light:     #dbeafe;
 
+  /* ── Semáforo de score crediticio (rojo -> naranja -> dorado -> verde
+       claro -> verde oscuro). Tonos más oscuros/saturados en modo claro
+       para que se lean sobre fondo blanco; más claros en modo oscuro. ── */
+  --credit-score-1: #dc2626;
+  --credit-score-2: #ea580c;
+  --credit-score-3: #ca8a04;
+  --credit-score-4: #16a34a;
+  --credit-score-5: #15803d;
+
   /* ── Superficies ── */
   --color-bg:             #f8fafc;
   --color-surface:        #ffffff;
@@ -108,6 +117,12 @@
   --color-warning-light:  rgba(251, 191, 36, 0.15);
   --color-info:           #60a5fa;
   --color-info-light:     rgba(96, 165, 250, 0.15);
+
+  --credit-score-1: #f87171;
+  --credit-score-2: #fb923c;
+  --credit-score-3: #facc15;
+  --credit-score-4: #4ade80;
+  --credit-score-5: #22c55e;
 
   --color-bg:             #0f172a;
   --color-surface:        #1e293b;

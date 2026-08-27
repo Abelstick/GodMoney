@@ -6,11 +6,12 @@ async function getUserId() {
   return session.user.id
 }
 
-export const accountService = {
+export const creditScoreService = {
   async getAll() {
     const { data, error } = await supabase
-      .from('accounts')
+      .from('credit_scores')
       .select('*')
+      .order('recorded_date', { ascending: true })
       .order('created_at', { ascending: true })
     if (error) throw error
     return data
@@ -19,7 +20,7 @@ export const accountService = {
   async create(payload) {
     const user_id = await getUserId()
     const { data, error } = await supabase
-      .from('accounts')
+      .from('credit_scores')
       .insert({ ...payload, user_id })
       .select()
       .single()
@@ -29,8 +30,8 @@ export const accountService = {
 
   async update(id, payload) {
     const { data, error } = await supabase
-      .from('accounts')
-      .update({ ...payload, updated_at: new Date().toISOString() })
+      .from('credit_scores')
+      .update(payload)
       .eq('id', id)
       .select()
       .single()
@@ -39,21 +40,7 @@ export const accountService = {
   },
 
   async remove(id) {
-    const { error } = await supabase.from('accounts').delete().eq('id', id)
+    const { error } = await supabase.from('credit_scores').delete().eq('id', id)
     if (error) throw error
-  },
-
-  // Depósito/corrección manual del saldo (no ligado a préstamos). Se lee el
-  // saldo actual y se suma el delta en vez de mandar un valor absoluto, para
-  // no pisar cambios recientes (p. ej. un pago de préstamo justo antes).
-  async adjustBalance(id, delta) {
-    const { data: account, error: fetchError } = await supabase
-      .from('accounts')
-      .select('balance')
-      .eq('id', id)
-      .single()
-    if (fetchError) throw fetchError
-
-    return this.update(id, { balance: Number(account.balance) + Number(delta) })
   },
 }

@@ -95,7 +95,10 @@ export function Goals() {
           initial={editing ? {
             name:           editing.name,
             target_amount:  String(editing.target_amount),
-            current_amount: String(editing.current_amount),
+            // Si está vinculado a cuentas, current_amount en BD es un valor
+            // manual desactualizado — se muestra el monto calculado en vivo
+            // (el mismo que ve la tarjeta) para que no diga algo distinto.
+            current_amount: String(editing.isAccountLinked ? editing.progressAmount : editing.current_amount),
             target_date:    editing.target_date ?? '',
             color:          editing.color,
           } : undefined}

@@ -10,7 +10,7 @@ import { AccountForm } from './components/AccountForm'
 import styles from './Accounts.module.css'
 
 export function Accounts() {
-  const { accounts, loading, addAccount, updateAccount, removeAccount } = useAccounts()
+  const { accounts, loading, addAccount, updateAccount, removeAccount, adjustAccountBalance } = useAccounts()
   const [modalOpen,  setModalOpen]  = useState(false)
   const [editing,    setEditing]    = useState(null)
   const [saving,     setSaving]     = useState(false)
@@ -69,6 +69,7 @@ export function Accounts() {
               account={account}
               onEdit={(a) => { setEditing(a); setModalOpen(true) }}
               onDelete={(id) => setDeletingId(id)}
+              onAdjustBalance={adjustAccountBalance}
             />
           ))}
         </div>

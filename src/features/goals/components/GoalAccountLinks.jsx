@@ -7,13 +7,17 @@ import { getAccountHeadroom, getHonoredAmount, computeAccountUsage } from '@/lib
 import styles from './GoalAccountLinks.module.css'
 
 export function GoalAccountLinks({ goal, accounts, allLinks, onLink, onUnlink }) {
-  const [adding, setAdding] = useState(false)
+  const [formMode, setFormMode] = useState(null) // null | 'add' | linkId being edited
   const [accountId, setAccountId] = useState('')
   const [amount, setAmount] = useState('')
 
   const links = allLinks.filter((l) => l.goal_id === goal.id)
   const usage = useMemo(() => computeAccountUsage(allLinks), [allLinks])
   const accountsById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a])), [accounts])
+
+  const editingLink = typeof formMode === 'string' && formMode !== 'add'
+    ? links.find((l) => l.id === formMode)
+    : null
 
   const headroom = accountId ? getAccountHeadroom(accountId, allLinks, accountsById, goal.id) : null
   const overAllocated = headroom !== null && Number(amount) > headroom && headroom >= 0
@@ -24,12 +28,22 @@ export function GoalAccountLinks({ goal, accounts, allLinks, onLink, onUnlink })
     ...availableAccounts.map((a) => ({ value: a.id, label: `${a.name} (${formatCurrency(a.balance)})` })),
   ]
 
-  function handleAdd() {
-    if (!accountId || !amount || Number(amount) <= 0) return
-    onLink(goal.id, accountId, Number(amount))
+  function startAdd() {
     setAccountId('')
     setAmount('')
-    setAdding(false)
+    setFormMode('add')
+  }
+
+  function startEdit(link) {
+    setAccountId(link.account_id)
+    setAmount(String(link.allocated_amount))
+    setFormMode(link.id)
+  }
+
+  function handleSave() {
+    if (!accountId || !amount || Number(amount) <= 0) return
+    onLink(goal.id, accountId, Number(amount))
+    setFormMode(null)
   }
 
   return (
@@ -48,6 +62,7 @@ export function GoalAccountLinks({ goal, accounts, allLinks, onLink, onUnlink })
                     {isShort && <span className={styles.shortTag}> · cuenta con menos saldo del asignado</span>}
                   </span>
                 </div>
+                <button className={styles.editBtn} onClick={() => startEdit(l)}>Editar</button>
                 <button className={styles.unlinkBtn} onClick={() => onUnlink(l.id)}>Quitar</button>
               </div>
             )
@@ -55,11 +70,17 @@ export function GoalAccountLinks({ goal, accounts, allLinks, onLink, onUnlink })
         </div>
       )}
 
-      {adding ? (
+      {formMode ? (
         <div className={styles.addForm}>
-          <Select label="Cuenta" options={accountOptions} value={accountId} onChange={(e) => setAccountId(e.target.value)} />
+          {editingLink ? (
+            <p className={styles.editingHint}>
+              Editando monto asignado a <strong>{accountsById[editingLink.account_id]?.name}</strong>
+            </p>
+          ) : (
+            <Select label="Cuenta" options={accountOptions} value={accountId} onChange={(e) => setAccountId(e.target.value)} />
+          )}
           <Input label="Monto asignado a este objetivo" type="number" min="0" step="0.01" prefix="S/"
-            value={amount} onChange={(e) => setAmount(e.target.value)} />
+            value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus={!!editingLink} />
           {headroom !== null && (
             <p className={styles.headroomHint}>
               Disponible sin comprometer en esta cuenta: {formatCurrency(Math.max(headroom, 0))}
@@ -69,15 +90,15 @@ export function GoalAccountLinks({ goal, accounts, allLinks, onLink, onUnlink })
             <p className={styles.warning}>⚠️ Asignas más de lo disponible en esa cuenta ahora mismo.</p>
           )}
           <div className={styles.addActions}>
-            <Button size="sm" variant="secondary" onClick={() => setAdding(false)}>Cancelar</Button>
-            <Button size="sm" onClick={handleAdd} disabled={!accountId || !amount}>
-              {overAllocated ? 'Vincular de todas formas' : 'Vincular cuenta'}
+            <Button size="sm" variant="secondary" onClick={() => setFormMode(null)}>Cancelar</Button>
+            <Button size="sm" onClick={handleSave} disabled={!accountId || !amount}>
+              {overAllocated ? 'Guardar de todas formas' : editingLink ? 'Guardar monto' : 'Vincular cuenta'}
             </Button>
           </div>
         </div>
       ) : (
         availableAccounts.length > 0 && (
-          <button className={styles.addLinkBtn} onClick={() => setAdding(true)}>+ Vincular cuenta</button>
+          <button className={styles.addLinkBtn} onClick={startAdd}>+ Vincular cuenta</button>
         )
       )}
     </div>

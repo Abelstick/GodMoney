@@ -12,11 +12,20 @@
 .rowAmount { font-size: var(--text-xs); color: var(--color-text-muted); }
 .shortTag { color: var(--color-warning); }
 
+.editBtn {
+  border: none; background: none; color: var(--color-primary);
+  font-size: var(--text-xs); font-weight: var(--weight-medium); cursor: pointer; flex-shrink: 0;
+}
+.editBtn:hover { text-decoration: underline; }
+
 .unlinkBtn {
   border: none; background: none; color: var(--color-danger);
   font-size: var(--text-xs); font-weight: var(--weight-medium); cursor: pointer; flex-shrink: 0;
 }
 .unlinkBtn:hover { text-decoration: underline; }
+
+.editingHint { font-size: var(--text-xs); color: var(--color-text-secondary); }
+.editingHint strong { color: var(--color-text-primary); }
 
 .addLinkBtn {
   align-self: flex-start;

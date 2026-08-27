@@ -8,10 +8,11 @@ export function useAccounts() {
   const addAccount     = useStore((s) => s.addAccount)
   const updateAccount  = useStore((s) => s.updateAccount)
   const removeAccount  = useStore((s) => s.removeAccount)
+  const adjustAccountBalance = useStore((s) => s.adjustAccountBalance)
 
   useEffect(() => {
     fetchAccounts()
   }, [])
 
-  return { accounts, loading, addAccount, updateAccount, removeAccount }
+  return { accounts, loading, addAccount, updateAccount, removeAccount, adjustAccountBalance }
 }

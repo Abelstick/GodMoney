@@ -35,6 +35,13 @@ export const createAccountSlice = (set, get) => ({
     get().showToast('Cuenta eliminada', 'info')
   },
 
+  adjustAccountBalance: async (id, delta) => {
+    const data = await accountService.adjustBalance(id, delta)
+    set((s) => ({ accounts: s.accounts.map((a) => (a.id === id ? data : a)) }))
+    get().showToast(delta >= 0 ? 'Saldo aumentado' : 'Saldo reducido', 'success')
+    return data
+  },
+
   // Usado internamente cuando un préstamo/pago ajusta el saldo de una cuenta,
   // para que la UI refleje el nuevo balance sin tener que refetchar todo.
   patchAccountBalance: (accountId, account) => {

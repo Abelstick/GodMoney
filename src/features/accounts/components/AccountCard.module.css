@@ -30,10 +30,35 @@
 .balance { font-size: var(--text-2xl); font-weight: var(--weight-bold); }
 .negative { color: var(--color-danger); }
 
-.actions { display: flex; gap: var(--space-2); }
-.actions > * { flex: 1; }
+.actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.actions > * { flex: 1; min-width: 90px; }
+
+.adjustRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+}
+
+.adjustInput {
+  flex: 1;
+  min-width: 90px;
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  outline: none;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.adjustInput:focus { border-color: var(--color-primary); }
 
 @media (max-width: 640px) {
   .card { padding: var(--space-4); gap: var(--space-3); }
   .actions > * { min-height: 40px; }
+  .adjustRow > * { flex: 1 1 100%; }
 }
