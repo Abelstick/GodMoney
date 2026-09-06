@@ -8,6 +8,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // injectManifest (en vez de generateSW) para poder tener un service
+      // worker propio (src/sw.js) que además del precache escuche eventos
+      // `push` — necesario para las notificaciones de pagos recurrentes.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+      },
       includeAssets: ['favicon.svg', 'icon-192.svg', 'icon-512.svg'],
       manifest: {
         name: 'GodMoney',
@@ -56,35 +65,8 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        // Cachea todos los assets del build
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Estrategia: cache-first para assets, network-first para API
-        runtimeCaching: [
-          {
-            // Supabase API → network-first (datos frescos cuando hay conexión)
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api',
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5, // 5 minutos
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            // Google Fonts (si se agregan en el futuro)
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-            },
-          },
-        ],
-      },
+      // Con injectManifest, `workbox.runtimeCaching` ya no aplica — esas
+      // rutas se reimplementan a mano en src/sw.js con workbox-routing.
       devOptions: {
         enabled: false, // evita conflictos en desarrollo
       },

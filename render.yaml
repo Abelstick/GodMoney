@@ -8,3 +8,12 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+    envVars:
+      # Se compilan dentro del build (Vite) — configúralas en el dashboard
+      # de Render, no van en este archivo ni en el repo.
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_TELEGRAM_BOT_USERNAME
+        sync: false

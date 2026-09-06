@@ -31,6 +31,7 @@ No intenta ser un sistema contable complejo, sino una **herramienta práctica pa
 | 📊 **Dashboard** | Visualiza gráficos y resumen financiero |
 | 🔍 **Análisis** | Descubre en qué se va tu dinero |
 | 🤖 **Asistente IA** | Consulta tus finanzas con lenguaje natural |
+| 🔔 **Pagos recurrentes** | Registra pagos obligatorios (seguro, internet, servicios) con vencimiento fijo o manual, y recibe recordatorios automáticos en la app, por notificación push y por Telegram antes de que venzan — incluso sin abrir la app |
 
 ---
 
@@ -46,6 +47,16 @@ La idea es evitar navegar por toda la interfaz y obtener **respuestas rápidas**
 
 ---
 
+## 🔔 Alertas de pagos recurrentes
+
+Pensado para pagos que no son automáticos pero sí obligatorios (seguro de vida, internet, servicios): defines si vencen en un **día fijo del mes** o con **fecha manual**, y GodMoney se encarga del resto.
+
+- **Recordatorios multicanal**: alerta dentro de la app, **notificación push** (funciona como PWA instalada en el celular) y **mensaje de Telegram**, con aviso configurable de días de anticipación.
+- **Funciona aunque no abras la app**: un job programado (Supabase Cron) revisa los vencimientos todos los días y dispara los avisos por su cuenta — no depende de que entres a mirar.
+- **Marcar como pagado** con un botón, o vinculando directamente el gasto ya registrado.
+
+---
+
 ## 🛠️ Stack Tecnológico
 
 <div align="center">
@@ -56,8 +67,13 @@ La idea es evitar navegar por toda la interfaz y obtener **respuestas rápidas**
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
 ![Express](https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white)
 ![Recharts](https://img.shields.io/badge/Recharts-FF4B4B?style=flat-square)
+![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=flat-square&logo=pwa&logoColor=white)
+![Deno Edge Functions](https://img.shields.io/badge/Supabase_Edge_Functions-000000?style=flat-square&logo=deno&logoColor=white)
+![Telegram Bot API](https://img.shields.io/badge/Telegram_Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white)
 
 </div>
+
+GodMoney es una **PWA instalable**: funciona offline (cache de assets) y envía notificaciones push reales usando el protocolo Web Push (VAPID), firmadas desde una Edge Function de Supabase — sin backend propio corriendo procesos.
 
 ---
 
@@ -97,6 +113,7 @@ src/
 
 ## 🗺️ Roadmap
 
+- [x] 🔔 Alertas de pagos recurrentes (push + Telegram)
 - [ ] 📈 Mejorar las predicciones financieras
 - [ ] 📄 Exportación de reportes (PDF / Excel)
 - [ ] 🔔 Alertas de gasto por categoría
