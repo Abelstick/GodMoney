@@ -19,4 +19,7 @@
   transition: all var(--transition-fast);
 }
 .tab:hover  { border-color: var(--color-primary); color: var(--color-primary); }
-.tab.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+.tab.active { background: var(--color-primary-dark); border-color: var(--color-primary-dark); color: white; }
+
+/* ── Skeleton de carga inicial ── */
+.cardSkeleton { height: 260px; }

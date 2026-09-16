@@ -16,6 +16,7 @@ import {
 
 const EMPTY = {
   loading: true,
+  error: null,
   projection: null,
   dailyAvailable: null,
   alerts: [],
@@ -28,6 +29,7 @@ const EMPTY = {
 // useMonthFilter — igual que Dashboard.jsx hace para su gráfico histórico.
 export function useInsights() {
   const [data, setData] = useState(EMPTY)
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -36,34 +38,43 @@ export function useInsights() {
     const { from: prevFrom, to: prevTo } = getMonthRange(subMonths(today, 1))
 
     async function load() {
-      const [expenses, incomes, prevExpenses, historicalExpenses, historicalIncomes, budgets] =
-        await Promise.all([
-          expenseService.getByMonth(from, to),
-          incomeService.getByMonth(from, to),
-          expenseService.getByMonth(prevFrom, prevTo),
-          expenseService.getHistorical(MONTHS_HISTORY),
-          incomeService.getHistorical(MONTHS_HISTORY),
-          budgetService.getAll(),
-        ])
+      setData((d) => ({ ...d, loading: true, error: null }))
+      try {
+        const [expenses, incomes, prevExpenses, historicalExpenses, historicalIncomes, budgets] =
+          await Promise.all([
+            expenseService.getByMonth(from, to),
+            incomeService.getByMonth(from, to),
+            expenseService.getByMonth(prevFrom, prevTo),
+            expenseService.getHistorical(MONTHS_HISTORY),
+            incomeService.getHistorical(MONTHS_HISTORY),
+            budgetService.getAll(),
+          ])
 
-      const categoryIds = budgets.map((b) => b.category_id).filter(Boolean)
-      const spentByCategory = await budgetService.getSpentByCategory(categoryIds, from, to)
-      const budgetsWithSpent = buildBudgetsWithSpent(budgets, spentByCategory)
+        const categoryIds = budgets.map((b) => b.category_id).filter(Boolean)
+        const spentByCategory = await budgetService.getSpentByCategory(categoryIds, from, to)
+        const budgetsWithSpent = buildBudgetsWithSpent(budgets, spentByCategory)
 
-      const projection     = getMonthEndProjection({ today, expenses, incomes, historicalExpenses })
-      const dailyAvailable = getDailyAvailable({ today, incomes, expenses, budgetsWithSpent })
-      const alerts         = getSmartAlerts({ today, projection, dailyAvailable, budgetsWithSpent, expenses, historicalExpenses })
-      const recurring       = getRecurringSummary({ expenses, incomes })
-      const autoInsights    = getAutoInsights({ expenses, prevExpenses, historicalExpenses, historicalIncomes })
+        const projection     = getMonthEndProjection({ today, expenses, incomes, historicalExpenses })
+        const dailyAvailable = getDailyAvailable({ today, incomes, expenses, budgetsWithSpent })
+        const alerts         = getSmartAlerts({ today, projection, dailyAvailable, budgetsWithSpent, expenses, historicalExpenses })
+        const recurring       = getRecurringSummary({ expenses, incomes })
+        const autoInsights    = getAutoInsights({ expenses, prevExpenses, historicalExpenses, historicalIncomes })
 
-      if (!cancelled) {
-        setData({ loading: false, projection, dailyAvailable, alerts, recurring, autoInsights })
+        if (!cancelled) {
+          setData({ loading: false, error: null, projection, dailyAvailable, alerts, recurring, autoInsights })
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setData((d) => ({ ...d, loading: false, error: err.message }))
+        }
       }
     }
 
     load()
     return () => { cancelled = true }
-  }, [])
+  }, [reloadToken])
 
-  return data
+  const refetch = () => setReloadToken((t) => t + 1)
+
+  return { ...data, refetch }
 }

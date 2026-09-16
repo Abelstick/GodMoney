@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
-import { IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown } from '@tabler/icons-react'
+import {
+  IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown,
+  IconReceipt2, IconEdit, IconTrash, IconPinned,
+} from '@tabler/icons-react'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { SORT_OPTIONS, sortTransactions } from '@/lib/transactionSort'
@@ -15,9 +18,9 @@ function ExpenseItem({ expense, onEdit, onDelete }) {
     <div className={styles.item}>
       <div
         className={styles.iconWrap}
-        style={{ background: (expense.category?.color ?? '#ef4444') + '20' }}
+        style={{ background: (expense.category?.color ?? '#ef4444') + '26', color: expense.category?.color ?? 'var(--color-danger)' }}
       >
-        💸
+        <IconReceipt2 size={18} stroke={1.75} />
       </div>
       <div className={styles.info}>
         <div className={styles.description}>
@@ -35,8 +38,12 @@ function ExpenseItem({ expense, onEdit, onDelete }) {
       <div className={styles.right}>
         <span className={styles.amount}>-{formatCurrency(expense.amount)}</span>
         <div className={styles.actions}>
-          <button className={styles.actionBtn} onClick={() => onEdit(expense)}>✏️</button>
-          <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(expense.id)}>🗑️</button>
+          <button className={styles.actionBtn} onClick={() => onEdit(expense)} aria-label="Editar gasto">
+            <IconEdit size={15} stroke={1.75} />
+          </button>
+          <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(expense.id)} aria-label="Eliminar gasto">
+            <IconTrash size={15} stroke={1.75} />
+          </button>
         </div>
       </div>
     </div>
@@ -141,7 +148,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
 
   if (!expenses.length) {
     return (
-      <EmptyState icon="💸" title="Sin gastos este mes" description="Registra tu primer gasto del mes" />
+      <EmptyState icon={<IconReceipt2 size={44} stroke={1.5} />} title="Sin gastos este mes" description="Registra tu primer gasto del mes" />
     )
   }
 
@@ -183,7 +190,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
               className={`${styles.chip} ${onlyFixed ? styles.chipActive : ''}`}
               onClick={() => setOnlyFixed((v) => !v)}
             >
-              📌 Fijo
+              <IconPinned size={13} stroke={1.75} /> Fijo
             </button>
           )}
 
@@ -218,7 +225,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
 
       {/* Lista o vacío */}
       {filtered.length === 0 ? (
-        <EmptyState icon="🔍" title="Sin resultados" description="Prueba con otros filtros" />
+        <EmptyState icon={<IconSearch size={44} stroke={1.5} />} title="Sin resultados" description="Prueba con otros filtros" />
       ) : (
         <>
           {/* Resumen del monto agrupado según los filtros activos + controles de vista */}

@@ -39,10 +39,10 @@ export function GoalForm({ initial, onSubmit, onCancel, loading, isLinked = fals
     <form className={styles.form} onSubmit={handleSubmit}>
       <Input label="Nombre del objetivo" value={form.name} onChange={set('name')}
         error={errors.name} required placeholder="Ej: Inicial de casa" />
-      <Input label="Monto objetivo" type="number" min="0" step="0.01" prefix="$"
+      <Input label="Monto objetivo" type="number" min="0" step="0.01" prefix="S/"
         value={form.target_amount} onChange={set('target_amount')}
         error={errors.target_amount} required placeholder="0.00" />
-      <Input label="Monto actual (ahorro acumulado)" type="number" min="0" step="0.01" prefix="$"
+      <Input label="Monto actual (ahorro acumulado)" type="number" min="0" step="0.01" prefix="S/"
         value={form.current_amount} onChange={set('current_amount')} placeholder="0.00"
         disabled={isLinked}
         hint={isLinked ? 'Este objetivo está vinculado a cuentas: el monto se calcula solo' : undefined}

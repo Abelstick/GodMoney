@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { formatCurrency } from '@/lib/formatters'
 import { Select } from '@/components/ui/Select/Select'
 import { Input } from '@/components/ui/Input/Input'
@@ -87,7 +88,10 @@ export function GoalAccountLinks({ goal, accounts, allLinks, onLink, onUnlink })
             </p>
           )}
           {overAllocated && (
-            <p className={styles.warning}>⚠️ Asignas más de lo disponible en esa cuenta ahora mismo.</p>
+            <p className={styles.warning}>
+              <IconAlertTriangle size={14} stroke={1.75} className={styles.warningIcon} />
+              Asignas más de lo disponible en esa cuenta ahora mismo.
+            </p>
           )}
           <div className={styles.addActions}>
             <Button size="sm" variant="secondary" onClick={() => setFormMode(null)}>Cancelar</Button>

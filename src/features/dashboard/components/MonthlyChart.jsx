@@ -2,8 +2,9 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
 } from 'recharts'
-import { CHART_COLORS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/formatters'
+import { EmptyState } from '@/components/common/EmptyState/EmptyState'
+import { IconChartBar } from '@tabler/icons-react'
 import styles from './MonthlyChart.module.css'
 
 function CustomTooltip({ active, payload, label }) {
@@ -28,6 +29,16 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export function MonthlyChart({ data }) {
+  if (!data.length) {
+    return (
+      <EmptyState
+        icon={<IconChartBar size={44} stroke={1.5} />}
+        title="Sin datos suficientes"
+        description="Registra ingresos y gastos para ver tu evolución mensual"
+      />
+    )
+  }
+
   return (
     <div>
       <div className={styles.wrap}>
@@ -48,15 +59,15 @@ export function MonthlyChart({ data }) {
               width={38}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-surface-2)', radius: 4 }} />
-            <Bar dataKey="income"  name="Ingresos" fill={CHART_COLORS.income}  radius={[4,4,0,0]} />
-            <Bar dataKey="expense" name="Gastos"   fill={CHART_COLORS.expense} radius={[4,4,0,0]} />
+            <Bar dataKey="income"  name="Ingresos" fill="var(--color-success)" radius={[4,4,0,0]} />
+            <Bar dataKey="expense" name="Gastos"   fill="var(--color-danger)" radius={[4,4,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
       <div className={styles.legend}>
         {[
-          { color: CHART_COLORS.income,  label: 'Ingresos' },
-          { color: CHART_COLORS.expense, label: 'Gastos' },
+          { color: 'var(--color-success)', label: 'Ingresos' },
+          { color: 'var(--color-danger)',  label: 'Gastos' },
         ].map((l) => (
           <div key={l.label} className={styles.legendItem}>
             <span className={styles.legendDot} style={{ background: l.color }} />

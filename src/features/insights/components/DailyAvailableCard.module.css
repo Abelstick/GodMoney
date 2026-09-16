@@ -1,37 +1,53 @@
 .card {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: white;
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass);
+  padding: var(--space-6) var(--space-5);
   margin-bottom: var(--space-6);
 }
 
-.card.negative {
-  background: linear-gradient(135deg, var(--color-danger), #b91c1c);
-  box-shadow: 0 4px 20px rgba(239,68,68,0.35);
-}
-
 .label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--text-sm);
-  opacity: 0.85;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
   margin-bottom: var(--space-2);
 }
 
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.dotUp   { background: var(--color-success); }
+.dotDown { background: var(--color-danger-soft); }
+
 .amount {
-  font-size: var(--text-3xl);
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 2rem + 1.2vw, 3rem);
   font-weight: var(--weight-bold);
   letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
+
+.positive { color: var(--color-success); }
+.negative { color: var(--color-danger-soft); }
 
 .meta {
   font-size: var(--text-sm);
-  opacity: 0.85;
+  color: var(--color-text-muted);
   margin-top: var(--space-2);
 }
 
 .budgetsRemaining {
   font-size: var(--text-xs);
-  opacity: 0.75;
+  color: var(--color-text-muted);
   margin-top: var(--space-1);
 }

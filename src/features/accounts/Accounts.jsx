@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { IconWallet } from '@tabler/icons-react'
 import { useAccounts } from '@/hooks/useAccounts'
 import { Button }      from '@/components/ui/Button/Button'
 import { Modal }       from '@/components/common/Modal/Modal'
 import { EmptyState }  from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { Skeleton }    from '@/components/common/Skeleton/Skeleton'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { AccountCard } from './components/AccountCard'
 import { AccountForm } from './components/AccountForm'
@@ -53,10 +54,14 @@ export function Accounts() {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.grid}>
+          <Skeleton className={styles.cardSkeleton} />
+          <Skeleton className={styles.cardSkeleton} />
+          <Skeleton className={styles.cardSkeleton} />
+        </div>
       ) : accounts.length === 0 ? (
         <EmptyState
-          icon="💳"
+          icon={<IconWallet size={44} stroke={1.5} />}
           title="Sin cuentas"
           description="Crea al menos una cuenta para poder registrar préstamos y deudas"
           action={<Button onClick={() => setModalOpen(true)}>Crear cuenta</Button>}

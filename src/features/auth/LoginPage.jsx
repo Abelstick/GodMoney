@@ -1,12 +1,76 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  TextInput, PasswordInput, Button, Paper, Title,
-  Text, Anchor, Alert, Stack, Divider, Center,
+  TextInput, PasswordInput, Button, Title,
+  Text, Anchor, Alert, Stack, useMantineColorScheme,
 } from '@mantine/core'
-import { useMantineColorScheme } from '@mantine/core'
+import {
+  IconSun, IconMoon, IconMail, IconLock, IconArrowRight,
+  IconTrendingUp, IconShieldCheck, IconDiamondFilled,
+} from '@tabler/icons-react'
 import { useAuth } from './AuthContext'
 import styles from './LoginPage.module.css'
+
+function ShowcasePanel() {
+  return (
+    <section className={styles.showcase}>
+      <div className={styles.showcaseGlowTop} />
+      <div className={styles.showcaseGlowBottom} />
+
+      <div className={styles.showcaseLogo}>
+        <div className={styles.logoMark}>
+          <IconDiamondFilled size={20} />
+        </div>
+        <div className={styles.logoText}>
+          God<span className={styles.logoAccent}>Money</span>
+        </div>
+      </div>
+
+      <div className={styles.showcaseBody}>
+        <h1 className={styles.showcaseTitle}>
+          Tu <span className={styles.showcaseTitleAccent}>finanzas personales</span>, bajo control real
+        </h1>
+        <p className={styles.showcaseDesc}>
+          Registra ingresos y gastos, organiza todo por categorías, arma presupuestos
+          y objetivos de ahorro, y consulta tus finanzas con un asistente de IA — todo
+          en un solo lugar.
+        </p>
+
+        <div className={styles.previewCard}>
+          <div className={styles.previewTop}>
+            <div>
+              <span className={styles.previewLabel}>Profit del mes</span>
+              <div className={styles.previewAmount}>S/ 1,240.32</div>
+            </div>
+            <div className={styles.previewIcon}>
+              <IconTrendingUp size={20} stroke={1.75} />
+            </div>
+          </div>
+          <div className={styles.previewBars}>
+            {[45, 60, 35, 75, 55, 88, 100].map((h, i) => (
+              <div key={i} className={styles.previewBarWrap}>
+                <div className={styles.previewBar} style={{ height: `${h}%` }} />
+              </div>
+            ))}
+          </div>
+          <div className={styles.previewDays}>
+            <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.showcaseFooter}>
+        <div className={styles.showcaseFooterIcon}>
+          <IconShieldCheck size={16} stroke={1.75} />
+        </div>
+        <div>
+          <span className={styles.showcaseFooterTitle}>Tus datos, protegidos.</span>
+          <span className={styles.showcaseFooterDesc}>Autenticación gestionada con Supabase Auth.</span>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 export function LoginPage() {
   const { signIn, signUp, user, loading: authLoading } = useAuth()
@@ -48,24 +112,25 @@ export function LoginPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.bg} />
+      <ShowcasePanel />
 
-      <button
-        className={styles.themeBtn}
-        onClick={toggleColorScheme}
-        aria-label="Cambiar tema"
-      >
-        {colorScheme === 'dark' ? '☀️' : '🌙'}
-      </button>
+      <section className={styles.formColumn}>
+        <div className={styles.formHeader}>
+          <span className={styles.mobileLogo}>
+            <IconDiamondFilled size={16} />
+            GodMoney
+          </span>
+          <button
+            className={styles.themeBtn}
+            onClick={toggleColorScheme}
+            aria-label="Cambiar tema"
+          >
+            {colorScheme === 'dark' ? <IconSun size={18} stroke={1.75} /> : <IconMoon size={18} stroke={1.75} />}
+          </button>
+        </div>
 
-      <Center className={styles.center}>
-        <div className={styles.formWrap}>
-          <div className={styles.logo}>
-            <span className={styles.logoIcon}>💎</span>
-            <span className={styles.logoText}>GodMoney</span>
-          </div>
-
-          <Paper shadow="md" className={styles.card}>
+        <div className={styles.formCenter}>
+          <div className={styles.formWrap}>
             <Title order={2} className={styles.title}>
               {mode === 'login' ? 'Bienvenido de vuelta' : 'Crear cuenta'}
             </Title>
@@ -75,15 +140,13 @@ export function LoginPage() {
                 : 'Comienza a gestionar tus finanzas'}
             </Text>
 
-            <Divider my="md" />
-
             {error && (
-              <Alert color="red" mb="md" radius="md" variant="light">
+              <Alert color="red" radius="md" variant="light" className={styles.alert}>
                 {error}
               </Alert>
             )}
             {info && (
-              <Alert color="green" mb="md" radius="md" variant="light">
+              <Alert color="green" radius="md" variant="light" className={styles.alert}>
                 {info}
               </Alert>
             )}
@@ -97,7 +160,9 @@ export function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  radius="md"
+                  radius="xl"
+                  leftSection={<IconMail size={16} stroke={1.75} />}
+                  classNames={{ input: styles.input, label: styles.inputLabel }}
                 />
                 <PasswordInput
                   label="Contraseña"
@@ -105,37 +170,40 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  radius="md"
+                  radius="xl"
                   minLength={6}
+                  leftSection={<IconLock size={16} stroke={1.75} />}
+                  classNames={{ input: styles.input, label: styles.inputLabel }}
                 />
                 <Button
                   type="submit"
                   fullWidth
                   loading={loading}
-                  color="violet"
-                  radius="md"
+                  radius="xl"
                   size="md"
+                  className={styles.submitBtn}
+                  rightSection={!loading && <IconArrowRight size={16} stroke={2} />}
                 >
                   {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
                 </Button>
               </Stack>
             </form>
 
-            <Text ta="center" size="sm" mt="lg" c="dimmed">
+            <Text ta="center" size="sm" className={styles.switchMode}>
               {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
               <Anchor
                 component="button"
                 type="button"
-                c="violet"
                 fw={600}
+                className={styles.switchModeLink}
                 onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setInfo('') }}
               >
                 {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
               </Anchor>
             </Text>
-          </Paper>
+          </div>
         </div>
-      </Center>
+      </section>
     </div>
   )
 }

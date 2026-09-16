@@ -25,40 +25,42 @@ export function BottomNav() {
   return (
     <>
       <nav className={styles.nav}>
-        {TABS.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              `${styles.tab} ${isActive ? styles.active : ''}`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span className={styles.iconWrap}>
-                  <Icon size={20} stroke={isActive ? 2 : 1.5} />
-                  {isActive && <span className={styles.activeDot} />}
-                </span>
-                <span className={styles.label}>{label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
+        <div className={styles.pill}>
+          {TABS.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) =>
+                `${styles.tab} ${isActive ? styles.active : ''}`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span className={styles.iconWrap}>
+                    <Icon size={20} stroke={isActive ? 2 : 1.5} />
+                    {isActive && <span className={styles.activeDot} />}
+                  </span>
+                  <span className={styles.label}>{label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
 
-        <button
-          type="button"
-          className={`${styles.tab} ${moreActive ? styles.active : ''}`}
-          onClick={() => setMoreOpen(true)}
-          aria-haspopup="true"
-          aria-expanded={moreOpen}
-        >
-          <span className={styles.iconWrap}>
-            <IconDots size={20} stroke={moreActive ? 2 : 1.5} />
-            {moreActive && <span className={styles.activeDot} />}
-          </span>
-          <span className={styles.label}>Más</span>
-        </button>
+          <button
+            type="button"
+            className={`${styles.tab} ${moreActive ? styles.active : ''}`}
+            onClick={() => setMoreOpen(true)}
+            aria-haspopup="true"
+            aria-expanded={moreOpen}
+          >
+            <span className={styles.iconWrap}>
+              <IconDots size={20} stroke={moreActive ? 2 : 1.5} />
+              {moreActive && <span className={styles.activeDot} />}
+            </span>
+            <span className={styles.label}>Más</span>
+          </button>
+        </div>
       </nav>
 
       <MoreSheet opened={moreOpen} onClose={() => setMoreOpen(false)} />

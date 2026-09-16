@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useMantineColorScheme } from '@mantine/core'
-import { IconMoon, IconSun, IconLogout } from '@tabler/icons-react'
+import { IconMoon, IconSun, IconLogout, IconDiamondFilled } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useAuth }   from '@/features/auth/AuthContext'
+import { useHideOnScroll } from '@/hooks/useHideOnScroll'
 import { Sidebar }   from '../Sidebar/Sidebar'
 import { BottomNav } from '../BottomNav/BottomNav'
+import { QuickAddFab } from '../QuickAddFab/QuickAddFab'
 import { InstallPrompt } from '@/components/ui/InstallPrompt/InstallPrompt'
 import { ChatBot }       from '@/features/chat/ChatBot'
 import styles from './AppShell.module.css'
@@ -18,7 +20,7 @@ function MobileHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.headerLogo}>
-        <span>💎</span>
+        <IconDiamondFilled size={18} />
         <span>GodMoney</span>
       </div>
       <div className={styles.headerActions}>
@@ -48,6 +50,7 @@ export function AppShell() {
   const toast           = useStore((s) => s.toast)
   const clearToast      = useStore((s) => s.clearToast)
   const collapsed       = useStore((s) => s.sidebarCollapsed)
+  const hideFabs        = useHideOnScroll()
 
   useEffect(() => {
     if (!toast) return
@@ -68,8 +71,9 @@ export function AppShell() {
       </div>
 
       <BottomNav />
+      <QuickAddFab hidden={hideFabs} />
       <InstallPrompt />
-      <ChatBot />
+      <ChatBot hidden={hideFabs} />
 
       {toast && (
         <div className={`${styles.toast} ${styles[toast.type] ?? ''}`}>

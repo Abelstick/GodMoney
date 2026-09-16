@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Tabs, Badge, ActionIcon, Group, Text, SimpleGrid } from '@mantine/core'
+import { Tabs, Badge, ActionIcon, Group, SimpleGrid } from '@mantine/core'
+import { IconTag, IconEdit, IconTrash } from '@tabler/icons-react'
 import { categoryService } from '@/services/categoryService'
 import { Card }   from '@/components/ui/Card/Card'
 import { Button } from '@/components/ui/Button/Button'
 import { Modal }  from '@/components/common/Modal/Modal'
-import { EmptyState }     from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { EmptyState }    from '@/components/common/EmptyState/EmptyState'
+import { Skeleton }      from '@/components/common/Skeleton/Skeleton'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { CategoryForm }   from './components/CategoryForm'
 import { useStore }       from '@/store'
 import styles from './Categories.module.css'
@@ -34,7 +36,10 @@ export function Categories() {
   const [activeTab, setActiveTab]   = useState('all')
   const [modalOpen, setModalOpen]   = useState(false)
   const [editing, setEditing]       = useState(null)
-  const [deleting, setDeleting]     = useState(null)
+
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleting, setDeleting]     = useState(false)
+  const deletingCategory = categories.find((c) => c.id === deletingId)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -73,17 +78,18 @@ export function Categories() {
     }
   }
 
-  async function handleDelete(cat) {
-    setSaving(true)
+  async function handleConfirmDelete() {
+    if (!deletingId) return
+    setDeleting(true)
     try {
-      await categoryService.remove(cat.id)
-      setCategories((prev) => prev.filter((c) => c.id !== cat.id))
+      await categoryService.remove(deletingId)
+      setCategories((prev) => prev.filter((c) => c.id !== deletingId))
       showToast('Categoría eliminada', 'success')
+      setDeletingId(null)
     } catch (err) {
       showToast('No se puede eliminar: tiene registros asociados', 'error')
     } finally {
-      setSaving(false)
-      setDeleting(null)
+      setDeleting(false)
     }
   }
 
@@ -129,10 +135,14 @@ export function Categories() {
       </Tabs>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.grid}>
+          <Skeleton className={styles.cardSkeleton} />
+          <Skeleton className={styles.cardSkeleton} />
+          <Skeleton className={styles.cardSkeleton} />
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="🏷️"
+          icon={<IconTag size={44} stroke={1.5} />}
           title="Sin categorías"
           description="Crea tu primera categoría para organizar tus finanzas"
           action={<Button onClick={openNew}>Crear categoría</Button>}
@@ -153,16 +163,16 @@ export function Categories() {
                     onClick={() => openEdit(cat)}
                     title="Editar"
                   >
-                    ✏️
+                    <IconEdit size={15} stroke={1.75} />
                   </ActionIcon>
                   <ActionIcon
                     variant="subtle"
                     color="red"
                     size="sm"
-                    onClick={() => setDeleting(cat)}
+                    onClick={() => setDeletingId(cat.id)}
                     title="Eliminar"
                   >
-                    🗑️
+                    <IconTrash size={15} stroke={1.75} />
                   </ActionIcon>
                 </Group>
               </div>
@@ -201,22 +211,18 @@ export function Categories() {
         />
       </Modal>
 
-      {/* Modal confirmar eliminación */}
-      <Modal
-        isOpen={!!deleting}
-        onClose={() => setDeleting(null)}
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
         title="Eliminar categoría"
-      >
-        <Text size="sm" mb="lg" style={{ color: 'var(--color-text-secondary)' }}>
-          ¿Eliminar <strong>{deleting?.name}</strong>? Los registros que la usen quedarán sin categoría.
-        </Text>
-        <Group justify="flex-end" gap="sm">
-          <Button variant="secondary" onClick={() => setDeleting(null)}>Cancelar</Button>
-          <Button variant="danger" onClick={() => handleDelete(deleting)} disabled={saving}>
-            {saving ? 'Eliminando…' : 'Eliminar'}
-          </Button>
-        </Group>
-      </Modal>
+        description={
+          deletingCategory
+            ? `¿Eliminar la categoría "${deletingCategory.name}"? Los registros que la usen quedarán sin categoría.`
+            : '¿Eliminar esta categoría? Los registros que la usen quedarán sin categoría.'
+        }
+      />
     </div>
   )
 }

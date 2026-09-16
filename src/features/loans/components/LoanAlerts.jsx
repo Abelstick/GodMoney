@@ -1,9 +1,15 @@
 import { useMemo, useState } from 'react'
+import { IconAlertOctagon, IconClockExclamation, IconConfetti, IconBellRinging } from '@tabler/icons-react'
 import { useLoanAlerts } from '@/hooks/useLoanAlerts'
 import { formatDate } from '@/lib/formatters'
 import styles from './LoanAlerts.module.css'
 
-const SEVERITY_ICON = { danger: '🚨', warning: '⏰', success: '🎉', info: '🔔' }
+const SEVERITY_ICON = {
+  danger:  <IconAlertOctagon size={16} stroke={1.75} />,
+  warning: <IconClockExclamation size={16} stroke={1.75} />,
+  success: <IconConfetti size={16} stroke={1.75} />,
+  info:    <IconBellRinging size={16} stroke={1.75} />,
+}
 
 const FILTERS = [
   { value: 'unread', label: 'No leídas' },
@@ -22,7 +28,7 @@ export function LoanAlerts() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
-        <span className={styles.icon}>🔔</span>
+        <IconBellRinging size={16} stroke={1.75} className={styles.icon} />
         <span className={styles.title}>Alertas de préstamos</span>
         <span className={styles.count}>{unreadCount}</span>
         {unreadCount > 0 && (

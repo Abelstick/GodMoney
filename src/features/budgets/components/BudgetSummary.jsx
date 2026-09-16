@@ -86,8 +86,8 @@ export function BudgetSummary({ budgets }) {
                 }}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Límite" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              <Bar dataKey="Gastado" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="Límite" fill="var(--color-primary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="Gastado" fill="var(--color-danger)" radius={[4, 4, 0, 0]} maxBarSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>

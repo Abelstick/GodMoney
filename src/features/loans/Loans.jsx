@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
+import { IconHeartHandshake, IconFileText } from '@tabler/icons-react'
 import { useLoans } from '@/hooks/useLoans'
 import { Button } from '@/components/ui/Button/Button'
 import { Modal } from '@/components/common/Modal/Modal'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { getEffectiveLoanStatus, LOAN_TYPE } from '@/lib/loanStatus'
 import { LoanSummary } from './components/LoanSummary'
 import { LoanAlerts } from './components/LoanAlerts'
@@ -126,10 +127,18 @@ export function Loans() {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.skeletonWrap}>
+          <Skeleton className={styles.summarySkeleton} />
+          <Skeleton className={styles.alertsSkeleton} />
+          <div className={styles.grid}>
+            <Skeleton className={styles.cardSkeleton} />
+            <Skeleton className={styles.cardSkeleton} />
+            <Skeleton className={styles.cardSkeleton} />
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={tab === LOAN_TYPE.LENT ? '🤝' : '📄'}
+          icon={tab === LOAN_TYPE.LENT ? <IconHeartHandshake size={44} stroke={1.5} /> : <IconFileText size={44} stroke={1.5} />}
           title={tab === LOAN_TYPE.LENT ? 'Nadie te debe todavía' : 'No tienes préstamos pendientes'}
           description="Registra un préstamo para empezar a hacer seguimiento"
           action={<Button onClick={() => setCreateOpen(true)}>Crear préstamo</Button>}

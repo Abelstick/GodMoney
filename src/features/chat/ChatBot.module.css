@@ -1,7 +1,8 @@
 /* ── Floating action button ── */
 .fab {
   position: fixed;
-  bottom: calc(var(--nav-height) + var(--space-4));
+  /* En mobile se apila arriba del QuickAddFab (mismo lado derecho) */
+  bottom: calc(var(--nav-height) + var(--space-4) + 52px + var(--space-3));
   right: var(--space-4);
   width: 52px;
   height: 52px;
@@ -15,12 +16,18 @@
   justify-content: center;
   box-shadow: 0 4px 20px color-mix(in srgb, var(--color-primary) 45%, transparent);
   z-index: calc(var(--z-modal) - 1);
-  transition: transform 150ms ease, background 150ms ease;
+  transition: transform 200ms ease, background 150ms ease, opacity 200ms ease;
 }
 
 .fab:hover {
   transform: scale(1.08);
   background: var(--color-primary-dark);
+}
+
+.fabHidden {
+  transform: translateY(150%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 @media (min-width: 768px) {

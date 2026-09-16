@@ -17,9 +17,11 @@
 .errorText { color: var(--color-danger); font-size: var(--text-xs); }
 
 .overpayWarning {
-  font-size: var(--text-xs); color: #b45309; background: #f59e0b12;
-  border: 1px solid #f59e0b44; padding: var(--space-3); border-radius: var(--radius-md);
+  display: flex; align-items: flex-start; gap: var(--space-2);
+  font-size: var(--text-xs); color: var(--color-warning); background: var(--color-warning-light);
+  border: 1px solid var(--color-warning); padding: var(--space-3); border-radius: var(--radius-md);
 }
+.overpayWarning svg { flex-shrink: 0; margin-top: 1px; }
 
 .actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 

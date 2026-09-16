@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconGauge, IconCalendar, IconFolders } from '@tabler/icons-react'
 import { useCreditScore } from '@/hooks/useCreditScore'
 import { Button } from '@/components/ui/Button/Button'
 import { Card } from '@/components/ui/Card/Card'
@@ -6,7 +7,7 @@ import { StatCard } from '@/components/ui/StatCard/StatCard'
 import { Badge } from '@/components/ui/Badge/Badge'
 import { Modal } from '@/components/common/Modal/Modal'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { formatDate } from '@/lib/formatters'
 import { getCreditScoreCategory, CREDIT_SCORE_RANGES } from '@/lib/creditScoreStatus'
@@ -61,10 +62,18 @@ export function CreditScore() {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.skeletonWrap}>
+          <Skeleton className={styles.heroSkeleton} />
+          <div className={styles.statsGrid}>
+            <Skeleton className={styles.statSkeleton} />
+            <Skeleton className={styles.statSkeleton} />
+          </div>
+          <Skeleton className={styles.chartSkeleton} />
+          <Skeleton className={styles.listSkeleton} />
+        </div>
       ) : creditScores.length === 0 ? (
         <EmptyState
-          icon="📊"
+          icon={<IconGauge size={44} stroke={1.5} />}
           title="Sin registros de score"
           description="Agrega tu primera lectura para empezar a ver tu evolución"
           action={<Button onClick={() => setModalOpen(true)}>Registrar score</Button>}
@@ -99,14 +108,14 @@ export function CreditScore() {
             <StatCard
               label="Última actualización"
               amount={formatDate(latest.recorded_date)}
-              icon="📅"
-              iconBg="rgba(245,158,11,0.12)"
+              icon={<IconCalendar size={20} stroke={1.75} />}
+              iconBg="var(--color-warning-light)"
             />
             <StatCard
               label="Lecturas registradas"
               amount={creditScores.length}
-              icon="🗂️"
-              iconBg="rgba(16,185,129,0.12)"
+              icon={<IconFolders size={20} stroke={1.75} />}
+              iconBg="var(--color-success-light)"
             />
           </div>
 

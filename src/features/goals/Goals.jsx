@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { IconTarget } from '@tabler/icons-react'
 import { useGoals }    from '@/hooks/useGoals'
 import { Button }      from '@/components/ui/Button/Button'
 import { Modal }       from '@/components/common/Modal/Modal'
 import { EmptyState }  from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { Skeleton }    from '@/components/common/Skeleton/Skeleton'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { GoalCard }    from './components/GoalCard'
 import { GoalForm }    from './components/GoalForm'
 import styles from './Goals.module.css'
@@ -24,6 +26,10 @@ export function Goals() {
   const [saving,    setSaving]    = useState(false)
   const [tab,       setTab]       = useState('active')
 
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleting,   setDeleting]   = useState(false)
+  const deletingGoal = goals.find((g) => g.id === deletingId)
+
   async function handleSubmit(payload) {
     setSaving(true)
     try {
@@ -33,6 +39,17 @@ export function Goals() {
       setEditing(null)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingId) return
+    setDeleting(true)
+    try {
+      await removeGoal(deletingId)
+      setDeletingId(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -58,10 +75,14 @@ export function Goals() {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.grid}>
+          <Skeleton className={styles.cardSkeleton} />
+          <Skeleton className={styles.cardSkeleton} />
+          <Skeleton className={styles.cardSkeleton} />
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="🎯"
+          icon={<IconTarget size={44} stroke={1.5} />}
           title={`Sin objetivos ${tab === 'active' ? 'activos' : tab === 'completed' ? 'completados' : 'pausados'}`}
           description={tab === 'active' ? 'Crea un objetivo para empezar a ahorrar' : ''}
           action={tab === 'active' && (
@@ -75,7 +96,7 @@ export function Goals() {
               key={goal.id}
               goal={goal}
               onEdit={(g) => { setEditing(g); setModalOpen(true) }}
-              onDelete={removeGoal}
+              onDelete={(id) => setDeletingId(id)}
               onAddProgress={addGoalProgress}
               accounts={accounts}
               goalAccountLinks={goalAccountLinks}
@@ -85,6 +106,19 @@ export function Goals() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+        title="Eliminar objetivo"
+        description={
+          deletingGoal
+            ? `¿Eliminar el objetivo "${deletingGoal.name}"? Esta acción no se puede deshacer.`
+            : '¿Eliminar este objetivo? Esta acción no se puede deshacer.'
+        }
+      />
 
       <Modal
         isOpen={modalOpen}

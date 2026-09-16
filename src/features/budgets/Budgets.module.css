@@ -47,3 +47,9 @@
 @media print {
   .headerActions { display: none; }
 }
+
+/* ── Skeleton de carga inicial ── */
+.skeletonWrap { display: flex; flex-direction: column; gap: var(--space-5); }
+.summarySkeleton { height: 280px; }
+.alertsSkeleton  { height: 140px; }
+.cardSkeleton    { height: 260px; }

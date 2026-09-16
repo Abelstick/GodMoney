@@ -1,14 +1,18 @@
 :root {
-  /* ── Colores de marca ── */
+  /* ── Colores de marca (Deep Glassmorphism — ver DESIGN.md) ── */
   --color-primary:        #6366f1;
-  --color-primary-light:  #818cf8;
+  --color-primary-light:  #8083ff;
   --color-primary-dark:   #4f46e5;
   --color-primary-alpha:  rgba(99, 102, 241, 0.12);
 
   --color-success:        #10b981;
   --color-success-light:  #d1fae5;
-  --color-danger:         #ef4444;
-  --color-danger-light:   #fee2e2;
+  /* Coral Rose: salidas de capital Y acciones destructivas (DESIGN.md unifica
+     ambos significados bajo un solo acento — sustituye al rojo genérico previo) */
+  --color-danger:         #f43f5e;
+  --color-danger-soft:    #f43f5e;
+  --color-danger-soft-light: #ffe4e6;
+  --color-danger-light:   #ffe4e6;
   --color-warning:        #f59e0b;
   --color-warning-light:  #fef3c7;
   --color-info:           #3b82f6;
@@ -23,13 +27,23 @@
   --credit-score-4: #16a34a;
   --credit-score-5: #15803d;
 
-  /* ── Superficies ── */
-  --color-bg:             #f8fafc;
+  /* ── Superficies: "light glass" derivado del sistema dark de DESIGN.md
+       (el documento solo define modo oscuro; este es el equivalente claro) ── */
+  --color-bg:             #f5f6fb;
   --color-surface:        #ffffff;
-  --color-surface-2:      #f1f5f9;
-  --color-surface-3:      #e2e8f0;
-  --color-border:         #e2e8f0;
-  --color-border-strong:  #cbd5e1;
+  --color-surface-2:      #f1f1f8;
+  --color-surface-3:      #e4e4f0;
+  --color-surface-4:      #d7d7e6;
+  --color-border:         rgba(15, 23, 42, 0.08);
+  --color-border-strong:  rgba(15, 23, 42, 0.16);
+
+  /* ── Glass (light) ── */
+  --surface-glass:       rgba(255, 255, 255, 0.72);
+  --surface-glass-blur:  20px;
+  --shadow-glass:        0 8px 24px -8px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --glow-primary:        0 8px 20px -4px rgba(99, 102, 241, 0.28);
+  --glow-success:        0 8px 28px -8px rgba(16, 185, 129, 0.18);
+  --glow-danger:         0 8px 28px -8px rgba(244, 63, 94, 0.18);
 
   /* ── Texto ── */
   --color-text-primary:   #0f172a;
@@ -52,8 +66,9 @@
   --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
   --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
 
-  /* ── Tipografía ── */
-  --font-sans:    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* ── Tipografía: Plus Jakarta Sans (display/cifras) + Inter (texto) ── */
+  --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Plus Jakarta Sans', var(--font-sans);
   --font-mono:    'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
   --text-xs:    0.75rem;
@@ -102,19 +117,27 @@
   --z-header:     50;
 }
 
-/* ── Modo oscuro ── */
+/* ── Modo oscuro: "Deep Glassmorphism" (DESIGN.md) ──
+   El primary usa el tono claro-lavanda del theme M3 adjunto (roles
+   "primary"/"primary-container" del YAML), que es más fiel a las capturas
+   de referencia que el índigo saturado genérico de la sección de prosa. ── */
 [data-mantine-color-scheme="dark"] {
-  --color-primary:        #818cf8;
-  --color-primary-light:  #a5b4fc;
+  --color-primary:        #8183ff;
+  --color-primary-light:  #c0c1ff;
   --color-primary-dark:   #6366f1;
-  --color-primary-alpha:  rgba(129, 140, 248, 0.15);
+  --color-primary-alpha:  rgba(129, 131, 255, 0.20);
 
-  --color-success:        #34d399;
-  --color-success-light:  rgba(52, 211, 153, 0.15);
-  --color-danger:         #f87171;
-  --color-danger-light:   rgba(248, 113, 113, 0.15);
-  --color-warning:        #fbbf24;
-  --color-warning-light:  rgba(251, 191, 36, 0.15);
+  /* success/danger tomados del mockup real (roles M3 "secondary"/"tertiary"),
+     no de la prosa del DESIGN.md — son más claros/luminosos, por eso se ven
+     bien incluso con fondos de baja opacidad sobre el canvas casi negro */
+  --color-success:        #4edea3;
+  --color-success-light:  rgba(78, 222, 163, 0.15);
+  --color-danger:         #ff516a;
+  --color-danger-soft:    #ffb2b7;
+  --color-danger-soft-light: rgba(255, 178, 183, 0.12);
+  --color-danger-light:   rgba(255, 81, 106, 0.20);
+  --color-warning:        #f59e0b;
+  --color-warning-light:  rgba(245, 158, 11, 0.12);
   --color-info:           #60a5fa;
   --color-info-light:     rgba(96, 165, 250, 0.15);
 
@@ -124,14 +147,25 @@
   --credit-score-4: #4ade80;
   --credit-score-5: #22c55e;
 
-  --color-bg:             #0f172a;
-  --color-surface:        #1e293b;
-  --color-surface-2:      #334155;
-  --color-surface-3:      #475569;
-  --color-border:         #2d3f55;
-  --color-border-strong:  #475569;
+  /* Canvas obsidiana + superficies elevadas (valores exactos del theme:
+     surface-container-lowest/low/DEFAULT/high/highest) */
+  --color-bg:             #0a0e18;
+  --color-surface:        #171b26;
+  --color-surface-2:      #1c1f2a;
+  --color-surface-3:      #262a35;
+  --color-surface-4:      #313540;
+  --color-border:         rgba(255, 255, 255, 0.08);
+  --color-border-strong:  rgba(255, 255, 255, 0.16);
 
-  --color-text-primary:   #f1f5f9;
+  /* Glass */
+  --surface-glass:       rgba(17, 24, 39, 0.7);
+  --surface-glass-blur:  24px;
+  --shadow-glass:        0 12px 32px -8px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.08);
+  --glow-primary:        0 8px 24px -4px rgba(129, 131, 255, 0.45);
+  --glow-success:        0 8px 32px -8px rgba(78, 222, 163, 0.18);
+  --glow-danger:         0 8px 32px -8px rgba(255, 81, 106, 0.18);
+
+  --color-text-primary:   #f8fafc;
   --color-text-secondary: #94a3b8;
   --color-text-muted:     #64748b;
   --color-text-inverse:   #0f172a;

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconWallet, IconX } from '@tabler/icons-react'
 import { formatCurrency } from '@/lib/formatters'
 import { Button } from '@/components/ui/Button/Button'
 import styles from './AccountCard.module.css'
@@ -19,7 +20,9 @@ export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
   return (
     <div className={styles.card} style={{ '--account-color': account.color }}>
       <div className={styles.top}>
-        <div className={styles.iconWrap} style={{ background: account.color + '20' }}>💳</div>
+        <div className={styles.iconWrap} style={{ background: account.color + '20', color: account.color }}>
+          <IconWallet size={20} stroke={1.75} />
+        </div>
         <div className={styles.name}>{account.name}</div>
       </div>
 
@@ -41,7 +44,9 @@ export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
           />
           <Button size="sm" variant="success" onClick={() => handleAdjust(1)}>+ Depositar</Button>
           <Button size="sm" variant="danger" onClick={() => handleAdjust(-1)}>− Retirar</Button>
-          <Button size="sm" variant="ghost" onClick={() => setAdjusting(false)}>✕</Button>
+          <Button size="sm" variant="ghost" onClick={() => setAdjusting(false)}>
+            <IconX size={15} stroke={1.75} />
+          </Button>
         </div>
       ) : (
         <div className={styles.actions}>

@@ -1,4 +1,5 @@
 import { getDaysInMonth } from 'date-fns'
+import { IconAlertTriangle, IconTrendingUp } from '@tabler/icons-react'
 import { formatCurrency } from '@/lib/formatters'
 import { BUDGET_STATUS, BUDGET_STATUS_META } from '@/lib/budgetStatus'
 import { ProgressBar } from '@/components/ui/ProgressBar/ProgressBar'
@@ -76,7 +77,9 @@ export function BudgetCard({ budget, onEdit, onDelete, isCurrentMonth }) {
 
       {projected !== null && (
         <div className={`${styles.prediction} ${projectedOver ? styles.predictionOver : styles.predictionOk}`}>
-          <span className={styles.predictionIcon}>{projectedOver ? '⚠️' : '📈'}</span>
+          <span className={styles.predictionIcon}>
+            {projectedOver ? <IconAlertTriangle size={15} stroke={1.75} /> : <IconTrendingUp size={15} stroke={1.75} />}
+          </span>
           <span className={styles.predictionText}>
             Proyección fin de mes:{' '}
             <strong>{formatCurrency(projected)}</strong>

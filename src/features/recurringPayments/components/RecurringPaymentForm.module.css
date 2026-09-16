@@ -12,6 +12,7 @@
 }
 .scheduleBtn:hover { border-color: var(--color-primary); }
 .scheduleActive { border-color: var(--color-primary); background: var(--color-primary-alpha); }
+.scheduleLabel { display: inline-flex; align-items: center; gap: 6px; }
 .scheduleHint { font-size: var(--text-xs); font-weight: var(--weight-normal); color: var(--color-text-muted); }
 
 .actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }

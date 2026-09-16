@@ -1,9 +1,11 @@
 .wrapper {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-glass);
   margin-bottom: var(--space-5);
 }
 
@@ -15,7 +17,7 @@
   flex-wrap: wrap;
 }
 
-.icon { font-size: 16px; line-height: 1; }
+.icon { color: var(--color-warning); flex-shrink: 0; }
 
 .title {
   font-size: var(--text-sm);
@@ -58,7 +60,7 @@
   transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 }
 .filterChip:hover { border-color: var(--color-border-strong); color: var(--color-text-primary); }
-.filterChipActive { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.filterChipActive { background: var(--color-primary-dark); border-color: var(--color-primary-dark); color: #fff; }
 
 .empty {
   padding: var(--space-4);
@@ -78,13 +80,13 @@
   border-left: 3px solid transparent;
 }
 
-.warning { background: #f59e0b12; border-left-color: #f59e0b; }
-.danger  { background: #ef444412; border-left-color: var(--color-danger); }
-.success { background: #10b98112; border-left-color: var(--color-success); }
-.info    { background: #3b82f612; border-left-color: var(--color-info); }
+.warning { background: var(--color-warning-light); border-left-color: var(--color-warning); }
+.danger  { background: var(--color-danger-light);  border-left-color: var(--color-danger); }
+.success { background: var(--color-success-light); border-left-color: var(--color-success); }
+.info    { background: var(--color-info-light);    border-left-color: var(--color-info); }
 .read    { opacity: 0.55; }
 
-.alertDot { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.alertDot { flex-shrink: 0; display: flex; align-items: center; }
 
 .alertBody { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .alertMsg  { font-size: var(--text-sm); color: var(--color-text-primary); }

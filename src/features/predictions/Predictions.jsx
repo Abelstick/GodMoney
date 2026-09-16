@@ -1,10 +1,14 @@
+import {
+  IconCoin, IconCreditCard, IconTrendingUp, IconTrendingDown, IconPigMoney,
+  IconCircleCheck, IconAlertTriangle, IconInfoCircle,
+} from '@tabler/icons-react'
 import { usePredictions } from '@/hooks/usePredictions'
 import { formatCurrency }  from '@/lib/formatters'
 import { getPredictionConfidence, PREDICTION_CONFIDENCE_META } from './utils/predictionAlgorithms'
 import { Card }            from '@/components/ui/Card/Card'
 import { StatCard }        from '@/components/ui/StatCard/StatCard'
 import { Badge }           from '@/components/ui/Badge/Badge'
-import { LoadingSpinner }  from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { Skeleton }        from '@/components/common/Skeleton/Skeleton'
 import { PredictionChart } from './components/PredictionChart'
 import styles from './Predictions.module.css'
 
@@ -20,9 +24,27 @@ function subtitleText(noData, monthsOfData) {
 }
 
 function GoalEta({ goal }) {
-  if (goal.status === 'completed') return <span className={styles.goalCompleted}>✓ Completado</span>
-  if (!Number.isFinite(goal.monthsLeft)) return <span className={styles.goalNoSaving}>Sin ahorro positivo</span>
-  if (goal.monthsLeft === 0) return <span className={styles.goalCompleted}>¡Listo!</span>
+  if (goal.status === 'completed') {
+    return (
+      <span className={styles.goalCompleted}>
+        <IconCircleCheck size={15} stroke={1.75} /> Completado
+      </span>
+    )
+  }
+  if (!Number.isFinite(goal.monthsLeft)) {
+    return (
+      <span className={styles.goalNoSaving}>
+        <IconAlertTriangle size={14} stroke={1.75} /> Sin ahorro positivo
+      </span>
+    )
+  }
+  if (goal.monthsLeft === 0) {
+    return (
+      <span className={styles.goalCompleted}>
+        <IconCircleCheck size={15} stroke={1.75} /> ¡Listo!
+      </span>
+    )
+  }
   return (
     <>
       Faltan{' '}
@@ -48,7 +70,25 @@ export function Predictions() {
     goalsProjection,
   } = usePredictions()
 
-  if (loading) return <LoadingSpinner />
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.header}>
+          <div>
+            <h1 className={styles.title}>Predicciones financieras</h1>
+            <p className={styles.subtitle}>{subtitleText(true, 0)}</p>
+          </div>
+        </div>
+        <div className={styles.statsGrid}>
+          <Skeleton className={styles.statSkeleton} />
+          <Skeleton className={styles.statSkeleton} />
+          <Skeleton className={styles.statSkeleton} />
+          <Skeleton className={styles.statSkeleton} />
+        </div>
+        <Skeleton className={styles.chartSkeleton} />
+      </div>
+    )
+  }
 
   const noData = chartData.length === 0
   const confidence = getPredictionConfidence(monthsOfData)
@@ -66,13 +106,15 @@ export function Predictions() {
 
       {noData ? (
         <div className={styles.infoBox}>
-          Necesitas al menos 1 mes de datos para ver predicciones. Registra ingresos y gastos para comenzar.
+          <IconInfoCircle size={18} stroke={1.75} className={styles.infoIcon} />
+          <span>Necesitas al menos 1 mes de datos para ver predicciones. Registra ingresos y gastos para comenzar.</span>
         </div>
       ) : (
         <>
           {confidence === 'low' && (
             <div className={styles.warnBox}>
-              Con pocos meses de historial estas proyecciones son menos precisas. Ganarán exactitud a medida que registres más meses.
+              <IconAlertTriangle size={18} stroke={1.75} className={styles.warnIcon} />
+              <span>Con pocos meses de historial estas proyecciones son menos precisas. Ganarán exactitud a medida que registres más meses.</span>
             </div>
           )}
 
@@ -81,30 +123,32 @@ export function Predictions() {
             <StatCard
               label="Ingreso estimado (próx. mes)"
               amount={formatCurrency(projectedIncome)}
-              icon="💰"
-              iconBg="rgba(16,185,129,0.12)"
+              icon={<IconCoin size={20} stroke={1.75} />}
+              iconBg="var(--color-success-light)"
               {...trendProps(incomeTrend)}
             />
             <StatCard
               label="Gasto estimado (próx. mes)"
               amount={formatCurrency(projectedExpense)}
-              icon="💸"
-              iconBg="rgba(239,68,68,0.12)"
+              icon={<IconCreditCard size={20} stroke={1.75} />}
+              iconBg="var(--color-danger-light)"
               invertTrendColor
               {...trendProps(expenseTrend)}
             />
             <StatCard
               label="Ahorro estimado (próx. mes)"
               amount={formatCurrency(projectedProfit)}
-              icon={projectedProfit >= 0 ? '📈' : '📉'}
-              iconBg={projectedProfit >= 0 ? 'rgba(99,102,241,0.12)' : 'rgba(239,68,68,0.12)'}
+              icon={projectedProfit >= 0
+                ? <IconTrendingUp size={20} stroke={1.75} />
+                : <IconTrendingDown size={20} stroke={1.75} />}
+              iconBg={projectedProfit >= 0 ? 'var(--color-primary-alpha)' : 'var(--color-danger-light)'}
               {...trendProps(profitTrend)}
             />
             <StatCard
               label="Ahorro mensual promedio"
               amount={formatCurrency(avgMonthlySaving)}
-              icon="💎"
-              iconBg="rgba(245,158,11,0.12)"
+              icon={<IconPigMoney size={20} stroke={1.75} />}
+              iconBg="var(--color-warning-light)"
             />
           </div>
 

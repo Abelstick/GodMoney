@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
+import { IconTransferIn, IconTransferOut, IconAlertTriangle } from '@tabler/icons-react'
 import { Input } from '@/components/ui/Input/Input'
 import { Select } from '@/components/ui/Select/Select'
 import { Button } from '@/components/ui/Button/Button'
@@ -120,7 +121,7 @@ export function LoanForm({ onSubmit, onCancel, loading, existingLoans = [] }) {
           className={`${styles.typeBtn} ${form.type === LOAN_TYPE.BORROWED ? styles.typeActive : ''}`}
           onClick={() => setForm((f) => ({ ...f, type: LOAN_TYPE.BORROWED }))}
         >
-          <span className={styles.typeIcon}>📥</span>
+          <span className={styles.typeIcon}><IconTransferIn size={22} stroke={1.75} /></span>
           <span>Me prestaron</span>
           <span className={styles.typeHint}>Recibo dinero, debo devolverlo</span>
         </button>
@@ -129,7 +130,7 @@ export function LoanForm({ onSubmit, onCancel, loading, existingLoans = [] }) {
           className={`${styles.typeBtn} ${form.type === LOAN_TYPE.LENT ? styles.typeActive : ''}`}
           onClick={() => setForm((f) => ({ ...f, type: LOAN_TYPE.LENT }))}
         >
-          <span className={styles.typeIcon}>📤</span>
+          <span className={styles.typeIcon}><IconTransferOut size={22} stroke={1.75} /></span>
           <span>Yo presté</span>
           <span className={styles.typeHint}>Entrego dinero, deben devolvérmelo</span>
         </button>
@@ -187,7 +188,8 @@ export function LoanForm({ onSubmit, onCancel, loading, existingLoans = [] }) {
 
       {duplicate && (
         <div className={styles.duplicateWarning}>
-          ⚠️ Ya existe un préstamo activo con {duplicate.person_name} por {formatCurrency(duplicate.principal_amount)}. Si continúas, se creará un préstamo adicional.
+          <IconAlertTriangle size={15} stroke={1.75} />
+          <span>Ya existe un préstamo activo con {duplicate.person_name} por {formatCurrency(duplicate.principal_amount)}. Si continúas, se creará un préstamo adicional.</span>
         </div>
       )}
 

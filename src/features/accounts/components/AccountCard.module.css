@@ -1,9 +1,11 @@
 .card {
-  background: var(--color-surface);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-glass);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -23,11 +25,16 @@
 .iconWrap {
   width: 40px; height: 40px; border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem; flex-shrink: 0;
+  flex-shrink: 0;
 }
 .name { font-size: var(--text-base); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
 
-.balance { font-size: var(--text-2xl); font-weight: var(--weight-bold); }
+.balance {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
 .negative { color: var(--color-danger); }
 
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

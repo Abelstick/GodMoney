@@ -33,12 +33,12 @@
 }
 
 .info    { background: var(--color-primary-alpha); border-left-color: var(--color-primary); }
-.warning { background: #f59e0b12; border-left-color: #f59e0b; }
-.danger  { background: #ef444412; border-left-color: var(--color-danger); }
+.warning { background: var(--color-warning-light); border-left-color: var(--color-warning); }
+.danger  { background: var(--color-danger-light); border-left-color: var(--color-danger); }
 
-.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot { width: 8px; height: 8px; border-radius: var(--radius-full); flex-shrink: 0; }
 .info    .dot { background: var(--color-primary); }
-.warning .dot { background: #f59e0b; }
+.warning .dot { background: var(--color-warning); }
 .danger  .dot { background: var(--color-danger); }
 
 .message { font-size: var(--text-sm); color: var(--color-text-secondary); }

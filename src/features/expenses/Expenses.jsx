@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
+import { IconReceipt2, IconPinned, IconListNumbers } from '@tabler/icons-react'
 import { useExpenses }    from '@/hooks/useExpenses'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
 import { formatCurrency, formatMonth, getPastMonths } from '@/lib/formatters'
@@ -8,7 +9,8 @@ import { Card }     from '@/components/ui/Card/Card'
 import { Button }   from '@/components/ui/Button/Button'
 import { StatCard } from '@/components/ui/StatCard/StatCard'
 import { Modal }    from '@/components/common/Modal/Modal'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
+import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import styles from './Expenses.module.css'
@@ -61,11 +63,22 @@ function PieTooltipContent({ active, payload }) {
 export function Expenses() {
   const { activeMonth, setActiveMonth } = useMonthFilter()
   const months = useMemo(() => getPastMonths(6), [])
-  const { expenses, loading, totalExpense, addExpense, updateExpense, removeExpense } = useExpenses()
+  const {
+    expenses, loading, error, totalExpense,
+    addExpense, updateExpense, removeExpense, refetch,
+  } = useExpenses()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState(null)
   const [saving,    setSaving]    = useState(false)
+
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleting,   setDeleting]   = useState(false)
+  const deletingExpense = expenses.find((e) => e.id === deletingId)
+
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+  useMemo(() => { if (!loading) setHasLoadedOnce(true) }, [loading])
+  const showSkeleton = loading && !hasLoadedOnce
 
   async function handleSubmit(payload) {
     setSaving(true)
@@ -76,6 +89,17 @@ export function Expenses() {
       setEditing(null)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingId) return
+    setDeleting(true)
+    try {
+      await removeExpense(deletingId)
+      setDeletingId(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -111,67 +135,92 @@ export function Expenses() {
         ))}
       </div>
 
-      {/* Stats */}
-      <div className={styles.summary}>
-        <StatCard label="Total gastos"  amount={formatCurrency(totalExpense)} icon="💸" iconBg="rgba(239,68,68,0.12)" />
-        <StatCard label="Gastos fijos"  amount={formatCurrency(fixedTotal)}   icon="📌" iconBg="rgba(245,158,11,0.12)" />
-        <StatCard label="Transacciones" amount={expenses.length}              icon="🔢" iconBg="rgba(99,102,241,0.12)" />
-      </div>
+      {/* Error de carga */}
+      {error && (
+        <div className={`${styles.errorBanner} ${styles.mb6}`} role="alert">
+          <div>
+            <p className={styles.errorTitle}>No pudimos cargar tus gastos</p>
+            <p className={styles.errorDesc}>Revisa tu conexión e inténtalo de nuevo.</p>
+          </div>
+          <Button size="sm" variant="secondary" onClick={refetch}>Reintentar</Button>
+        </div>
+      )}
 
-      <div className={styles.catGrid}>
-        {/* Gráfico de dona */}
-        {pieData.length > 0 && (
-          <Card padded>
-            <Card.Header>Por categoría · {formatMonth(parseISO(`${activeMonth}-01`))}</Card.Header>
-            <div className={styles.pieWrap}>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    cx="50%" cy="50%"
-                    innerRadius={55}
-                    outerRadius={95}
-                    paddingAngle={2}
-                    labelLine={false}
-                    label={<PieLabel />}
-                  >
-                    {pieData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} stroke="none" />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
+      {showSkeleton ? (
+        <>
+          <div className={styles.summary}>
+            <Skeleton className={styles.statSkeleton} />
+            <Skeleton className={styles.statSkeleton} />
+            <Skeleton className={styles.statSkeleton} />
+          </div>
+          <div className={styles.catGrid}>
+            <Skeleton className={styles.pieSkeleton} />
+            <Skeleton className={styles.listSkeleton} />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Stats */}
+          <div className={styles.summary}>
+            <StatCard label="Total gastos"  amount={formatCurrency(totalExpense)} icon={<IconReceipt2 size={20} stroke={1.75} />} iconBg="var(--color-danger-light)" />
+            <StatCard label="Gastos fijos"  amount={formatCurrency(fixedTotal)}   icon={<IconPinned size={20} stroke={1.75} />} iconBg="var(--color-danger-light)" />
+            <StatCard label="Transacciones" amount={expenses.length}              icon={<IconListNumbers size={20} stroke={1.75} />} iconBg="var(--color-primary-alpha)" />
+          </div>
 
-              {/* Total en el centro (donut) */}
-              <div className={styles.pieCenter}>
-                <span className={styles.pieCenterLabel}>Total</span>
-                <span className={styles.pieCenterAmount}>{formatCurrency(totalExpense)}</span>
+          <div className={styles.catGrid}>
+            {/* Gráfico de dona */}
+            {pieData.length > 0 && (
+              <Card padded>
+                <Card.Header>Por categoría · {formatMonth(parseISO(`${activeMonth}-01`))}</Card.Header>
+                <div className={styles.pieWrap}>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey="value"
+                        cx="50%" cy="50%"
+                        innerRadius={55}
+                        outerRadius={95}
+                        paddingAngle={2}
+                        labelLine={false}
+                        label={<PieLabel />}
+                      >
+                        {pieData.map((entry) => (
+                          <Cell key={entry.name} fill={entry.color} stroke="none" />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<PieTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  {/* Total en el centro (donut) */}
+                  <div className={styles.pieCenter}>
+                    <span className={styles.pieCenterLabel}>Total</span>
+                    <span className={styles.pieCenterAmount}>{formatCurrency(totalExpense)}</span>
+                  </div>
+                </div>
+
+                <PieLegend data={pieData} total={totalExpense} />
+              </Card>
+            )}
+
+            {/* Lista con paginación */}
+            <Card padded={false}>
+              <div className={styles.listHeader}>
+                <strong>Movimientos · {formatMonth(parseISO(`${activeMonth}-01`))}</strong>
+                <span className={styles.listCount}>{expenses.length} registros</span>
               </div>
-            </div>
-
-            <PieLegend data={pieData} total={totalExpense} />
-          </Card>
-        )}
-
-        {/* Lista con paginación */}
-        {loading ? <LoadingSpinner /> : (
-          <Card padded={false}>
-            <div className={styles.listHeader}>
-              <strong>Movimientos · {formatMonth(parseISO(`${activeMonth}-01`))}</strong>
-              <span className={styles.listCount}>{expenses.length} registros</span>
-            </div>
-            <div style={{ padding: '8px 12px 12px' }}>
-              <ExpenseList
-                expenses={expenses}
-                onEdit={(e) => { setEditing(e); setModalOpen(true) }}
-                onDelete={removeExpense}
-              />
-            </div>
-          </Card>
-        )}
-      </div>
+              <div style={{ padding: '8px 12px 12px' }}>
+                <ExpenseList
+                  expenses={expenses}
+                  onEdit={(e) => { setEditing(e); setModalOpen(true) }}
+                  onDelete={(id) => setDeletingId(id)}
+                />
+              </div>
+            </Card>
+          </div>
+        </>
+      )}
 
       <Modal
         isOpen={modalOpen}
@@ -191,6 +240,19 @@ export function Expenses() {
           loading={saving}
         />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+        title="Eliminar gasto"
+        description={
+          deletingExpense
+            ? `¿Eliminar "${deletingExpense.description || deletingExpense.category?.name || 'este gasto'}" por ${formatCurrency(deletingExpense.amount)}? Esta acción no se puede deshacer.`
+            : '¿Eliminar este gasto? Esta acción no se puede deshacer.'
+        }
+      />
     </div>
   )
 }

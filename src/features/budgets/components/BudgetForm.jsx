@@ -45,7 +45,7 @@ export function BudgetForm({ initial, onSubmit, onCancel, loading }) {
     <form className={styles.form} onSubmit={handleSubmit}>
       <Input label="Nombre del presupuesto" value={form.name} onChange={set('name')}
         error={errors.name} required placeholder="Ej: Ocio mensual" />
-      <Input label="Monto límite" type="number" min="0" step="0.01" prefix="$"
+      <Input label="Monto límite" type="number" min="0" step="0.01" prefix="S/"
         value={form.amount} onChange={set('amount')} error={errors.amount} required placeholder="0.00" />
       <Select label="Categoría de gasto (para seguimiento automático)"
         options={catOptions} value={form.category_id} onChange={set('category_id')} />

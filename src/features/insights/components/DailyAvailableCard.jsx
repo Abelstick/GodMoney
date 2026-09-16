@@ -6,9 +6,14 @@ export function DailyAvailableCard({ dailyAvailable }) {
   const negative = availablePerDay < 0
 
   return (
-    <div className={`${styles.card} ${negative ? styles.negative : ''}`}>
-      <div className={styles.label}>Disponible para gastar por día</div>
-      <div className={styles.amount}>{formatCurrency(availablePerDay)}</div>
+    <div className={styles.card}>
+      <div className={styles.label}>
+        <span className={`${styles.dot} ${negative ? styles.dotDown : styles.dotUp}`} />
+        Disponible para gastar por día
+      </div>
+      <div className={`${styles.amount} ${negative ? styles.negative : styles.positive}`}>
+        {formatCurrency(availablePerDay)}
+      </div>
       <div className={styles.meta}>
         {daysRemaining > 0
           ? `${formatCurrency(moneyLeft)} restantes · ${daysRemaining} ${daysRemaining === 1 ? 'día' : 'días'} por delante`

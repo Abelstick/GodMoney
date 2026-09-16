@@ -18,5 +18,7 @@ export function useIncome() {
     fetchIncomes(from, to)
   }, [from, to])
 
-  return { incomes, loading, error, totalIncome, addIncome, updateIncome, removeIncome }
+  const refetch = () => fetchIncomes(from, to)
+
+  return { incomes, loading, error, totalIncome, addIncome, updateIncome, removeIncome, refetch }
 }

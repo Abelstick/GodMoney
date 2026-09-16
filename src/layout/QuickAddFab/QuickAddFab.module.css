@@ -1,0 +1,80 @@
+/* Apilado con el FAB del chat, del mismo lado (derecha): este va abajo,
+   más cerca del nav; el chat se corrió más arriba para dejarle sitio.
+   El menú se posiciona absoluto para despejar también al FAB del chat,
+   que queda justo encima de este botón. */
+.wrap {
+  position: fixed;
+  bottom: calc(var(--nav-height) + var(--space-4));
+  right: var(--space-4);
+  z-index: calc(var(--z-modal) - 1);
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.wrapHidden {
+  transform: translateY(150%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .wrap { display: none; }
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-modal) - 2);
+}
+
+.fab {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-dark);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--glow-primary);
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.fab:hover { transform: scale(1.08); }
+.fabOpen   { transform: rotate(45deg); }
+
+.menu {
+  position: absolute;
+  right: 0;
+  /* Despeja el propio botón (52px) + el FAB del chat apilado arriba (52px)
+     + los espacios entre ambos (space-3 x2). */
+  bottom: calc(52px + var(--space-3) + 52px + var(--space-3));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glass);
+  padding: var(--space-2);
+  animation: fadeIn 150ms ease;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+
+.item:hover { background: var(--color-surface-2); }

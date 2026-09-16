@@ -10,7 +10,7 @@ import styles from './ChatBot.module.css'
 const WELCOME =
   'Hola 👋 Soy GodMoney AI. Puedo analizar tus finanzas, revisar tus gastos o ayudarte a planificar. ¿En qué te ayudo hoy?'
 
-export function ChatBot() {
+export function ChatBot({ hidden = false }) {
   const { user } = useAuth()
   const [open,     setOpen]     = useState(false)
   const [apiKey,   setApiKey]   = useState(null)
@@ -66,7 +66,7 @@ export function ChatBot() {
     <>
       {/* Floating action button */}
       <button
-        className={styles.fab}
+        className={`${styles.fab} ${hidden && !open ? styles.fabHidden : ''}`}
         onClick={() => setOpen((o) => !o)}
         aria-label="Abrir asistente AI"
       >

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { IconClipboardList } from '@tabler/icons-react'
 import { useBudgets }      from '@/hooks/useBudgets'
 import { useMonthFilter }  from '@/hooks/useMonthFilter'
 import { Button }          from '@/components/ui/Button/Button'
 import { Modal }           from '@/components/common/Modal/Modal'
 import { EmptyState }      from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner }  from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { Skeleton }        from '@/components/common/Skeleton/Skeleton'
 import { exportBudgetCSV, printBudgets } from '@/lib/exportBudgets'
 import { BudgetCard }      from './components/BudgetCard'
 import { BudgetForm }      from './components/BudgetForm'
@@ -79,10 +80,18 @@ export function Budgets() {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.skeletonWrap}>
+          <Skeleton className={styles.summarySkeleton} />
+          <Skeleton className={styles.alertsSkeleton} />
+          <div className={styles.grid}>
+            <Skeleton className={styles.cardSkeleton} />
+            <Skeleton className={styles.cardSkeleton} />
+            <Skeleton className={styles.cardSkeleton} />
+          </div>
+        </div>
       ) : budgets.length === 0 ? (
         <EmptyState
-          icon="📋"
+          icon={<IconClipboardList size={44} stroke={1.5} />}
           title="Sin presupuestos"
           description="Crea un presupuesto para controlar tus gastos por categoría"
           action={<Button onClick={() => setModalOpen(true)}>Crear presupuesto</Button>}

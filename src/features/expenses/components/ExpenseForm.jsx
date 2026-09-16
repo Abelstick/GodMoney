@@ -49,7 +49,7 @@ export function ExpenseForm({ initial, onSubmit, onCancel, loading }) {
         type="number"
         min="0"
         step="0.01"
-        prefix="$"
+        prefix="S/"
         value={form.amount}
         onChange={set('amount')}
         error={errors.amount}

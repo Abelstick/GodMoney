@@ -7,6 +7,7 @@ import {
   IconCashBanknote, IconShoppingCart, IconFlag,
   IconClipboard, IconTrendingUp, IconTag, IconKey, IconBulb,
   IconHandGrab, IconWallet, IconReportAnalytics, IconBellRinging,
+  IconDiamondFilled,
 } from '@tabler/icons-react'
 import { useMantineColorScheme } from '@mantine/core'
 import { useStore } from '@/store'
@@ -114,7 +115,7 @@ export function Sidebar() {
 
       {/* Logo */}
       <div className={styles.logo}>
-        <span className={styles.logoEmoji}>💎</span>
+        <span className={styles.logoEmoji}><IconDiamondFilled size={20} /></span>
         <span className={styles.logoText}>GodMoney</span>
       </div>
 

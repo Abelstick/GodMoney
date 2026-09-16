@@ -1,9 +1,16 @@
 import { useMemo, useState } from 'react'
+import { IconAlertTriangle, IconClock, IconCircleCheck, IconBell, IconBellRinging } from '@tabler/icons-react'
 import { useRecurringPaymentAlerts } from '@/hooks/useRecurringPaymentAlerts'
 import { formatDate } from '@/lib/formatters'
 import styles from './RecurringPaymentAlerts.module.css'
 
-const SEVERITY_ICON = { danger: '🚨', warning: '⏰', success: '🎉', info: '🔔' }
+const SEVERITY_ICON = { danger: IconAlertTriangle, warning: IconClock, success: IconCircleCheck, info: IconBell }
+const SEVERITY_COLOR = {
+  danger: 'var(--color-danger)',
+  warning: 'var(--color-warning)',
+  success: 'var(--color-success)',
+  info: 'var(--color-info)',
+}
 
 const FILTERS = [
   { value: 'unread', label: 'No leídas' },
@@ -22,7 +29,7 @@ export function RecurringPaymentAlerts() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
-        <span className={styles.icon}>🔔</span>
+        <IconBellRinging size={16} stroke={1.75} className={styles.icon} />
         <span className={styles.title}>Alertas de pagos recurrentes</span>
         <span className={styles.count}>{unreadCount}</span>
         {unreadCount > 0 && (
@@ -48,9 +55,13 @@ export function RecurringPaymentAlerts() {
         <div className={styles.empty}>Sin alertas pendientes</div>
       ) : (
         <div className={styles.list}>
-          {visible.map((a) => (
+          {visible.map((a) => {
+            const SeverityIcon = SEVERITY_ICON[a.severity]
+            return (
             <div key={a.id} className={`${styles.alert} ${styles[a.severity]} ${a.is_read ? styles.read : ''}`}>
-              <div className={styles.alertDot}>{SEVERITY_ICON[a.severity]}</div>
+              <div className={styles.alertDot}>
+                <SeverityIcon size={16} stroke={1.75} color={SEVERITY_COLOR[a.severity]} />
+              </div>
               <div className={styles.alertBody}>
                 <span className={styles.alertMsg}>{a.message}</span>
                 <span className={styles.alertDate}>{formatDate(a.created_at)}</span>
@@ -61,7 +72,8 @@ export function RecurringPaymentAlerts() {
                 </button>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

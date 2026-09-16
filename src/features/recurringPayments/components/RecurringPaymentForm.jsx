@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { IconCalendar, IconPencil } from '@tabler/icons-react'
 import { Input } from '@/components/ui/Input/Input'
 import { Select } from '@/components/ui/Select/Select'
 import { Button } from '@/components/ui/Button/Button'
@@ -82,7 +83,7 @@ export function RecurringPaymentForm({ initial, onSubmit, onCancel, loading }) {
           className={`${styles.scheduleBtn} ${isFixedDay ? styles.scheduleActive : ''}`}
           onClick={() => setForm((f) => ({ ...f, schedule_type: SCHEDULE_TYPE.FIXED_DAY }))}
         >
-          <span>📅 Día fijo del mes</span>
+          <span className={styles.scheduleLabel}><IconCalendar size={16} stroke={1.75} /> Día fijo del mes</span>
           <span className={styles.scheduleHint}>Ej: siempre vence el día 15</span>
         </button>
         <button
@@ -90,7 +91,7 @@ export function RecurringPaymentForm({ initial, onSubmit, onCancel, loading }) {
           className={`${styles.scheduleBtn} ${!isFixedDay ? styles.scheduleActive : ''}`}
           onClick={() => setForm((f) => ({ ...f, schedule_type: SCHEDULE_TYPE.MANUAL }))}
         >
-          <span>✍️ Fecha manual</span>
+          <span className={styles.scheduleLabel}><IconPencil size={16} stroke={1.75} /> Fecha manual</span>
           <span className={styles.scheduleHint}>Tú actualizas la fecha cada vez que pagas</span>
         </button>
       </div>

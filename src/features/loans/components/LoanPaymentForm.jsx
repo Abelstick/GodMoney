@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { Input } from '@/components/ui/Input/Input'
 import { Select } from '@/components/ui/Select/Select'
 import { Button } from '@/components/ui/Button/Button'
@@ -123,7 +124,8 @@ export function LoanPaymentForm({ loan, pendingInstallments = [], onSubmit, onCa
 
       {isOverpay && (
         <div className={styles.overpayWarning}>
-          ⚠️ El monto ({formatCurrency(total)}) supera el saldo pendiente ({formatCurrency(loanPending)}). Confirma si deseas continuar.
+          <IconAlertTriangle size={15} stroke={1.75} />
+          <span>El monto ({formatCurrency(total)}) supera el saldo pendiente ({formatCurrency(loanPending)}). Confirma si deseas continuar.</span>
         </div>
       )}
 

@@ -1,3 +1,4 @@
+import { IconBulb } from '@tabler/icons-react'
 import { Card } from '@/components/ui/Card/Card'
 import styles from './AutoInsightsList.module.css'
 
@@ -12,7 +13,9 @@ export function AutoInsightsList({ insights }) {
         <ul className={styles.list}>
           {insights.map((i) => (
             <li key={i.id} className={styles.item}>
-              <span className={styles.icon}>💡</span>
+              <span className={styles.iconWrap}>
+                <IconBulb size={16} stroke={1.75} />
+              </span>
               <span>{i.text}</span>
             </li>
           ))}

@@ -1,3 +1,4 @@
+import { IconCoin, IconReceipt2, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'
 import { Card }     from '@/components/ui/Card/Card'
 import { StatCard } from '@/components/ui/StatCard/StatCard'
 import { Badge }    from '@/components/ui/Badge/Badge'
@@ -29,20 +30,20 @@ export function MonthEndProjectionCard({ projection }) {
         <StatCard
           label="Ingreso proyectado"
           amount={formatCurrency(projectedIncome)}
-          icon="💰"
-          iconBg="rgba(16,185,129,0.12)"
+          icon={<IconCoin size={20} stroke={1.75} />}
+          iconBg="var(--color-success-light)"
         />
         <StatCard
           label="Gasto proyectado"
           amount={formatCurrency(projectedExpense)}
-          icon="💸"
-          iconBg="rgba(239,68,68,0.12)"
+          icon={<IconReceipt2 size={20} stroke={1.75} />}
+          iconBg="var(--color-danger-light)"
         />
         <StatCard
           label="Ahorro proyectado"
           amount={formatCurrency(projectedProfit)}
-          icon={projectedProfit >= 0 ? '📈' : '📉'}
-          iconBg={projectedProfit >= 0 ? 'rgba(99,102,241,0.12)' : 'rgba(239,68,68,0.12)'}
+          icon={projectedProfit >= 0 ? <IconTrendingUp size={20} stroke={1.75} /> : <IconTrendingDown size={20} stroke={1.75} />}
+          iconBg={projectedProfit >= 0 ? 'var(--color-primary-alpha)' : 'var(--color-danger-light)'}
         />
       </div>
     </Card>

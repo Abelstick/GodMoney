@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { IconCoin, IconCoinOff, IconCalendarDue, IconAlertTriangle, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'
 import { formatCurrency } from '@/lib/formatters'
 import { StatCard } from '@/components/ui/StatCard/StatCard'
 import { ProgressBar } from '@/components/ui/ProgressBar/ProgressBar'
@@ -41,12 +42,12 @@ export function LoanSummary({ loans, pendingInstallments, activeTab }) {
   return (
     <div>
       <div className={styles.grid}>
-        <StatCard label="Me deben" amount={formatCurrency(totals.receivable)} icon="💰" iconBg="rgba(16,185,129,0.12)" />
-        <StatCard label="Yo debo"  amount={formatCurrency(totals.payable)}    icon="💸" iconBg="rgba(239,68,68,0.12)" />
-        <StatCard label="Próximos pagos" amount={formatCurrency(totals.upcoming)} icon="📅" iconBg="rgba(245,158,11,0.12)" />
-        <StatCard label="Vencidos" amount={formatCurrency(totals.overdue)} icon="⚠️" iconBg="rgba(239,68,68,0.12)" />
-        <StatCard label="Intereses por cobrar" amount={formatCurrency(totals.interestReceivable)} icon="📈" iconBg="rgba(34,197,94,0.12)" />
-        <StatCard label="Intereses por pagar"  amount={formatCurrency(totals.interestPayable)}    icon="📉" iconBg="rgba(249,115,22,0.12)" />
+        <StatCard label="Me deben" amount={formatCurrency(totals.receivable)} icon={<IconCoin size={20} stroke={1.75} />} iconBg="var(--color-success-light)" />
+        <StatCard label="Yo debo"  amount={formatCurrency(totals.payable)}    icon={<IconCoinOff size={20} stroke={1.75} />} iconBg="var(--color-danger-light)" />
+        <StatCard label="Próximos pagos" amount={formatCurrency(totals.upcoming)} icon={<IconCalendarDue size={20} stroke={1.75} />} iconBg="var(--color-warning-light)" />
+        <StatCard label="Vencidos" amount={formatCurrency(totals.overdue)} icon={<IconAlertTriangle size={20} stroke={1.75} />} iconBg="var(--color-danger-light)" />
+        <StatCard label="Intereses por cobrar" amount={formatCurrency(totals.interestReceivable)} icon={<IconTrendingUp size={20} stroke={1.75} />} iconBg="var(--color-success-light)" />
+        <StatCard label="Intereses por pagar"  amount={formatCurrency(totals.interestPayable)}    icon={<IconTrendingDown size={20} stroke={1.75} />} iconBg="var(--color-warning-light)" />
       </div>
 
       {totals.originalTotal > 0 && (

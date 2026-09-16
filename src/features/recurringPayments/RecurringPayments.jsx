@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
+import { IconCalendarRepeat } from '@tabler/icons-react'
 import { useRecurringPayments } from '@/hooks/useRecurringPayments'
 import { Button } from '@/components/ui/Button/Button'
 import { Modal } from '@/components/common/Modal/Modal'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { getEffectiveRecurringStatus } from '@/lib/recurringPaymentStatus'
 import { RecurringPaymentAlerts } from './components/RecurringPaymentAlerts'
 import { RecurringPaymentCard } from './components/RecurringPaymentCard'
@@ -82,10 +83,18 @@ export function RecurringPayments() {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.skeletonWrap}>
+          <Skeleton className={styles.alertsSkeleton} />
+          <Skeleton className={styles.toolbarSkeleton} />
+          <div className={styles.grid}>
+            <Skeleton className={styles.cardSkeleton} />
+            <Skeleton className={styles.cardSkeleton} />
+            <Skeleton className={styles.cardSkeleton} />
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="🔔"
+          icon={<IconCalendarRepeat size={44} stroke={1.5} />}
           title="Sin pagos recurrentes registrados"
           description="Agrega tus pagos obligatorios (seguro, internet, servicios) para que la app te avise antes de que venzan"
           action={<Button onClick={() => setCreateOpen(true)}>Crear pago recurrente</Button>}

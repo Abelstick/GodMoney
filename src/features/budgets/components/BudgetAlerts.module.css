@@ -1,9 +1,11 @@
 .wrapper {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   padding: var(--space-4);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-glass);
   margin-bottom: var(--space-5);
 }
 
@@ -14,7 +16,7 @@
   margin-bottom: var(--space-3);
 }
 
-.icon { font-size: 16px; line-height: 1; }
+.icon { color: var(--color-warning); flex-shrink: 0; }
 
 .title {
   font-size: var(--text-sm);
@@ -60,8 +62,8 @@
 .filterChip:hover { border-color: var(--color-border-strong); color: var(--color-text-primary); }
 
 .filterChipActive {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
   color: #fff;
 }
 
@@ -94,9 +96,9 @@
   border-left: 3px solid transparent;
 }
 
-.warning  { background: #f59e0b12; border-left-color: #f59e0b; }
-.reached  { background: #3b82f612; border-left-color: var(--color-info); }
-.exceeded { background: #ef444412; border-left-color: var(--color-danger); }
+.warning  { background: var(--color-warning-light); border-left-color: var(--color-warning); }
+.reached  { background: var(--color-info-light);    border-left-color: var(--color-info); }
+.exceeded { background: var(--color-danger-light);  border-left-color: var(--color-danger); }
 
 .alertDot {
   width: 8px;
@@ -104,7 +106,7 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.warning  .alertDot { background: #f59e0b; }
+.warning  .alertDot { background: var(--color-warning); }
 .reached  .alertDot { background: var(--color-info); }
 .exceeded .alertDot { background: var(--color-danger); }
 
@@ -137,9 +139,9 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
-.warning  .badge { background: #f59e0b22; color: #b45309; }
-.reached  .badge { background: #3b82f622; color: var(--color-info); }
-.exceeded .badge { background: #ef444422; color: var(--color-danger); }
+.warning  .badge { background: var(--color-warning-light); color: var(--color-warning); }
+.reached  .badge { background: var(--color-info-light);    color: var(--color-info); }
+.exceeded .badge { background: var(--color-danger-light);  color: var(--color-danger-soft); }
 
 @media (max-width: 480px) {
   .alert { flex-wrap: wrap; }

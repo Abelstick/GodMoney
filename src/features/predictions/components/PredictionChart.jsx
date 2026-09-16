@@ -3,7 +3,6 @@ import {
   CartesianGrid, Tooltip, ReferenceLine, Cell,
 } from 'recharts'
 import { formatCurrency } from '@/lib/formatters'
-import { CHART_COLORS } from '@/lib/constants'
 import styles from './PredictionChart.module.css'
 
 function CustomTooltip({ active, payload, label }) {
@@ -71,7 +70,8 @@ export function PredictionChart({ data }) {
               {data.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill={entry.projected ? CHART_COLORS.income + '60' : CHART_COLORS.income}
+                  fill="var(--color-success)"
+                  fillOpacity={entry.projected ? 0.45 : 1}
                 />
               ))}
             </Bar>
@@ -80,7 +80,8 @@ export function PredictionChart({ data }) {
               {data.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill={entry.projected ? CHART_COLORS.expense + '60' : CHART_COLORS.expense}
+                  fill="var(--color-danger)"
+                  fillOpacity={entry.projected ? 0.45 : 1}
                 />
               ))}
             </Bar>
@@ -89,7 +90,7 @@ export function PredictionChart({ data }) {
             <Line
               dataKey="expenseMA"
               name="Tendencia gastos"
-              stroke={CHART_COLORS.expense}
+              stroke="var(--color-danger)"
               strokeWidth={2}
               dot={false}
               strokeDasharray="4 2"
@@ -101,15 +102,15 @@ export function PredictionChart({ data }) {
 
       <div className={styles.legend}>
         {[
-          { type: 'bar',  color: CHART_COLORS.income,  label: 'Ingresos (real)' },
-          { type: 'bar',  color: CHART_COLORS.income + '60', label: 'Ingresos (proyectado)' },
-          { type: 'bar',  color: CHART_COLORS.expense, label: 'Gastos (real)' },
-          { type: 'bar',  color: CHART_COLORS.expense + '60', label: 'Gastos (proyectado)' },
-          { type: 'dash', color: CHART_COLORS.expense, label: 'Tendencia gastos (MA3)' },
+          { type: 'bar',  color: 'var(--color-success)', opacity: 1,    label: 'Ingresos (real)' },
+          { type: 'bar',  color: 'var(--color-success)', opacity: 0.45, label: 'Ingresos (proyectado)' },
+          { type: 'bar',  color: 'var(--color-danger)',  opacity: 1,    label: 'Gastos (real)' },
+          { type: 'bar',  color: 'var(--color-danger)',  opacity: 0.45, label: 'Gastos (proyectado)' },
+          { type: 'dash', color: 'var(--color-danger)',  opacity: 1,    label: 'Tendencia gastos (MA3)' },
         ].map((l) => (
           <div key={l.label} className={styles.legendItem}>
             {l.type === 'bar'
-              ? <span className={styles.legendDot} style={{ background: l.color }} />
+              ? <span className={styles.legendDot} style={{ background: l.color, opacity: l.opacity }} />
               : <span className={styles.legendDash} style={{ borderColor: l.color }} />
             }
             {l.label}

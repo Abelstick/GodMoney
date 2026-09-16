@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconBulb, IconX } from '@tabler/icons-react'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { ProgressBar } from '@/components/ui/ProgressBar/ProgressBar'
 import { Badge }       from '@/components/ui/Badge/Badge'
@@ -60,7 +61,8 @@ export function GoalCard({ goal, onEdit, onDelete, onAddProgress, accounts, goal
 
       {hasPotential && (
         <div className={styles.potential}>
-          💡 Potencial si se liquidan los préstamos: <strong>{formatCurrency(potentialAmount)}</strong>
+          <IconBulb size={15} stroke={1.75} className={styles.potentialIcon} />
+          Potencial si se liquidan los préstamos: <strong>{formatCurrency(potentialAmount)}</strong>
         </div>
       )}
 
@@ -76,7 +78,9 @@ export function GoalCard({ goal, onEdit, onDelete, onAddProgress, accounts, goal
             autoFocus
           />
           <Button size="sm" onClick={handleProgress}>Añadir</Button>
-          <Button size="sm" variant="ghost" onClick={() => setAddingProgress(false)}>✕</Button>
+          <Button size="sm" variant="ghost" onClick={() => setAddingProgress(false)}>
+            <IconX size={15} stroke={1.75} />
+          </Button>
         </div>
       )}
 

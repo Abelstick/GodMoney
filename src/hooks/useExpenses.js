@@ -18,5 +18,7 @@ export function useExpenses() {
     fetchExpenses(from, to)
   }, [from, to])
 
-  return { expenses, loading, error, totalExpense, addExpense, updateExpense, removeExpense }
+  const refetch = () => fetchExpenses(from, to)
+
+  return { expenses, loading, error, totalExpense, addExpense, updateExpense, removeExpense, refetch }
 }

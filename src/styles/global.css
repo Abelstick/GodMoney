@@ -52,11 +52,24 @@ a {
   text-decoration: none;
 }
 
+/* ── Foco visible (accesibilidad — nunca outline:none) ── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
 ul, ol {
   list-style: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
   line-height: 1.2;
   font-weight: var(--weight-semibold);
 }

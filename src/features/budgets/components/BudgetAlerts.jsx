@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { IconBellRinging } from '@tabler/icons-react'
 import {
   BUDGET_STATUS,
   budgetStatusSeverity,
@@ -36,7 +37,7 @@ export function BudgetAlerts({ budgets }) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
-        <span className={styles.icon}>🔔</span>
+        <IconBellRinging size={16} stroke={1.75} className={styles.icon} />
         <span className={styles.title}>Alertas de gasto</span>
         <span className={styles.count}>{alerts.length}</span>
       </div>

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { IconCoin, IconRepeat, IconBolt } from '@tabler/icons-react'
 import { useIncome }      from '@/hooks/useIncome'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
 import { formatCurrency, formatMonth, getPastMonths } from '@/lib/formatters'
@@ -7,20 +8,31 @@ import { Card }      from '@/components/ui/Card/Card'
 import { Button }    from '@/components/ui/Button/Button'
 import { StatCard }  from '@/components/ui/StatCard/StatCard'
 import { Modal }     from '@/components/common/Modal/Modal'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
+import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { IncomeForm } from './components/IncomeForm'
 import { IncomeList } from './components/IncomeList'
 import styles from './Income.module.css'
-import { useMemo } from 'react'
 
 export function Income() {
   const { activeMonth, setActiveMonth } = useMonthFilter()
   const months = useMemo(() => getPastMonths(6), [])
-  const { incomes, loading, totalIncome, addIncome, updateIncome, removeIncome } = useIncome()
+  const {
+    incomes, loading, error, totalIncome,
+    addIncome, updateIncome, removeIncome, refetch,
+  } = useIncome()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState(null)
   const [saving,    setSaving]    = useState(false)
+
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleting,   setDeleting]   = useState(false)
+  const deletingIncome = incomes.find((i) => i.id === deletingId)
+
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+  useMemo(() => { if (!loading) setHasLoadedOnce(true) }, [loading])
+  const showSkeleton = loading && !hasLoadedOnce
 
   async function handleSubmit(payload) {
     setSaving(true)
@@ -31,6 +43,17 @@ export function Income() {
       setEditing(null)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingId) return
+    setDeleting(true)
+    try {
+      await removeIncome(deletingId)
+      setDeletingId(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -55,49 +78,61 @@ export function Income() {
       </div>
 
       {/* Filtro de mes */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 24 }}>
+      <div className={styles.monthFilter}>
         {months.map((m) => (
           <button
             key={m.key}
+            className={`${styles.monthBtn} ${activeMonth === m.key ? styles.monthActive : ''}`}
             onClick={() => setActiveMonth(m.key)}
-            style={{
-              flexShrink: 0,
-              padding: '6px 16px',
-              borderRadius: 999,
-              border: `1.5px solid ${activeMonth === m.key ? 'var(--color-primary)' : 'var(--color-border)'}`,
-              background: activeMonth === m.key ? 'var(--color-primary)' : 'var(--color-surface)',
-              color: activeMonth === m.key ? 'white' : 'var(--color-text-secondary)',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 500,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
           >
             {m.label} {m.year}
           </button>
         ))}
       </div>
 
-      {/* Stats */}
-      <div className={styles.summary}>
-        <StatCard label="Total ingresos" amount={formatCurrency(totalIncome)} icon="💰" iconBg="rgba(16,185,129,0.12)" />
-        <StatCard label="Recurrentes" amount={formatCurrency(recurring.reduce((a, i) => a + Number(i.amount), 0))} icon="🔁" iconBg="rgba(59,130,246,0.12)" />
-        <StatCard label="Únicos" amount={oneTime.length} icon="⚡" iconBg="rgba(245,158,11,0.12)" />
-      </div>
+      {/* Error de carga */}
+      {error && (
+        <div className={`${styles.errorBanner} ${styles.mb6}`} role="alert">
+          <div>
+            <p className={styles.errorTitle}>No pudimos cargar tus ingresos</p>
+            <p className={styles.errorDesc}>Revisa tu conexión e inténtalo de nuevo.</p>
+          </div>
+          <Button size="sm" variant="secondary" onClick={refetch}>Reintentar</Button>
+        </div>
+      )}
 
-      {loading ? (
-        <LoadingSpinner />
+      {showSkeleton ? (
+        <>
+          <div className={styles.summary}>
+            <Skeleton className={styles.statSkeleton} />
+            <Skeleton className={styles.statSkeleton} />
+            <Skeleton className={styles.statSkeleton} />
+          </div>
+          <Skeleton className={styles.listSkeleton} />
+        </>
       ) : (
-        <Card padded={false}>
-          <div style={{ padding: '20px 20px 8px', borderBottom: '1px solid var(--color-border)' }}>
-            <strong style={{ fontSize: 'var(--text-base)' }}>
-              Movimientos · {formatMonth(parseISO(`${activeMonth}-01`))}
-            </strong>
+        <>
+          {/* Stats */}
+          <div className={styles.summary}>
+            <StatCard label="Total ingresos" amount={formatCurrency(totalIncome)} icon={<IconCoin size={20} stroke={1.75} />} iconBg="var(--color-success-light)" />
+            <StatCard label="Recurrentes" amount={formatCurrency(recurring.reduce((a, i) => a + Number(i.amount), 0))} icon={<IconRepeat size={20} stroke={1.75} />} iconBg="var(--color-info-light)" />
+            <StatCard label="Únicos" amount={oneTime.length} icon={<IconBolt size={20} stroke={1.75} />} iconBg="var(--color-warning-light)" />
           </div>
-          <div style={{ padding: 12 }}>
-            <IncomeList incomes={incomes} onEdit={openEdit} onDelete={removeIncome} />
-          </div>
-        </Card>
+
+          <Card padded={false}>
+            <div className={styles.listHeader}>
+              <strong>Movimientos · {formatMonth(parseISO(`${activeMonth}-01`))}</strong>
+              <span className={styles.listCount}>{incomes.length} registros</span>
+            </div>
+            <div style={{ padding: '8px 12px 12px' }}>
+              <IncomeList
+                incomes={incomes}
+                onEdit={openEdit}
+                onDelete={(id) => setDeletingId(id)}
+              />
+            </div>
+          </Card>
+        </>
       )}
 
       <Modal
@@ -118,6 +153,19 @@ export function Income() {
           loading={saving}
         />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+        title="Eliminar ingreso"
+        description={
+          deletingIncome
+            ? `¿Eliminar "${deletingIncome.description || deletingIncome.category?.name || 'este ingreso'}" por ${formatCurrency(deletingIncome.amount)}? Esta acción no se puede deshacer.`
+            : '¿Eliminar este ingreso? Esta acción no se puede deshacer.'
+        }
+      />
     </div>
   )
 }

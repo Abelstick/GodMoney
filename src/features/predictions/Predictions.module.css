@@ -43,25 +43,48 @@
 .goalAmounts { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
 .goalEta     { font-size: var(--text-sm); color: var(--color-text-secondary); }
 .goalEtaHighlight { color: var(--color-primary); font-weight: var(--weight-semibold); }
-.goalCompleted    { color: var(--color-success); font-weight: var(--weight-semibold); }
-.goalNoSaving     { color: var(--color-danger); }
+.goalCompleted    { color: var(--color-success); font-weight: var(--weight-semibold); display: inline-flex; align-items: center; gap: 4px; }
+.goalNoSaving     { color: var(--color-danger); display: inline-flex; align-items: center; gap: 4px; }
 
+/* ── Skeletons de carga inicial ── */
+.statSkeleton  { height: 104px; }
+.chartSkeleton { height: 360px; margin-bottom: var(--space-6); }
+
+/* ── Banners informativos (sin datos / confianza baja) ── */
 .infoBox {
-  background: var(--color-primary-alpha);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   border: 1px solid var(--color-primary-light);
-  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glass);
   padding: var(--space-4);
   font-size: var(--text-sm);
-  color: var(--color-primary-dark);
+  color: var(--color-text-primary);
   margin-bottom: var(--space-6);
 }
+
+.infoIcon { color: var(--color-primary); flex-shrink: 0; margin-top: 1px; }
 
 .warnBox {
-  background: #f59e0b1f;
-  border: 1px solid #f59e0b40;
-  border-radius: var(--radius-md);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  border: 1px solid var(--color-warning);
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glass);
   padding: var(--space-4);
   font-size: var(--text-sm);
-  color: #92400e;
+  color: var(--color-text-primary);
   margin-bottom: var(--space-6);
 }
+
+.warnIcon { color: var(--color-warning); flex-shrink: 0; margin-top: 1px; }
