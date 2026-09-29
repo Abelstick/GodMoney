@@ -53,7 +53,7 @@
 
 .potential {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: var(--space-2);
   font-size: var(--text-xs);
   color: var(--color-text-secondary);
@@ -63,6 +63,25 @@
 }
 .potential strong { color: var(--color-primary); }
 .potentialIcon { flex-shrink: 0; color: var(--color-primary); margin-top: 1px; }
+
+.potentialHeader {
+  display: flex; align-items: flex-start; gap: var(--space-2);
+  width: 100%; padding: 0; border: none; background: none;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.potentialHeader > span { flex: 1; }
+.chevron { flex-shrink: 0; margin-top: 1px; transition: transform 0.2s ease; }
+.chevronOpen { transform: rotate(180deg); }
+
+.loanDetail {
+  display: flex; flex-direction: column; gap: 4px;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+.loanRow { display: flex; justify-content: space-between; gap: var(--space-2); }
+.loanPlus  { color: var(--color-success); font-weight: var(--weight-semibold); white-space: nowrap; }
+.loanMinus { color: var(--color-danger);  font-weight: var(--weight-semibold); white-space: nowrap; }
+.loanNote  { color: var(--color-warning); margin-top: 2px; }
 
 .linkedTag {
   align-self: center;

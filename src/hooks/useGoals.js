@@ -2,8 +2,8 @@ import { useEffect, useMemo } from 'react'
 import { useStore } from '@/store'
 import { useAccounts } from './useAccounts'
 import { useLoans } from './useLoans'
-import { getGoalDerivedAmount } from '@/lib/goalProgress'
-import { getAccountLoanImpact } from '@/lib/loanStatus'
+import { getGoalDerivedAmount, getLinkMode, ALLOCATION_MODE } from '@/lib/goalProgress'
+import { getAccountLoanImpact, LOAN_STATUS } from '@/lib/loanStatus'
 
 export function useGoals() {
   const goals          = useStore((s) => s.goals)
@@ -45,22 +45,36 @@ export function useGoals() {
 
   // progressAmount = lo que se debe usar para barras de progreso y montos
   // mostrados: si el objetivo tiene cuentas vinculadas, es el monto derivado
-  // (prorrateado si el saldo real no alcanza); si no, es el manual de siempre.
+  // (toda la cuenta o monto fijo, prorrateado si el saldo real no alcanza);
+  // si no, es el manual de siempre.
   // potentialAmount = lo mismo, pero asumiendo que todos los préstamos
-  // ligados a esas cuentas ya se liquidaron (te pagaron / pagaste todo).
+  // ligados a esas cuentas ya se liquidaron (te pagaron / pagaste todo). En
+  // vínculos de monto fijo el potencial nunca pasa de lo asignado; en los de
+  // "toda la cuenta" sí crece con lo que te devuelvan.
   const enrichedGoals = useMemo(() => goals.map((goal) => {
     const links = goalAccountLinks.filter((l) => l.goal_id === goal.id)
     const derived = getGoalDerivedAmount(goal.id, goalAccountLinks, accountsById)
     const potential = getGoalDerivedAmount(goal.id, goalAccountLinks, potentialAccountsById)
     const progressAmount = derived ?? Number(goal.current_amount)
+
+    // Préstamos activos que salieron de (o entraron a) las cuentas
+    // vinculadas: es el detalle de por qué el potencial difiere del actual.
+    const linkedAccountIds = new Set(links.map((l) => l.account_id))
+    const pendingLoans = loans.filter(
+      (l) => linkedAccountIds.has(l.account_id) && l.status === LOAN_STATUS.ACTIVE
+    )
+    const hasFixedLinks = links.some((l) => getLinkMode(l) === ALLOCATION_MODE.FIXED)
+
     return {
       ...goal,
       isAccountLinked: links.length > 0,
       linkedAccounts: links,
       progressAmount,
       potentialAmount: potential ?? progressAmount,
+      pendingLoans,
+      hasFixedLinks,
     }
-  }), [goals, goalAccountLinks, accountsById, potentialAccountsById])
+  }), [goals, goalAccountLinks, accountsById, potentialAccountsById, loans])
 
   return {
     goals: enrichedGoals,

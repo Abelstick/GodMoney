@@ -15,8 +15,8 @@ export const createGoalLinkSlice = (set, get) => ({
     }
   },
 
-  linkGoalAccount: async (goalId, accountId, allocatedAmount) => {
-    const data = await goalAccountLinkService.link(goalId, accountId, allocatedAmount)
+  linkGoalAccount: async (goalId, accountId, allocatedAmount, mode) => {
+    const data = await goalAccountLinkService.link(goalId, accountId, allocatedAmount, mode)
     set((s) => ({
       goalAccountLinks: [...s.goalAccountLinks.filter((l) => l.id !== data.id), data],
     }))

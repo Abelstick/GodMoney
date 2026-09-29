@@ -2,34 +2,53 @@ function round2(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100
 }
 
-/**
- * Cuánto de lo asignado (allocated_amount) por cada vínculo cuenta-objetivo
- * se puede "honrar" de verdad. Si el saldo real de la cuenta alcanza para
- * cubrir todo lo asignado a ella (entre todos los objetivos que la usan),
- * cada vínculo cuenta al 100%. Si no alcanza (p. ej. porque salió dinero en
- * un préstamo), se prorratea proporcionalmente entre todos los objetivos
- * que comparten esa cuenta — nadie "pierde" desproporcionadamente.
- */
-export function computeAccountUsage(links) {
-  const usage = {}
-  for (const link of links) {
-    usage[link.account_id] = (usage[link.account_id] ?? 0) + Number(link.allocated_amount)
-  }
-  return usage
+// Cómo un objetivo toma dinero de una cuenta vinculada:
+//   FIXED -> un monto fijo (allocated_amount): "de esta cuenta, S/ 500 son
+//            para el viaje".
+//   ALL   -> todo lo que quede en la cuenta tras los montos fijos de otros
+//            objetivos: "esta cuenta de ahorros ES el fondo del viaje". Crece
+//            solo cada vez que le metes dinero a la cuenta.
+export const ALLOCATION_MODE = {
+  FIXED: 'FIXED',
+  ALL:   'ALL',
 }
 
-export function getHonoredAmount(link, accountsById, usageByAccount) {
-  const account = accountsById[link.account_id]
-  if (!account) return 0
+export function getLinkMode(link) {
+  return link.allocation_mode === ALLOCATION_MODE.ALL ? ALLOCATION_MODE.ALL : ALLOCATION_MODE.FIXED
+}
 
-  const totalAllocated = usageByAccount[link.account_id] ?? 0
-  if (totalAllocated <= 0) return 0
+/**
+ * Reparte el saldo real de cada cuenta entre los vínculos que la usan y
+ * devuelve { [linkId]: montoHonrado }.
+ *
+ * 1. Primero se cubren los vínculos FIXED. Si el saldo no alcanza (p. ej.
+ *    porque salió dinero en un préstamo), se prorratean proporcionalmente
+ *    entre todos los objetivos que comparten la cuenta — nadie "pierde"
+ *    desproporcionadamente.
+ * 2. Lo que sobra se reparte en partes iguales entre los vínculos ALL.
+ */
+export function resolveAllocations(allLinks, accountsById) {
+  const byAccount = {}
+  for (const link of allLinks) {
+    ;(byAccount[link.account_id] ??= []).push(link)
+  }
 
-  const balance = Math.max(Number(account.balance), 0)
-  if (balance >= totalAllocated) return Number(link.allocated_amount)
+  const honored = {}
+  for (const [accountId, links] of Object.entries(byAccount)) {
+    const account = accountsById[accountId]
+    const balance = account ? Math.max(Number(account.balance), 0) : 0
 
-  const ratio = balance / totalAllocated
-  return round2(Number(link.allocated_amount) * ratio)
+    const fixed = links.filter((l) => getLinkMode(l) === ALLOCATION_MODE.FIXED)
+    const all   = links.filter((l) => getLinkMode(l) === ALLOCATION_MODE.ALL)
+
+    const totalFixed = fixed.reduce((sum, l) => sum + Number(l.allocated_amount), 0)
+    const ratio = totalFixed > 0 ? Math.min(balance / totalFixed, 1) : 0
+    for (const l of fixed) honored[l.id] = round2(Number(l.allocated_amount) * ratio)
+
+    const leftover = Math.max(balance - totalFixed, 0)
+    for (const l of all) honored[l.id] = round2(leftover / all.length)
+  }
+  return honored
 }
 
 /**
@@ -41,15 +60,19 @@ export function getGoalDerivedAmount(goalId, allLinks, accountsById) {
   const goalLinks = allLinks.filter((l) => l.goal_id === goalId)
   if (!goalLinks.length) return null
 
-  const usage = computeAccountUsage(allLinks)
-  return round2(goalLinks.reduce((sum, l) => sum + getHonoredAmount(l, accountsById, usage), 0))
+  const honored = resolveAllocations(allLinks, accountsById)
+  return round2(goalLinks.reduce((sum, l) => sum + (honored[l.id] ?? 0), 0))
 }
 
+/**
+ * Saldo de la cuenta que no está comprometido en montos fijos de OTROS
+ * objetivos. Los vínculos ALL no cuentan: solo toman lo que sobra.
+ */
 export function getAccountHeadroom(accountId, allLinks, accountsById, excludeGoalId = null) {
   const account = accountsById[accountId]
   if (!account) return 0
   const allocated = allLinks
-    .filter((l) => l.account_id === accountId && l.goal_id !== excludeGoalId)
+    .filter((l) => l.account_id === accountId && l.goal_id !== excludeGoalId && getLinkMode(l) === ALLOCATION_MODE.FIXED)
     .reduce((sum, l) => sum + Number(l.allocated_amount), 0)
   return round2(Number(account.balance) - allocated)
 }

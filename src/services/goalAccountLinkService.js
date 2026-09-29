@@ -14,12 +14,19 @@ export const goalAccountLinkService = {
   },
 
   // Upsert por (goal_id, account_id): vincular una cuenta ya vinculada
-  // simplemente actualiza el monto asignado, sin necesitar un método aparte.
-  async link(goalId, accountId, allocatedAmount) {
+  // simplemente actualiza el modo/monto asignado, sin necesitar un método aparte.
+  // mode ALL no lleva monto: el objetivo toma lo que quede en la cuenta.
+  async link(goalId, accountId, allocatedAmount, mode = 'FIXED') {
     const { data, error } = await supabase
       .from('goal_account_links')
       .upsert(
-        { goal_id: goalId, account_id: accountId, allocated_amount: allocatedAmount, updated_at: new Date().toISOString() },
+        {
+          goal_id: goalId,
+          account_id: accountId,
+          allocation_mode: mode,
+          allocated_amount: mode === 'ALL' ? null : allocatedAmount,
+          updated_at: new Date().toISOString(),
+        },
         { onConflict: 'goal_id,account_id' }
       )
       .select()
