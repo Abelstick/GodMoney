@@ -64,7 +64,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
   const [page,       setPage]       = useState(1)
   // Por defecto: orden por fecha de registro, ascendente (lo más reciente al final).
   const [sortBy,     setSortBy]     = useState('created_at')
-  const [sortDir,    setSortDir]    = useState('asc')
+  const [sortDir,    setSortDir]    = useState('desc')
 
   useEffect(() => { setActiveCats(new Set()); setOnlyFixed(false); setCollapsed(new Set()); setPage(1) }, [expenses])
   useEffect(() => { setPage(1) }, [query, activeCats, onlyFixed, grouped, sortBy, sortDir])
