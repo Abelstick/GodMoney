@@ -16,7 +16,8 @@ import { Card }          from '@/components/ui/Card/Card'
 import { StatCard }      from '@/components/ui/StatCard/StatCard'
 import { ProgressBar }   from '@/components/ui/ProgressBar/ProgressBar'
 import { Button }        from '@/components/ui/Button/Button'
-import { IconCoin, IconReceipt2, IconTarget, IconClipboardList } from '@tabler/icons-react'
+import { IconCoin, IconReceipt2, IconPigMoney, IconClipboardList } from '@tabler/icons-react'
+import { splitSavings, isSavingsExpense, getSavingsRate } from '@/lib/savings'
 import { EmptyState }    from '@/components/common/EmptyState/EmptyState'
 import { DashboardSkeleton } from './components/DashboardSkeleton'
 import { ProfitHero }    from './components/ProfitHero'
@@ -98,8 +99,16 @@ export function Dashboard() {
     return Math.round(((current - previous) / Math.abs(previous)) * 100)
   }
 
+  // ── Gasto real vs ahorro: el ahorro sigue restando al profit del mes (es
+  // dinero que no se toca), pero no se muestra como consumo ──
+  const { consumptionTotal, savingsTotal } = useMemo(() => splitSavings(expenses), [expenses])
+  const savingsRate = getSavingsRate(savingsTotal, totalIncome)
+  const prevConsumption = histExpense
+    .filter((e) => e.date.slice(0, 7) === prevMonthKey && !isSavingsExpense(e))
+    .reduce((acc, e) => acc + Number(e.amount), 0)
+
   const incomeTrendPct  = trendPct(totalIncome, prevEntry?.income ?? 0)
-  const expenseTrendPct = trendPct(totalExpense, prevEntry?.expense ?? 0)
+  const expenseTrendPct = trendPct(consumptionTotal, prevConsumption)
   const profitTrendPct  = trendPct(profit, prevEntry?.profit ?? 0)
 
   // ── Split ingresos/gastos del mes (mini barra bajo el hero) ──
@@ -192,8 +201,8 @@ export function Dashboard() {
                 trendUp={incomeTrendPct !== null ? incomeTrendPct >= 0 : undefined}
               />
               <StatCard
-                label="Gastos"
-                amount={formatCurrency(totalExpense)}
+                label="Gasto real"
+                amount={formatCurrency(consumptionTotal)}
                 icon={<IconReceipt2 size={20} stroke={1.75} />}
                 iconBg="var(--color-danger-light)"
                 trend={expenseTrendPct !== null ? `${Math.abs(expenseTrendPct)}%` : undefined}
@@ -202,11 +211,13 @@ export function Dashboard() {
                 badge={totalExpense > totalIncome ? { label: 'Exceso', tone: 'danger' } : undefined}
               />
               <StatCard
-                label="Objetivos activos"
-                amount={activeGoals.length}
-                icon={<IconTarget size={20} stroke={1.75} />}
+                label="Ahorrado"
+                amount={formatCurrency(savingsTotal)}
+                icon={<IconPigMoney size={20} stroke={1.75} />}
                 iconBg="var(--color-primary-alpha)"
-                badge={activeGoals.length > 0 ? { label: 'En curso', tone: 'brand' } : undefined}
+                badge={savingsRate !== null && savingsTotal > 0
+                  ? { label: `${savingsRate}% de ingresos`, tone: 'brand' }
+                  : undefined}
               />
               <StatCard
                 label="Presupuestos"

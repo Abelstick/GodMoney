@@ -58,7 +58,7 @@ export function useInsights() {
         const dailyAvailable = getDailyAvailable({ today, incomes, expenses, budgetsWithSpent })
         const alerts         = getSmartAlerts({ today, projection, dailyAvailable, budgetsWithSpent, expenses, historicalExpenses })
         const recurring       = getRecurringSummary({ expenses, incomes })
-        const autoInsights    = getAutoInsights({ expenses, prevExpenses, historicalExpenses, historicalIncomes })
+        const autoInsights    = getAutoInsights({ expenses, prevExpenses, historicalExpenses, historicalIncomes, incomes })
 
         if (!cancelled) {
           setData({ loading: false, error: null, projection, dailyAvailable, alerts, recurring, autoInsights })

@@ -40,7 +40,7 @@ async function getFinancialContext(userId) {
       .gte('date', `${month}-01`),
     supabase
       .from('expenses')
-      .select('amount, categories(name)')
+      .select('amount, categories(name, is_savings)')
       .eq('user_id', userId)
       .gte('date', `${month}-01`),
     supabase
@@ -58,11 +58,20 @@ async function getFinancialContext(userId) {
 
   const totalIncome  = incomes.reduce((s, i) => s + Number(i.amount), 0)
   const totalExpense = expenses.reduce((s, e) => s + Number(e.amount), 0)
+  // El ahorro apartado sale del mes, pero no es consumo: se le pasa aparte a
+  // la IA para que no lo trate como gasto a recortar.
+  const savingsTotal = expenses
+    .filter((e) => e.categories?.is_savings)
+    .reduce((s, e) => s + Number(e.amount), 0)
+  const consumptionTotal = totalExpense - savingsTotal
 
   const data = {
     month,
     totalIncome,
     totalExpense,
+    savingsTotal,
+    consumptionTotal,
+    savingsRate:    totalIncome > 0 ? Math.round((savingsTotal / totalIncome) * 100) : null,
     balance:        totalIncome - totalExpense,
     incomesBycat:   groupByCategory(incomes,  totalIncome),
     expensesByCat:  groupByCategory(expenses, totalExpense),
@@ -115,6 +124,7 @@ Idioma: español. Tono: directo, amigable, sin rodeos. Longitud: máx 3 párrafo
 
 ── RESUMEN ${ctx.month} ──
 Ingresos: ${s(ctx.totalIncome)} | Gastos: ${s(ctx.totalExpense)} | Balance: ${balanceTag}
+Gasto real (consumo): ${s(ctx.consumptionTotal)} | Ahorro apartado: ${s(ctx.savingsTotal)}${ctx.savingsRate !== null ? ` (${pct(ctx.savingsRate)} de los ingresos)` : ''}
 
 Ingresos por categoría:
 ${incomeRows}
@@ -130,6 +140,7 @@ ${budgetRows}
 
 Reglas:
 - Usa solo los datos anteriores; no inventes cifras.
+- Las categorías de ahorro cuentan como gasto del mes, pero NO son consumo: nunca sugieras recortarlas para gastar menos.
 - Si no hay datos suficientes, dilo en una sola línea.
 - No repitas el resumen completo; menciona solo lo relevante para la pregunta.`
 }

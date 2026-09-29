@@ -188,6 +188,9 @@ export function Categories() {
                 >
                   {cat.type === 'income' ? 'Ingreso' : cat.type === 'expense' ? 'Egreso' : 'Ambos'}
                 </Badge>
+                {cat.is_savings && (
+                  <Badge size="xs" variant="light" color="violet">Ahorro</Badge>
+                )}
                 {cat.is_default && (
                   <Badge size="xs" variant="light" color="gray">Por defecto</Badge>
                 )}

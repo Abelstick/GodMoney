@@ -30,6 +30,11 @@ function ExpenseItem({ expense, onEdit, onDelete }) {
           <span>{formatDate(expense.date)}</span>
           {expense.category && <Badge color={expense.category.color}>{expense.category.name}</Badge>}
           {expense.is_fixed && <Badge color="var(--color-warning)">Fijo</Badge>}
+          {expense.category?.is_savings && (
+            <Badge color="var(--color-primary)">
+              {expense.savings_account ? `Ahorro → ${expense.savings_account.name}` : 'Ahorro'}
+            </Badge>
+          )}
         </div>
         {expense.created_at && (
           <div className={styles.registeredAt}>Registrado el {formatDateTime(expense.created_at)}</div>

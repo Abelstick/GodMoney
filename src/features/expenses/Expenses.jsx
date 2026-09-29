@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
-import { IconReceipt2, IconPinned, IconListNumbers } from '@tabler/icons-react'
+import { IconReceipt2, IconPinned, IconPigMoney } from '@tabler/icons-react'
 import { useExpenses }    from '@/hooks/useExpenses'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
 import { formatCurrency, formatMonth, getPastMonths } from '@/lib/formatters'
+import { splitSavings } from '@/lib/savings'
 import { parseISO } from 'date-fns'
 import { Card }     from '@/components/ui/Card/Card'
 import { Button }   from '@/components/ui/Button/Button'
@@ -114,6 +115,7 @@ export function Expenses() {
   }, [expenses])
 
   const fixedTotal = expenses.filter((e) => e.is_fixed).reduce((a, e) => a + Number(e.amount), 0)
+  const { consumptionTotal, savingsTotal } = useMemo(() => splitSavings(expenses), [expenses])
 
   return (
     <div className={styles.page}>
@@ -162,9 +164,15 @@ export function Expenses() {
         <>
           {/* Stats */}
           <div className={styles.summary}>
-            <StatCard label="Total gastos"  amount={formatCurrency(totalExpense)} icon={<IconReceipt2 size={20} stroke={1.75} />} iconBg="var(--color-danger-light)" />
+            <StatCard
+              label="Gasto real"
+              amount={formatCurrency(consumptionTotal)}
+              icon={<IconReceipt2 size={20} stroke={1.75} />}
+              iconBg="var(--color-danger-light)"
+              badge={savingsTotal > 0 ? { label: `Total ${formatCurrency(totalExpense)}`, tone: 'plain' } : undefined}
+            />
+            <StatCard label="Ahorrado"      amount={formatCurrency(savingsTotal)} icon={<IconPigMoney size={20} stroke={1.75} />} iconBg="var(--color-primary-alpha)" />
             <StatCard label="Gastos fijos"  amount={formatCurrency(fixedTotal)}   icon={<IconPinned size={20} stroke={1.75} />} iconBg="var(--color-danger-light)" />
-            <StatCard label="Transacciones" amount={expenses.length}              icon={<IconListNumbers size={20} stroke={1.75} />} iconBg="var(--color-primary-alpha)" />
           </div>
 
           <div className={styles.catGrid}>
@@ -234,6 +242,7 @@ export function Expenses() {
             category_id: editing.category_id ?? '',
             date:        editing.date,
             is_fixed:    editing.is_fixed,
+            savings_account_id: editing.savings_account_id ?? '',
           } : undefined}
           onSubmit={handleSubmit}
           onCancel={() => { setModalOpen(false); setEditing(null) }}

@@ -2,6 +2,7 @@ import { getDate, getDaysInMonth, format } from 'date-fns'
 import { groupByMonth, simpleMean, percentChange } from '@/features/predictions/utils/predictionAlgorithms'
 import { getBudgetStatus, BUDGET_STATUS, getBudgetAlertMessage } from '@/lib/budgetStatus'
 import { formatCurrency } from '@/lib/formatters'
+import { isSavingsExpense, getSavingsRate } from '@/lib/savings'
 
 function sum(rows) {
   return rows.reduce((acc, r) => acc + Number(r.amount), 0)
@@ -30,13 +31,14 @@ export function buildBudgetsWithSpent(budgets, spentByCategory) {
 // ── 1. Proyección de fin de mes ───────────────────────────────────────────
 // Lo fijo/recurrente ya registrado no se vuelve a proyectar; lo variable se
 // extrapola con una tasa diaria (gastado hasta hoy / días transcurridos).
+// El ahorro tampoco se extrapola: es un apartado puntual, no un ritmo de gasto.
 export function getMonthEndProjection({ today, expenses, incomes, historicalExpenses }) {
   const daysInMonth   = getDaysInMonth(today)
   const daysElapsed   = getDate(today)
   const daysRemaining = Math.max(daysInMonth - daysElapsed, 0)
   const currentMonthKey = format(today, 'yyyy-MM')
 
-  const variableExpense = sum(expenses.filter((e) => !e.is_fixed))
+  const variableExpense = sum(expenses.filter((e) => !e.is_fixed && !isSavingsExpense(e)))
   const spentSoFar       = sum(expenses)
   const dailyExpenseRate = daysElapsed > 0 ? variableExpense / daysElapsed : 0
   const projectedExpense = spentSoFar + dailyExpenseRate * daysRemaining
@@ -134,9 +136,10 @@ export function getSmartAlerts({ today, projection, dailyAvailable, budgetsWithS
 
   // Excluye el mes en curso: comparar un gasto contra un promedio que lo incluye a él mismo
   // sesga el umbral hacia arriba y diluye lo "inusual" que realmente es.
-  const pastExpenses = historicalExpenses.filter((e) => e.date.slice(0, 7) !== currentMonthKey)
+  // Apartar más ahorro de lo habitual no es un "gasto inusual".
+  const pastExpenses = historicalExpenses.filter((e) => e.date.slice(0, 7) !== currentMonthKey && !isSavingsExpense(e))
   const avgByCategory = averageAmountByCategory(pastExpenses)
-  expenses.forEach((e) => {
+  expenses.filter((e) => !isSavingsExpense(e)).forEach((e) => {
     const catAvg = avgByCategory[e.category_id]
     const amount = Number(e.amount)
     if (catAvg && amount >= catAvg * 2 && amount - catAvg >= UNUSUAL_MIN_DIFF) {
@@ -183,8 +186,25 @@ function currentStreak(series) {
   return { count, positive }
 }
 
-export function getAutoInsights({ expenses, prevExpenses, historicalExpenses, historicalIncomes }) {
+// Los insights de consumo (categoría top, variación, gasto más grande) miran
+// solo el gasto real; el ahorro se reporta aparte como tasa de ahorro. La
+// racha usa ingresos − consumo: ahorrar más no debe romperla.
+export function getAutoInsights({ expenses: allExpenses, prevExpenses: allPrevExpenses, historicalExpenses: allHistorical, historicalIncomes, incomes = [] }) {
   const insights = []
+  const expenses           = allExpenses.filter((e) => !isSavingsExpense(e))
+  const prevExpenses       = allPrevExpenses.filter((e) => !isSavingsExpense(e))
+  const historicalExpenses = allHistorical.filter((e) => !isSavingsExpense(e))
+
+  const savedThisMonth = sum(allExpenses.filter(isSavingsExpense))
+  const savingsRate = getSavingsRate(savedThisMonth, sum(incomes))
+  if (savedThisMonth > 0) {
+    insights.push({
+      id: 'savings-rate',
+      text: savingsRate !== null
+        ? `Este mes apartaste ${formatCurrency(savedThisMonth)} para ahorro (${savingsRate}% de tus ingresos)`
+        : `Este mes apartaste ${formatCurrency(savedThisMonth)} para ahorro`,
+    })
+  }
 
   const byCategory = {}
   expenses.forEach((e) => {
@@ -206,8 +226,8 @@ export function getAutoInsights({ expenses, prevExpenses, historicalExpenses, hi
     insights.push({
       id: 'month-change',
       text: change >= 0
-        ? `Gastaste ${change}% más que el mes pasado (${formatCurrency(totalThisMonth)} vs ${formatCurrency(totalPrevMonth)})`
-        : `Gastaste ${Math.abs(change)}% menos que el mes pasado (${formatCurrency(totalThisMonth)} vs ${formatCurrency(totalPrevMonth)})`,
+        ? `Tu gasto real subió ${change}% vs el mes pasado (${formatCurrency(totalThisMonth)} vs ${formatCurrency(totalPrevMonth)})`
+        : `Tu gasto real bajó ${Math.abs(change)}% vs el mes pasado (${formatCurrency(totalThisMonth)} vs ${formatCurrency(totalPrevMonth)})`,
     })
   }
 
@@ -225,7 +245,7 @@ export function getAutoInsights({ expenses, prevExpenses, historicalExpenses, hi
     insights.push({
       id: 'streak',
       text: streak.positive
-        ? `Llevas ${streak.count} meses seguidos ahorrando (ingresos > gastos)`
+        ? `Llevas ${streak.count} meses seguidos ahorrando (ingresos > gasto real)`
         : `Llevas ${streak.count} meses seguidos gastando más de lo que ingresa`,
     })
   }

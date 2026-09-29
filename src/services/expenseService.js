@@ -10,7 +10,7 @@ export const expenseService = {
   async getByMonth(from, to) {
     const { data, error } = await supabase
       .from('expenses')
-      .select('*, category:categories(id,name,color,icon)')
+      .select('*, category:categories(id,name,color,icon,is_savings), savings_account:accounts(id,name)')
       .gte('date', from)
       .lte('date', to)
       .order('date', { ascending: false })
@@ -23,7 +23,7 @@ export const expenseService = {
     from.setMonth(from.getMonth() - months)
     const { data, error } = await supabase
       .from('expenses')
-      .select('amount, date, category_id, is_fixed')
+      .select('amount, date, category_id, is_fixed, category:categories(is_savings)')
       .gte('date', from.toISOString().slice(0, 10))
       .order('date')
     if (error) throw error
@@ -35,7 +35,7 @@ export const expenseService = {
     const { data, error } = await supabase
       .from('expenses')
       .insert({ ...payload, user_id })
-      .select('*, category:categories(id,name,color,icon)')
+      .select('*, category:categories(id,name,color,icon,is_savings), savings_account:accounts(id,name)')
       .single()
     if (error) throw error
     return data
@@ -46,7 +46,7 @@ export const expenseService = {
       .from('expenses')
       .update(payload)
       .eq('id', id)
-      .select('*, category:categories(id,name,color,icon)')
+      .select('*, category:categories(id,name,color,icon,is_savings), savings_account:accounts(id,name)')
       .single()
     if (error) throw error
     return data

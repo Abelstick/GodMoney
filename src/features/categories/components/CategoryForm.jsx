@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Stack, Group, SegmentedControl, ColorSwatch, SimpleGrid, Tooltip } from '@mantine/core'
+import { Stack, Group, SegmentedControl, ColorSwatch, SimpleGrid, Tooltip, Switch } from '@mantine/core'
 import { Input }   from '@/components/ui/Input/Input'
 import { Button }  from '@/components/ui/Button/Button'
 import { CATEGORY_COLORS } from '@/lib/constants'
@@ -29,7 +29,7 @@ const ICONS = [
   { value: 'percentage',     emoji: '💹' },
 ]
 
-const EMPTY = { name: '', type: 'expense', color: '#6366f1', icon: 'tag' }
+const EMPTY = { name: '', type: 'expense', color: '#6366f1', icon: 'tag', is_savings: false }
 
 export function CategoryForm({ initial, onSubmit, onCancel, loading }) {
   const [form, setForm] = useState(initial ?? EMPTY)
@@ -45,7 +45,11 @@ export function CategoryForm({ initial, onSubmit, onCancel, loading }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
-    onSubmit({ name: form.name.trim(), type: form.type, color: form.color, icon: form.icon })
+    onSubmit({
+      name: form.name.trim(), type: form.type, color: form.color, icon: form.icon,
+      // Solo un egreso puede ser ahorro: una categoría de ingreso no aparta dinero.
+      is_savings: form.type !== 'income' && Boolean(form.is_savings),
+    })
   }
 
   return (
@@ -75,6 +79,16 @@ export function CategoryForm({ initial, onSubmit, onCancel, loading }) {
             radius="md"
           />
         </div>
+
+        {form.type !== 'income' && (
+          <Switch
+            checked={Boolean(form.is_savings)}
+            onChange={(e) => setForm((f) => ({ ...f, is_savings: e.currentTarget.checked }))}
+            color="violet"
+            label="Es una categoría de ahorro"
+            description="Cuenta como salida del mes, pero los reportes la separan del consumo y puedes enviar el dinero a una cuenta."
+          />
+        )}
 
         <div>
           <label className={styles.label}>Color</label>
