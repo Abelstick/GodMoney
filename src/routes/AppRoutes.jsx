@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell }    from '@/layout/AppShell/AppShell'
 const Dashboard = lazy(() => import('@/features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })))
@@ -16,12 +16,14 @@ const CreditScore = lazy(() => import('@/features/creditScore/CreditScore').then
 const Categories = lazy(() => import('@/features/categories/Categories').then((m) => ({ default: m.Categories })))
 const Settings = lazy(() => import('@/features/settings/Settings').then((m) => ({ default: m.Settings })))
 import { LoginPage }   from '@/features/auth/LoginPage'
+const PrivacyPage = lazy(() => import('@/features/legal/PrivacyPage').then((m) => ({ default: m.PrivacyPage })))
 import { ProtectedRoute } from './ProtectedRoute'
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/privacidad" element={<Suspense fallback={null}><PrivacyPage /></Suspense>} />
 
       <Route
         element={

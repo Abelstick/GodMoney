@@ -247,3 +247,6 @@
   .subtitle { margin-bottom: var(--space-4); }
   .divider { margin: var(--space-4) 0; }
 }
+
+.legal { margin-top: var(--space-4); font-size: var(--text-xs); color: var(--color-text-muted); }
+.legal a { color: var(--color-primary); }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   TextInput, PasswordInput, Button,
   Text, Anchor, Alert, Stack, useMantineColorScheme,
@@ -196,6 +196,9 @@ export function LoginPage() {
               <IconShieldCheck size={14} stroke={1.75} /> Conexión cifrada
             </span>
           </div>
+          <p className={styles.legal}>
+            Al continuar aceptas nuestra <Link to="/privacidad">política de privacidad</Link>.
+          </p>
         </div>
       </section>
     </main>
