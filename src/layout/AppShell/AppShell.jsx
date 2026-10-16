@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useMantineColorScheme } from '@mantine/core'
 import { IconMoon, IconSun, IconLogout, IconDiamondFilled } from '@tabler/icons-react'
@@ -8,6 +8,7 @@ import { useHideOnScroll } from '@/hooks/useHideOnScroll'
 import { Sidebar }   from '../Sidebar/Sidebar'
 import { BottomNav } from '../BottomNav/BottomNav'
 import { QuickAddFab } from '../QuickAddFab/QuickAddFab'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
 import { InstallPrompt } from '@/components/ui/InstallPrompt/InstallPrompt'
 import { ChatBot }       from '@/features/chat/ChatBot'
 import styles from './AppShell.module.css'
@@ -66,7 +67,9 @@ export function AppShell() {
         <MobileHeader />
 
         <main className={styles.content}>
-          <Outlet />
+          <Suspense fallback={<LoadingSpinner />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
 

@@ -4,6 +4,7 @@ import { AppRoutes }     from './routes/AppRoutes'
 import { AuthProvider }  from './features/auth/AuthContext'
 
 const theme = createTheme({
+  respectReducedMotion: true,
   primaryColor: 'violet',
   defaultRadius: 'md',
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',

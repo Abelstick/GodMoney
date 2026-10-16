@@ -55,8 +55,11 @@ export function GoalForm({ initial, onSubmit, onCancel, loading, isLinked = fals
         </label>
         <div className={styles.colorRow}>
           {CATEGORY_COLORS.map((c) => (
-            <div
+            <button
+              type="button"
               key={c}
+              aria-label={`Color ${c}`}
+              aria-pressed={form.color === c}
               className={`${styles.colorSwatch} ${form.color === c ? styles.selected : ''}`}
               style={{ background: c }}
               onClick={() => setForm((f) => ({ ...f, color: c }))}

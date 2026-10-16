@@ -96,6 +96,10 @@ export function CategoryForm({ initial, onSubmit, onCancel, loading }) {
             {CATEGORY_COLORS.map((c) => (
               <Tooltip key={c} label={c} withArrow>
                 <ColorSwatch
+                  component="button"
+                  type="button"
+                  aria-label={`Color ${c}`}
+                  aria-pressed={form.color === c}
                   color={c}
                   size={32}
                   className={`${styles.swatch} ${form.color === c ? styles.selected : ''}`}

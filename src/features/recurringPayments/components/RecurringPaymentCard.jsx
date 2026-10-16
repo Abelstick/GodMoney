@@ -12,12 +12,12 @@ export function RecurringPaymentCard({ payment, ledger, onOpenDetail, onMarkPaid
   const canPay = status !== RECURRING_STATUS.PAUSED && status !== RECURRING_STATUS.UP_TO_DATE
 
   return (
-    <div className={styles.card} onClick={() => onOpenDetail(payment)}>
+    <div className={styles.card}>
       <div className={styles.top}>
         <div className={styles.info}>
           <span className={styles.avatar}>{payment.name.slice(0, 1).toUpperCase()}</span>
           <div>
-            <div className={styles.name}>{payment.name}</div>
+            <button type="button" className={styles.name} onClick={() => onOpenDetail(payment)}>{payment.name}</button>
             {payment.description && <div className={styles.description}>{payment.description}</div>}
           </div>
         </div>
@@ -42,7 +42,7 @@ export function RecurringPaymentCard({ payment, ledger, onOpenDetail, onMarkPaid
       </div>
 
       {canPay && (
-        <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.actions}>
           <Button size="sm" onClick={() => onMarkPaid(payment)}>Marcar pagado</Button>
           <Button size="sm" variant="secondary" onClick={() => onOpenDetail(payment)}>Ver detalle</Button>
         </div>

@@ -88,7 +88,7 @@
   width: 26px; height: 26px; border-radius: var(--radius-sm);
   font-size: 0.8rem; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition-fast); background: none; color: var(--color-text-muted);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast); background: none; color: var(--color-text-muted);
 }
 .actionBtn:hover { background: var(--color-surface-3); color: var(--color-text-primary); }
 .actionBtn.delete:hover { background: var(--color-danger-light); color: var(--color-danger); }
@@ -278,3 +278,12 @@
 
 .groupChevron { color: var(--color-text-muted); transition: transform var(--transition-fast); }
 .groupChevronCollapsed { transform: rotate(-90deg); }
+
+/* Área táctil mínima de 44px sin alterar el diseño visible */
+.clearBtn::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: max(100%, 44px); height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}

@@ -24,7 +24,6 @@
   backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   border: 1px solid var(--color-danger);
-  border-left: 4px solid var(--color-danger);
   box-shadow: var(--glow-danger);
 }
 

@@ -42,7 +42,7 @@ export function AccountForm({ initial, isEditing = false, onSubmit, onCancel, lo
         <label className={styles.label}>Color</label>
         <div className={styles.colorRow}>
           {CATEGORY_COLORS.map((c) => (
-            <div key={c} onClick={() => setForm((f) => ({ ...f, color: c }))}
+            <button type="button" key={c} aria-label={`Color ${c}`} aria-pressed={form.color === c} onClick={() => setForm((f) => ({ ...f, color: c }))}
               className={`${styles.colorSwatch} ${form.color === c ? styles.selected : ''}`}
               style={{ background: c }} />
           ))}

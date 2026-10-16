@@ -130,3 +130,19 @@ h1, h2, h3, h4, h5, h6 {
 
 .fade-in  { animation: fadeIn 200ms ease forwards; }
 .slide-up { animation: slideUp 250ms ease forwards; }
+
+/* ── Objetivos táctiles: mínimo 44px en pantallas táctiles ── */
+@media (pointer: coarse) {
+  .mantine-Button-root,
+  .mantine-ActionIcon-root,
+  .mantine-CloseButton-root,
+  .mantine-Modal-close {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ── Movimiento reducido (las entradas y elevaciones se resuelven en cada módulo) ── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

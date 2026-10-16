@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
 import {
   IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown,
-  IconCoin, IconEdit, IconTrash, IconRepeat,
+  IconCoin, IconEdit, IconTrash, IconRepeat, IconX,
 } from '@tabler/icons-react'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
@@ -18,7 +18,7 @@ function IncomeItem({ income, onEdit, onDelete }) {
     <div className={styles.item}>
       <div
         className={styles.iconWrap}
-        style={{ background: (income.category?.color ?? '#4edea3') + '26', color: income.category?.color ?? 'var(--color-success)' }}
+        style={{ background: `color-mix(in srgb, ${income.category?.color ?? 'var(--color-success)'} 15%, transparent)`, color: income.category?.color ?? 'var(--color-success)' }}
       >
         <IconCoin size={18} stroke={1.75} />
       </div>
@@ -166,7 +166,7 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        {query && <button className={styles.clearBtn} onClick={() => setQuery('')}>✕</button>}
+        {query && <button className={styles.clearBtn} onClick={() => setQuery('')} aria-label="Limpiar búsqueda"><IconX size={14} stroke={2} /></button>}
       </div>
 
       {/* Filtros dinámicos */}
@@ -221,6 +221,7 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
           className={styles.sortDirBtn}
           onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
           title={sortDir === 'asc' ? 'Ascendente' : 'Descendente'}
+          aria-label={sortDir === 'asc' ? 'Orden ascendente, cambiar a descendente' : 'Orden descendente, cambiar a ascendente'}
         >
           {sortDir === 'asc' ? <IconArrowUp size={15} stroke={1.75} /> : <IconArrowDown size={15} stroke={1.75} />}
         </button>

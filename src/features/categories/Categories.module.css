@@ -79,3 +79,7 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .catCard:hover { transform: none; }
+}

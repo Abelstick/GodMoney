@@ -30,3 +30,7 @@
   flex: 1;
   text-align: left;
 }
+
+@media (pointer: coarse) {
+  .toggle { min-height: 44px; }
+}

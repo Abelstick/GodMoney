@@ -119,7 +119,7 @@ export function GoalCard({ goal, onEdit, onDelete, onAddProgress, accounts, goal
             autoFocus
           />
           <Button size="sm" onClick={handleProgress}>Añadir</Button>
-          <Button size="sm" variant="ghost" onClick={() => setAddingProgress(false)}>
+          <Button size="sm" variant="ghost" onClick={() => setAddingProgress(false)} aria-label="Cancelar">
             <IconX size={15} stroke={1.75} />
           </Button>
         </div>

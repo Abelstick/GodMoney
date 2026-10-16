@@ -15,12 +15,12 @@ export function LoanCard({ loan, nextInstallment, onOpenDetail, onRegisterPaymen
   const canPay = status !== 'PAID' && status !== 'CANCELLED'
 
   return (
-    <div className={styles.card} onClick={() => onOpenDetail(loan)}>
+    <div className={styles.card}>
       <div className={styles.top}>
         <div className={styles.person}>
           <span className={styles.avatar}>{loan.person_name.slice(0, 1).toUpperCase()}</span>
           <div>
-            <div className={styles.name}>{loan.person_name}</div>
+            <button type="button" className={styles.name} onClick={() => onOpenDetail(loan)}>{loan.person_name}</button>
             {loan.description && <div className={styles.description}>{loan.description}</div>}
           </div>
         </div>
@@ -54,7 +54,7 @@ export function LoanCard({ loan, nextInstallment, onOpenDetail, onRegisterPaymen
       />
 
       {canPay && (
-        <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.actions}>
           <Button size="sm" onClick={() => onRegisterPayment(loan)}>Registrar pago</Button>
           <Button size="sm" variant="secondary" onClick={() => onOpenDetail(loan)}>Ver detalle</Button>
         </div>

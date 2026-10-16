@@ -13,16 +13,6 @@
   overflow: hidden;
 }
 
-/* Línea de color a la izquierda */
-.card::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background: var(--goal-color, var(--color-primary));
-  border-radius: 4px 0 0 4px;
-}
-
 .top {
   display: flex;
   align-items: flex-start;

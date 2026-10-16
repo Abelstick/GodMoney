@@ -64,7 +64,7 @@
 .filterChipActive {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
-  color: #fff;
+  color: var(--color-on-primary-dark);
 }
 
 .filterCount {
@@ -76,7 +76,7 @@
   line-height: 1.6;
 }
 
-.filterChipActive .filterCount { background: rgba(0, 0, 0, 0.18); color: #fff; }
+.filterChipActive .filterCount { background: rgba(0, 0, 0, 0.18); color: var(--color-on-primary-dark); }
 
 .empty {
   padding: var(--space-4);

@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  cursor: pointer;
+  position: relative;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-md); }
@@ -23,7 +23,14 @@
   display: flex; align-items: center; justify-content: center;
   font-weight: var(--weight-bold); font-size: var(--text-sm); flex-shrink: 0;
 }
-.name { font-size: var(--text-base); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
+.name {
+  font-size: var(--text-base); font-weight: var(--weight-semibold); overflow-wrap: break-word;
+  color: inherit; text-align: left;
+}
+/* Enlace estirado: toda la tarjeta abre el detalle, accesible con teclado */
+.name::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius-xl); cursor: pointer; }
+.name:focus-visible { outline: none; }
+.name:focus-visible::after { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .description { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
 
 .amounts {
@@ -36,7 +43,7 @@
 .amountValue { font-size: var(--text-sm); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
 .emphasis { color: var(--color-primary); }
 
-.actions { display: flex; gap: var(--space-2); }
+.actions { display: flex; gap: var(--space-2); position: relative; z-index: 1; }
 .actions > * { flex: 1; }
 
 @media (max-width: 640px) {

@@ -61,7 +61,7 @@
   height: 40px;
   border-radius: var(--radius-md);
   background: var(--color-primary-dark);
-  color: #fff;
+  color: var(--color-on-primary-dark);
   display: flex;
   align-items: center;
   justify-content: center;

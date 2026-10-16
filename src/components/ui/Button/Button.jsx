@@ -25,6 +25,7 @@ export function Button({
   onClick,
   className = '',
   style,
+  ...rest
 }) {
   const { variant: mv, color } = VARIANT_MAP[variant] ?? VARIANT_MAP.primary
   return (
@@ -38,6 +39,7 @@ export function Button({
       onClick={onClick}
       className={className}
       style={style}
+      {...rest}
     >
       {children}
     </MButton>

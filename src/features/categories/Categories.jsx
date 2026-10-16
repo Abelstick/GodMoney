@@ -162,6 +162,7 @@ export function Categories() {
                     size="sm"
                     onClick={() => openEdit(cat)}
                     title="Editar"
+                    aria-label={`Editar categoría ${cat.name}`}
                   >
                     <IconEdit size={15} stroke={1.75} />
                   </ActionIcon>
@@ -171,6 +172,7 @@ export function Categories() {
                     size="sm"
                     onClick={() => setDeletingId(cat.id)}
                     title="Eliminar"
+                    aria-label={`Eliminar categoría ${cat.name}`}
                   >
                     <IconTrash size={15} stroke={1.75} />
                   </ActionIcon>

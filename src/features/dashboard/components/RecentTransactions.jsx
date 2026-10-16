@@ -41,7 +41,7 @@ export function RecentTransactions({ incomes = [], expenses = [], limit = 8, has
           <div
             className={styles.dot}
             style={{
-              background: (tx.category?.color ?? '#6366f1') + '26',
+              background: `color-mix(in srgb, ${tx.category?.color ?? 'var(--color-primary)'} 15%, transparent)`,
               color: tx.category?.color ?? 'var(--color-text-secondary)',
             }}
           >

@@ -60,7 +60,7 @@
   transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 }
 .filterChip:hover { border-color: var(--color-border-strong); color: var(--color-text-primary); }
-.filterChipActive { background: var(--color-primary-dark); border-color: var(--color-primary-dark); color: #fff; }
+.filterChipActive { background: var(--color-primary-dark); border-color: var(--color-primary-dark); color: var(--color-on-primary-dark); }
 
 .empty {
   padding: var(--space-4);

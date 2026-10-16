@@ -189,6 +189,8 @@ export function Sidebar() {
         className={styles.collapseBtn}
         onClick={toggleCollapsed}
         title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+        aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
+        aria-expanded={!collapsed}
       >
         {collapsed
           ? <IconMenu2 size={16} stroke={1.75} />
@@ -204,6 +206,7 @@ export function Sidebar() {
           className={`${styles.themeToggle} ${isDark ? styles.themeDark : ''}`}
           onClick={toggleColorScheme}
           title={isDark ? 'Modo claro' : 'Modo oscuro'}
+          aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
           <div className={styles.toggleTrack}>
             <div className={styles.toggleThumb}>

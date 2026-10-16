@@ -44,7 +44,7 @@ export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
           />
           <Button size="sm" variant="success" onClick={() => handleAdjust(1)}>+ Depositar</Button>
           <Button size="sm" variant="danger" onClick={() => handleAdjust(-1)}>− Retirar</Button>
-          <Button size="sm" variant="ghost" onClick={() => setAdjusting(false)}>
+          <Button size="sm" variant="ghost" onClick={() => setAdjusting(false)} aria-label="Cancelar ajuste">
             <IconX size={15} stroke={1.75} />
           </Button>
         </div>

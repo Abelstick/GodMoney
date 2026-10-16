@@ -17,3 +17,9 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: rm-pulse 1.4s ease-in-out infinite; }
+}
+
+@keyframes rm-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }

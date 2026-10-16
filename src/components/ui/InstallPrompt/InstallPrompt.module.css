@@ -92,9 +92,25 @@
   align-items: center;
   justify-content: center;
   transition: background var(--transition-fast), color var(--transition-fast);
+position: relative;
 }
 
 .dismissBtn:hover {
   background: var(--color-surface-2);
   color: var(--color-text-primary);
 }
+
+/* Área táctil mínima de 44px sin alterar el diseño visible */
+.dismissBtn::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: max(100%, 44px); height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner { animation-name: rm-fade; }
+}
+
+@keyframes rm-fade  { from { opacity: 0; } to { opacity: 1; } }
