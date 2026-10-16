@@ -17,6 +17,7 @@ const Categories = lazy(() => import('@/features/categories/Categories').then((m
 const Settings = lazy(() => import('@/features/settings/Settings').then((m) => ({ default: m.Settings })))
 import { LoginPage }   from '@/features/auth/LoginPage'
 const PrivacyPage = lazy(() => import('@/features/legal/PrivacyPage').then((m) => ({ default: m.PrivacyPage })))
+const TermsPage = lazy(() => import('@/features/legal/TermsPage').then((m) => ({ default: m.TermsPage })))
 import { ProtectedRoute } from './ProtectedRoute'
 
 export function AppRoutes() {
@@ -24,6 +25,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/privacidad" element={<Suspense fallback={null}><PrivacyPage /></Suspense>} />
+      <Route path="/terminos" element={<Suspense fallback={null}><TermsPage /></Suspense>} />
 
       <Route
         element={

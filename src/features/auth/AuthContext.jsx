@@ -40,7 +40,11 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp(email, password) {
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION } },
+    })
     if (error) throw error
   }
 
@@ -63,5 +67,7 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
+
+export const TERMS_VERSION = '2026-10-16'
 
 export const useAuth = () => useContext(AuthContext)

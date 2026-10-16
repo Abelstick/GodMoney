@@ -9,6 +9,7 @@ import { Card }            from '@/components/ui/Card/Card'
 import { StatCard }        from '@/components/ui/StatCard/StatCard'
 import { Badge }           from '@/components/ui/Badge/Badge'
 import { Skeleton }        from '@/components/common/Skeleton/Skeleton'
+import { Disclaimer } from '@/components/common/Disclaimer/Disclaimer'
 import { PredictionChart } from './components/PredictionChart'
 import styles from './Predictions.module.css'
 
@@ -185,6 +186,7 @@ export function Predictions() {
           )}
         </>
       )}
+      <Disclaimer kind="prediction" />
     </div>
   )
 }

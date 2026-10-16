@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge/Badge'
 import { Modal } from '@/components/common/Modal/Modal'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
+import { Disclaimer } from '@/components/common/Disclaimer/Disclaimer'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { formatDate } from '@/lib/formatters'
 import { getCreditScoreCategory, CREDIT_SCORE_RANGES } from '@/lib/creditScoreStatus'
@@ -161,6 +162,7 @@ export function CreditScore() {
           loading={saving}
         />
       </Modal>
+      <Disclaimer kind="credit" />
     </div>
   )
 }

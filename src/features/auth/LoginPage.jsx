@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
-  TextInput, PasswordInput, Button,
+  TextInput, PasswordInput, Button, Checkbox,
   Text, Anchor, Alert, Stack, useMantineColorScheme,
 } from '@mantine/core'
 import {
@@ -29,12 +29,14 @@ export function LoginPage() {
   const [error, setError]       = useState('')
   const [info, setInfo]         = useState('')
   const [loading, setLoading]   = useState(false)
+  const [accepted, setAccepted] = useState(false)
 
   const isLogin = mode === 'login'
 
   async function handleGoogle() {
     setError('')
     setInfo('')
+    if (!isLogin && !accepted) { setError('Debes aceptar los términos de uso y la política de privacidad para crear tu cuenta.'); return }
     try {
       await signInWithGoogle()
     } catch (err) {
@@ -149,6 +151,15 @@ export function LoginPage() {
                   leftSection={<IconLock size={16} stroke={1.75} />}
                   classNames={{ input: styles.input, label: styles.inputLabel }}
                 />
+                {!isLogin && (
+                  <Checkbox
+                    checked={accepted}
+                    onChange={(e) => setAccepted(e.currentTarget.checked)}
+                    required
+                    size="sm"
+                    label={<>He leído y acepto los <Link to="/terminos" target="_blank">términos de uso</Link> y la <Link to="/privacidad" target="_blank">política de privacidad</Link>.</>}
+                  />
+                )}
                 <Button
                   type="submit"
                   fullWidth
@@ -197,7 +208,7 @@ export function LoginPage() {
             </span>
           </div>
           <p className={styles.legal}>
-            Al continuar aceptas nuestra <Link to="/privacidad">política de privacidad</Link>.
+            Al continuar aceptas los <Link to="/terminos">términos de uso</Link> y la <Link to="/privacidad">política de privacidad</Link>.
           </p>
         </div>
       </section>

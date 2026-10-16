@@ -65,14 +65,45 @@ export function PrivacyPage() {
           reglas de seguridad a nivel de fila en la base de datos.
         </p>
 
+        <h2>Responsable del tratamiento y base legal</h2>
+        <p>
+          El responsable es Abel Panta Chira (Perú), contacto: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+          Tratamos tus datos conforme a la Ley N.° 29733, Ley de Protección de Datos Personales, y su
+          reglamento. La base legal es tu consentimiento, que otorgas al crear tu cuenta aceptando esta
+          política y los <Link to="/terminos">términos de uso</Link>. No solicitamos datos sensibles ni números
+          de tarjetas o contraseñas bancarias: te recomendamos no escribirlos en notas ni adjuntos.
+        </p>
+
+        <h2>Conservación y transferencia internacional</h2>
+        <p>
+          Conservamos tus datos mientras mantengas tu cuenta y los eliminamos cuando lo solicites. Los
+          proveedores listados arriba (Supabase, Google, Render, Telegram) pueden almacenar o procesar datos
+          en servidores fuera del Perú; al aceptar esta política consientes dicha transferencia, limitada a lo
+          necesario para prestar el servicio.
+        </p>
+
+        <h2>Menores de edad</h2>
+        <p>
+          La aplicación está dirigida a mayores de 18 años. Si detectamos una cuenta de un menor sin
+          autorización de su representante, la eliminaremos.
+        </p>
+
         <h2>Tus derechos</h2>
         <p>
-          Puedes editar o eliminar tus movimientos desde la aplicación, revocar el acceso a Drive en{' '}
+          Puedes ejercer tus derechos de acceso, rectificación, cancelación y oposición (ARCO) escribiendo a{' '}
+          <a href={`mailto:${CONTACT}`}>{CONTACT}</a>; responderemos dentro de los plazos legales. También puedes
+          editar o eliminar tus movimientos desde la aplicación y revocar el acceso a Drive en{' '}
           <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">
             myaccount.google.com/permissions
-          </a>{' '}
-          y solicitar la eliminación completa de tu cuenta y tus datos escribiendo a{' '}
-          <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+          </a>. Si consideras que no atendimos tu solicitud, puedes acudir a la Autoridad Nacional de
+          Protección de Datos Personales (Ministerio de Justicia y Derechos Humanos).
+        </p>
+
+        <h2>Limitaciones</h2>
+        <p>
+          Aplicamos medidas razonables de seguridad, pero ningún sistema es infalible. La clave de API de
+          Gemini que ingreses se guarda asociada a tu cuenta para operar el asistente; puedes borrarla en
+          cualquier momento desde Configuración.
         </p>
 
         <h2>Cambios y contacto</h2>

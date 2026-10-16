@@ -1,5 +1,6 @@
 import { useInsights } from '@/hooks/useInsights'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
+import { Disclaimer } from '@/components/common/Disclaimer/Disclaimer'
 import { Button }   from '@/components/ui/Button/Button'
 import { MonthEndProjectionCard } from './components/MonthEndProjectionCard'
 import { DailyAvailableCard }     from './components/DailyAvailableCard'
@@ -43,6 +44,7 @@ export function Insights() {
           <AutoInsightsList insights={autoInsights} />
         </>
       )}
+      <Disclaimer />
     </div>
   )
 }

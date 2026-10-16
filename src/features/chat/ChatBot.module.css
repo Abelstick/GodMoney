@@ -306,3 +306,11 @@
 
 @keyframes rm-fade  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes rm-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+.aiNotice {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-text-muted);
+}

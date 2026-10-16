@@ -233,6 +233,8 @@ export function ChatBot({ hidden = false }) {
             <div ref={bottomRef} />
           </div>
 
+          <div className={styles.aiNotice}>La IA puede cometer errores. No es asesoría financiera; verifica la información importante.</div>
+
           {/* Input */}
           <div className={styles.inputArea}>
             {/* No se deshabilita mientras responde: en móvil un input
