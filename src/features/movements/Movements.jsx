@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { MultiSelect } from '@mantine/core'
 import {
-  IconSearch, IconX, IconDownload, IconFileTypePdf, IconUpload, IconPaperclip,
+  IconSearch, IconX, IconDownload, IconFileTypePdf, IconUpload,
   IconArrowUpRight, IconArrowDownRight, IconFilterOff,
 } from '@tabler/icons-react'
 import { format, startOfYear, endOfYear, subYears, subMonths } from 'date-fns'
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button/Button'
 import { Badge } from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Modal } from '@/components/common/Modal/Modal'
+import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import { ImportModal } from './components/ImportModal'
 import styles from './Movements.module.css'
 
@@ -295,14 +296,9 @@ export function Movements() {
                       <span>{formatDate(m.date)}</span>
                       {m.category && <Badge color={m.category.color}>{m.category.name}</Badge>}
                       {(m.tags ?? []).map((t) => <span key={t} className={styles.tag}>#{t}</span>)}
-                      {(m.attachments ?? []).map((a) => (
-                        <a key={a.id} href={a.link} target="_blank" rel="noopener noreferrer" className={styles.clip}
-                          title={a.name}>
-                          <IconPaperclip size={12} stroke={1.75} /> {a.name}
-                        </a>
-                      ))}
                     </div>
                     {m.notes && <div className={styles.note}>{m.notes}</div>}
+                    <AttachmentStrip attachments={m.attachments} />
                   </div>
                   <span className={`${styles.amount} ${isIncome ? styles.income : styles.expense}`}>
                     {isIncome ? '+' : '-'}{formatCurrency(m.amount)}

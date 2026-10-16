@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
 import {
   IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown,
-  IconReceipt2, IconPaperclip, IconEdit, IconTrash, IconPinned, IconX,
+  IconReceipt2, IconEdit, IconTrash, IconPinned, IconX,
 } from '@tabler/icons-react'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { SORT_OPTIONS, sortTransactions } from '@/lib/transactionSort'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
+import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import styles from './ExpenseList.module.css'
 
 const PAGE_SIZE = 8
@@ -36,12 +37,8 @@ function ExpenseItem({ expense, onEdit, onDelete }) {
             </Badge>
           )}
           {expense.tags?.map((t) => <span key={t} className={styles.tag}>#{t}</span>)}
-          {expense.attachments?.length > 0 && (
-            <span className={styles.clip} title={`${expense.attachments.length} adjunto(s)`}>
-              <IconPaperclip size={12} stroke={1.75} /> {expense.attachments.length}
-            </span>
-          )}
         </div>
+        <AttachmentStrip attachments={expense.attachments} />
         {expense.created_at && (
           <div className={styles.registeredAt}>Registrado el {formatDateTime(expense.created_at)}</div>
         )}

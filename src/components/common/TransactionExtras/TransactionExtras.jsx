@@ -1,8 +1,12 @@
 import { useRef, useState } from 'react'
 import { TagsInput, Textarea } from '@mantine/core'
-import { IconPaperclip, IconX, IconExternalLink, IconLoader2 } from '@tabler/icons-react'
+import { IconCamera, IconX, IconLoader2 } from '@tabler/icons-react'
 import { uploadAttachment, isDriveConfigured } from '@/lib/googleDrive'
+import { AttachmentViewer } from '@/components/common/Attachments/AttachmentViewer'
+import { ThumbContent } from '@/components/common/Attachments/AttachmentStrip'
 import styles from './TransactionExtras.module.css'
+
+const MAX_FILES = 6
 
 const fieldStyles = {
   input: {
@@ -20,29 +24,60 @@ const fieldStyles = {
  */
 export function TransactionExtras({ value, onChange }) {
   const fileRef = useRef(null)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState('')
+  const [pending, setPending] = useState([]) // nombres de archivos subiéndose
+  const [errors, setErrors]   = useState([])
+  const [dragging, setDragging] = useState(false)
+  const [viewing, setViewing] = useState(null)
 
-  async function handleFiles(e) {
-    const files = [...(e.target.files ?? [])]
-    e.target.value = ''
-    if (!files.length) return
-    setError('')
-    setUploading(true)
-    try {
-      const uploaded = []
-      for (const file of files) uploaded.push(await uploadAttachment(file))
-      onChange({ attachments: [...value.attachments, ...uploaded] })
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setUploading(false)
+  const uploading = pending.length > 0
+
+  async function uploadFiles(fileList) {
+    const files = [...fileList].filter((f) => f.type.startsWith('image/') || f.type === 'application/pdf')
+    const rejected = fileList.length - files.length
+    const room = MAX_FILES - value.attachments.length
+    const batch = files.slice(0, Math.max(0, room))
+
+    const errs = []
+    if (rejected > 0) errs.push('Solo se aceptan fotos y PDF.')
+    if (files.length > batch.length) errs.push(`Máximo ${MAX_FILES} adjuntos por movimiento.`)
+    setErrors(errs)
+    if (!batch.length) return
+
+    setPending(batch.map((f) => f.name))
+    const uploaded = []
+    for (const file of batch) {
+      try {
+        uploaded.push(await uploadAttachment(file))
+      } catch (err) {
+        errs.push(`${file.name}: ${err.message}`)
+        setErrors([...errs])
+        // Si el usuario canceló el permiso de Drive no tiene sentido seguir con el resto
+        if (/permiso|autoriz|configurar/i.test(err.message)) break
+      } finally {
+        setPending((p) => p.slice(1))
+      }
     }
+    setPending([])
+    if (uploaded.length) onChange({ attachments: [...value.attachments, ...uploaded] })
+  }
+
+  function handleInput(e) {
+    const files = e.target.files
+    if (files?.length) uploadFiles(files)
+    e.target.value = ''
+  }
+
+  function handleDrop(e) {
+    e.preventDefault()
+    setDragging(false)
+    if (isDriveConfigured && !uploading && e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files)
   }
 
   function removeAttachment(id) {
     onChange({ attachments: value.attachments.filter((a) => a.id !== id) })
   }
+
+  const disabled = uploading || !isDriveConfigured || value.attachments.length >= MAX_FILES
 
   return (
     <div className={styles.root}>
@@ -68,42 +103,63 @@ export function TransactionExtras({ value, onChange }) {
 
       <div>
         <span className={styles.label}>Adjuntos</span>
-        {value.attachments.length > 0 && (
-          <ul className={styles.files}>
-            {value.attachments.map((a) => (
-              <li key={a.id} className={styles.file}>
-                <a href={a.link} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
-                  <IconPaperclip size={14} stroke={1.75} />
-                  <span className={styles.fileName}>{a.name}</span>
-                  <IconExternalLink size={12} stroke={1.75} aria-hidden="true" />
-                </a>
-                <button type="button" className={styles.remove} onClick={() => removeAttachment(a.id)}
-                  aria-label={`Quitar ${a.name}`}>
-                  <IconX size={14} stroke={2} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
 
-        <input ref={fileRef} type="file" accept="image/*,application/pdf" multiple hidden onChange={handleFiles} />
-        <button
-          type="button"
-          className={styles.addBtn}
-          disabled={uploading || !isDriveConfigured}
-          onClick={() => fileRef.current?.click()}
-        >
-          {uploading
-            ? <><IconLoader2 size={16} stroke={1.75} className={styles.spin} /> Subiendo a tu Drive…</>
-            : <><IconPaperclip size={16} stroke={1.75} /> Adjuntar foto o PDF</>}
-        </button>
+        <div className={styles.grid}>
+          {value.attachments.map((a, i) => (
+            <div key={a.id} className={styles.tileWrap}>
+              <button type="button" className={styles.tile} onClick={() => setViewing(i)}
+                aria-label={`Ver ${a.name}`} title={a.name}>
+                <ThumbContent attachment={a} />
+              </button>
+              <button type="button" className={styles.remove} onClick={() => removeAttachment(a.id)}
+                aria-label={`Quitar ${a.name}`}>
+                <IconX size={12} stroke={2.5} />
+              </button>
+            </div>
+          ))}
+
+          {pending.map((name, i) => (
+            <div key={`${name}-${i}`} className={`${styles.tile} ${styles.tilePending}`} role="status" aria-label={`Subiendo ${name}`}>
+              <IconLoader2 size={20} stroke={1.75} className={styles.spin} />
+            </div>
+          ))}
+
+          {!disabled && value.attachments.length + pending.length < MAX_FILES && (
+            <button
+              type="button"
+              className={`${styles.tile} ${styles.addTile} ${dragging ? styles.dragging : ''}`}
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={handleDrop}
+              aria-label="Agregar foto o PDF"
+            >
+              <IconCamera size={22} stroke={1.5} />
+              <span>Agregar</span>
+            </button>
+          )}
+        </div>
+
+        <input ref={fileRef} type="file" accept="image/*,application/pdf" multiple hidden onChange={handleInput} />
+
         <p className={styles.hint}>
-          {isDriveConfigured
-            ? 'Se guardan en tu Google Drive (carpeta “GodMoney - Adjuntos”). Quitar un adjunto solo lo desvincula; el archivo sigue en tu Drive.'
-            : 'Google Drive no está configurado (falta VITE_GOOGLE_CLIENT_ID).'}
+          {!isDriveConfigured
+            ? 'Google Drive no está configurado (falta VITE_GOOGLE_CLIENT_ID).'
+            : uploading
+              ? 'Optimizando y subiendo a tu Google Drive…'
+              : value.attachments.length
+                ? 'Toca una foto para verla en grande. Quitarla solo la desvincula; el archivo sigue en tu Drive.'
+                : 'Fotos de boletas o facturas, o PDF. Se guardan en tu Google Drive (carpeta “GodMoney - Adjuntos”). También puedes arrastrarlas aquí.'}
         </p>
-        {error && <p className={styles.error} role="alert">{error}</p>}
+        {errors.map((msg) => <p key={msg} className={styles.error} role="alert">{msg}</p>)}
       </div>
+
+      <AttachmentViewer
+        attachments={value.attachments}
+        index={viewing}
+        onIndexChange={setViewing}
+        onClose={() => setViewing(null)}
+      />
     </div>
   )
 }

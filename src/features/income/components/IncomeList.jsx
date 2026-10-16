@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
 import {
   IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown,
-  IconCoin, IconPaperclip, IconEdit, IconTrash, IconRepeat, IconX,
+  IconCoin, IconEdit, IconTrash, IconRepeat, IconX,
 } from '@tabler/icons-react'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { SORT_OPTIONS, sortTransactions } from '@/lib/transactionSort'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
+import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import styles from './IncomeList.module.css'
 
 const PAGE_SIZE = 8
@@ -35,12 +36,8 @@ function IncomeItem({ income, onEdit, onDelete }) {
             <Badge color="var(--color-info)">Recurrente</Badge>
           )}
           {income.tags?.map((t) => <span key={t} className={styles.tag}>#{t}</span>)}
-          {income.attachments?.length > 0 && (
-            <span className={styles.clip} title={`${income.attachments.length} adjunto(s)`}>
-              <IconPaperclip size={12} stroke={1.75} /> {income.attachments.length}
-            </span>
-          )}
         </div>
+        <AttachmentStrip attachments={income.attachments} />
         {income.created_at && (
           <div className={styles.registeredAt}>Registrado el {formatDateTime(income.created_at)}</div>
         )}

@@ -6,6 +6,8 @@
 // Requiere VITE_GOOGLE_CLIENT_ID (el mismo Client ID OAuth web) y la Drive API
 // habilitada en el proyecto de Google Cloud.
 
+import { isImage, resizeImage, makeThumbnail } from '@/lib/imageUtils'
+
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 const SCOPE     = 'https://www.googleapis.com/auth/drive.file'
 const FOLDER    = 'GodMoney - Adjuntos'
@@ -50,7 +52,13 @@ async function getAccessToken() {
         cachedToken = { value: res.access_token, expiresAt: Date.now() + Number(res.expires_in) * 1000 }
         resolve(res.access_token)
       },
-      error_callback: () => reject(new Error('No se completó la autorización de Google Drive.')),
+      error_callback: (err) => {
+        const messages = {
+          popup_failed_to_open: 'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.',
+          popup_closed: 'Cerraste la ventana de Google antes de aceptar el permiso.',
+        }
+        reject(new Error(messages[err?.type] ?? `No se completó la autorización de Google Drive (${err?.type ?? 'desconocido'}).`))
+      },
     })
     client.requestAccessToken({ prompt: cachedToken ? '' : undefined })
   })
@@ -94,22 +102,53 @@ async function ensureFolder(token) {
   return id
 }
 
-/** Sube un archivo al Drive del usuario y devuelve el adjunto a guardar en la BD. */
+/**
+ * Sube un archivo al Drive del usuario y devuelve el adjunto a guardar en la BD.
+ * Las imágenes se optimizan (máx. 2000 px) y se les genera una miniatura.
+ */
 export async function uploadAttachment(file) {
-  if (file.size > MAX_BYTES) throw new Error('El archivo supera los 10 MB.')
+  // El permiso se pide primero: la ventana de Google solo se abre si ocurre
+  // enseguida del clic del usuario (después de procesar la imagen se bloquearía).
+  const token = await getAccessToken()
 
-  const token    = await getAccessToken()
+  let blob = file
+  let name = file.name
+  let thumb = null
+
+  if (isImage(file.type)) {
+    const optimized = await resizeImage(file, 2000, 0.85)
+    if (optimized && optimized.size < file.size) {
+      blob = optimized
+      name = name.replace(/\.[^.]+$/, '') + '.jpg'
+    }
+    thumb = await makeThumbnail(file)
+  }
+
+  if (blob.size > MAX_BYTES) throw new Error('El archivo supera los 10 MB.')
+
   const folderId = await ensureFolder(token)
 
-  const metadata = { name: file.name, parents: [folderId] }
+  const mimeType = blob === file ? file.type || 'application/octet-stream' : 'image/jpeg'
+  const metadata = { name, parents: [folderId], mimeType }
   const form = new FormData()
   form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
-  form.append('file', file)
+  form.append('file', new Blob([blob], { type: mimeType }))
 
   const data = await driveFetch(
     token,
     'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink',
     { method: 'POST', body: form },
   )
-  return { id: data.id, name: data.name, mimeType: data.mimeType, link: data.webViewLink }
+  return { id: data.id, name: data.name, mimeType: data.mimeType, link: data.webViewLink, thumb }
+}
+
+/** Descarga el archivo completo desde Drive (para la vista ampliada). Devuelve un Blob. */
+export async function fetchAttachmentBlob(id) {
+  const token = await getAccessToken()
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (res.status === 401) cachedToken = null
+  if (!res.ok) throw new Error('No se pudo descargar el archivo de Drive.')
+  return res.blob()
 }
