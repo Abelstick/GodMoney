@@ -2,11 +2,12 @@ import { Drawer } from '@mantine/core'
 import { NavLink } from 'react-router-dom'
 import {
   IconClipboard, IconBulb, IconTrendingUp, IconTag, IconKey,
-  IconHandGrab, IconWallet, IconReportAnalytics, IconBellRinging,
+  IconHandGrab, IconWallet, IconListSearch, IconReportAnalytics, IconBellRinging,
 } from '@tabler/icons-react'
 import styles from './MoreSheet.module.css'
 
 const MORE_ITEMS = [
+  { to: '/movimientos',      icon: IconListSearch,      label: 'Movimientos'      },
   { to: '/prestamos',        icon: IconHandGrab,        label: 'Préstamos'        },
   { to: '/pagos-recurrentes', icon: IconBellRinging,    label: 'Pagos recurrentes' },
   { to: '/presupuestos',     icon: IconClipboard,       label: 'Presupuestos'     },

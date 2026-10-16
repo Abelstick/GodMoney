@@ -14,6 +14,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
+import { extrasFrom } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './Expenses.module.css'
 
 const RADIAN = Math.PI / 180
@@ -243,6 +244,7 @@ export function Expenses() {
             date:        editing.date,
             is_fixed:    editing.is_fixed,
             savings_account_id: editing.savings_account_id ?? '',
+            ...extrasFrom(editing),
           } : undefined}
           onSubmit={handleSubmit}
           onCancel={() => { setModalOpen(false); setEditing(null) }}

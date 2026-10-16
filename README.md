@@ -65,6 +65,13 @@ Apartar ahorro se registra como un gasto: sale de tu disponible del mes, porque 
 
 ---
 
+## 📎 Movimientos, importación, transferencias y adjuntos
+
+- **Movimientos** (`/movimientos`): búsqueda y filtros por rango de fechas, tipo, categorías, monto, texto y etiquetas, con totales del filtro. Exporta a **CSV** o **PDF** (diálogo de impresión → "Guardar como PDF"); sirve como reporte mensual o anual.
+- **Importar CSV**: sube el extracto de tu banco, elige las columnas, revisa la vista previa (detecta duplicados) e importa en lote.
+- **Transferencias** (en Cuentas): mueven saldo entre cuentas sin contar como gasto ni ingreso. Requiere `supabase/migrations/009_transfers_tags_attachments.sql`.
+- **Etiquetas, notas y adjuntos** en ingresos y gastos. Los adjuntos se suben al **Google Drive del propio usuario** (carpeta "GodMoney - Adjuntos") con el scope `drive.file`, que solo ve los archivos creados por la app. Requiere habilitar la **Google Drive API** en Google Cloud, agregar el scope `.../auth/drive.file` en la pantalla de consentimiento y definir `VITE_GOOGLE_CLIENT_ID` (el mismo Client ID web del login con Google, con tu dominio en "Orígenes autorizados de JavaScript").
+
 ## 🤖 Asistente Financiero con IA
 
 Un chat con Gemini que responde a partir de **tus propios datos**:
@@ -139,6 +146,7 @@ Crea un archivo `.env` en la raíz:
 VITE_SUPABASE_URL=https://<tu-proyecto>.supabase.co
 VITE_SUPABASE_ANON_KEY=<tu-anon-key>
 VITE_TELEGRAM_BOT_USERNAME=<usuario-de-tu-bot>   # opcional, para alertas por Telegram
+VITE_GOOGLE_CLIENT_ID=<client-id>.apps.googleusercontent.com   # opcional, adjuntos en Google Drive
 ```
 
 La API key de Gemini no va en el `.env`: cada usuario la guarda en **Ajustes**.

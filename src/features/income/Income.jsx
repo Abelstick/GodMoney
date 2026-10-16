@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { IncomeForm } from './components/IncomeForm'
 import { IncomeList } from './components/IncomeList'
+import { extrasFrom } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './Income.module.css'
 
 export function Income() {
@@ -147,6 +148,7 @@ export function Income() {
             category_id:  editing.category_id ?? '',
             date:         editing.date,
             is_recurring: editing.is_recurring,
+            ...extrasFrom(editing),
           } : undefined}
           onSubmit={handleSubmit}
           onCancel={() => { setModalOpen(false); setEditing(null) }}

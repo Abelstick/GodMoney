@@ -4,14 +4,17 @@ import { Select } from '@/components/ui/Select/Select'
 import { Button } from '@/components/ui/Button/Button'
 import { useCategories } from '@/hooks/useCategories'
 import { toInputDate }   from '@/lib/formatters'
+import { TransactionExtras, EMPTY_EXTRAS, extrasFrom, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './IncomeForm.module.css'
 
-const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_recurring: false }
+const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_recurring: false, ...EMPTY_EXTRAS }
 
 export function IncomeForm({ initial, onSubmit, onCancel, loading }) {
   const [form, setForm] = useState(initial ?? EMPTY)
   const [errors, setErrors] = useState({})
   const { categories } = useCategories('income')
+
+  const patchExtras = (patch) => setForm((f) => ({ ...f, ...patch }))
 
   const set = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
@@ -34,6 +37,7 @@ export function IncomeForm({ initial, onSubmit, onCancel, loading }) {
       category_id:  form.category_id || null,
       date:         form.date,
       is_recurring: form.is_recurring,
+      ...extrasPayload(form),
     })
   }
 
@@ -76,6 +80,7 @@ export function IncomeForm({ initial, onSubmit, onCancel, loading }) {
         error={errors.date}
         required
       />
+      <TransactionExtras value={form} onChange={patchExtras} />
       <label className={styles.checkRow}>
         <input type="checkbox" checked={form.is_recurring} onChange={set('is_recurring')} />
         Ingreso recurrente (mensual)

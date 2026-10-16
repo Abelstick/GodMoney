@@ -1,11 +1,12 @@
 import { Modal as MModal } from '@mantine/core'
 
-export function Modal({ isOpen, onClose, title, children }) {
+export function Modal({ isOpen, onClose, title, size, children }) {
   return (
     <MModal
       opened={isOpen}
       onClose={onClose}
       title={title}
+      size={size}
       centered
       styles={{
         content: {

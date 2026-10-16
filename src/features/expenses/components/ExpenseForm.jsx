@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/Button/Button'
 import { useCategories } from '@/hooks/useCategories'
 import { useAccounts }   from '@/hooks/useAccounts'
 import { toInputDate, formatCurrency } from '@/lib/formatters'
+import { TransactionExtras, EMPTY_EXTRAS, extrasFrom, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './ExpenseForm.module.css'
 
-const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_fixed: false, savings_account_id: '' }
+const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_fixed: false, savings_account_id: '', ...EMPTY_EXTRAS }
 
 export function ExpenseForm({ initial, onSubmit, onCancel, loading }) {
   const [form, setForm] = useState(initial ?? EMPTY)
@@ -17,6 +18,8 @@ export function ExpenseForm({ initial, onSubmit, onCancel, loading }) {
 
   const selectedCategory = categories.find((c) => c.id === form.category_id)
   const isSavings = Boolean(selectedCategory?.is_savings)
+
+  const patchExtras = (patch) => setForm((f) => ({ ...f, ...patch }))
 
   const set = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
@@ -41,6 +44,7 @@ export function ExpenseForm({ initial, onSubmit, onCancel, loading }) {
       is_fixed:    form.is_fixed,
       // Solo los gastos de ahorro mueven dinero a una cuenta; si se cambia a
       // otra categoría se limpia para que el trigger revierta el saldo.
+      ...extrasPayload(form),
       savings_account_id: isSavings ? (form.savings_account_id || null) : null,
     })
   }
@@ -106,6 +110,7 @@ export function ExpenseForm({ initial, onSubmit, onCancel, loading }) {
         error={errors.date}
         required
       />
+      <TransactionExtras value={form} onChange={patchExtras} />
       <label className={styles.checkRow}>
         <input type="checkbox" checked={form.is_fixed} onChange={set('is_fixed')} />
         Gasto fijo (recurrente mensual)

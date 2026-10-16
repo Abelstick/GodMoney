@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
 import {
   IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown,
-  IconCoin, IconEdit, IconTrash, IconRepeat, IconX,
+  IconCoin, IconPaperclip, IconEdit, IconTrash, IconRepeat, IconX,
 } from '@tabler/icons-react'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
@@ -33,6 +33,12 @@ function IncomeItem({ income, onEdit, onDelete }) {
           )}
           {income.is_recurring && (
             <Badge color="var(--color-info)">Recurrente</Badge>
+          )}
+          {income.tags?.map((t) => <span key={t} className={styles.tag}>#{t}</span>)}
+          {income.attachments?.length > 0 && (
+            <span className={styles.clip} title={`${income.attachments.length} adjunto(s)`}>
+              <IconPaperclip size={12} stroke={1.75} /> {income.attachments.length}
+            </span>
           )}
         </div>
         {income.created_at && (

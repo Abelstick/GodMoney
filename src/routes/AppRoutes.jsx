@@ -4,6 +4,7 @@ import { AppShell }    from '@/layout/AppShell/AppShell'
 const Dashboard = lazy(() => import('@/features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })))
 const Income = lazy(() => import('@/features/income/Income').then((m) => ({ default: m.Income })))
 const Expenses = lazy(() => import('@/features/expenses/Expenses').then((m) => ({ default: m.Expenses })))
+const Movements = lazy(() => import('@/features/movements/Movements').then((m) => ({ default: m.Movements })))
 const Goals = lazy(() => import('@/features/goals/Goals').then((m) => ({ default: m.Goals })))
 const Budgets = lazy(() => import('@/features/budgets/Budgets').then((m) => ({ default: m.Budgets })))
 const Loans = lazy(() => import('@/features/loans/Loans').then((m) => ({ default: m.Loans })))
@@ -32,6 +33,7 @@ export function AppRoutes() {
         <Route index                   element={<Dashboard />} />
         <Route path="ingresos"         element={<Income />} />
         <Route path="gastos"           element={<Expenses />} />
+        <Route path="movimientos"      element={<Movements />} />
         <Route path="objetivos"        element={<Goals />} />
         <Route path="presupuestos"     element={<Budgets />} />
         <Route path="prestamos"        element={<Loans />} />

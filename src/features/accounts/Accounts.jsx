@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import { IconWallet } from '@tabler/icons-react'
+import { useState, useEffect } from 'react'
+import { IconWallet, IconArrowsExchange } from '@tabler/icons-react'
 import { useAccounts } from '@/hooks/useAccounts'
+import { useStore } from '@/store'
+import { Card } from '@/components/ui/Card/Card'
 import { Button }      from '@/components/ui/Button/Button'
 import { Modal }       from '@/components/common/Modal/Modal'
 import { EmptyState }  from '@/components/common/EmptyState/EmptyState'
@@ -8,6 +10,8 @@ import { Skeleton }    from '@/components/common/Skeleton/Skeleton'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { AccountCard } from './components/AccountCard'
 import { AccountForm } from './components/AccountForm'
+import { TransferForm } from './components/TransferForm'
+import { TransferList } from './components/TransferList'
 import styles from './Accounts.module.css'
 
 export function Accounts() {
@@ -17,6 +21,25 @@ export function Accounts() {
   const [saving,     setSaving]     = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [deleting,   setDeleting]   = useState(false)
+
+  const transfers       = useStore((s) => s.transfers)
+  const fetchTransfers  = useStore((s) => s.fetchTransfers)
+  const addTransfer     = useStore((s) => s.addTransfer)
+  const removeTransfer  = useStore((s) => s.removeTransfer)
+  const [transferOpen,   setTransferOpen]   = useState(false)
+  const [transferSaving, setTransferSaving] = useState(false)
+
+  useEffect(() => { fetchTransfers() }, [fetchTransfers])
+
+  async function handleTransfer(payload) {
+    setTransferSaving(true)
+    try {
+      await addTransfer(payload)
+      setTransferOpen(false)
+    } finally {
+      setTransferSaving(false)
+    }
+  }
 
   const deletingAccount = accounts.find((a) => a.id === deletingId)
 
@@ -50,7 +73,16 @@ export function Accounts() {
           <h1 className={styles.title}>Cuentas</h1>
           <p className={styles.subtitle}>Tus cuentas y billeteras — base para préstamos y deudas</p>
         </div>
-        <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nueva cuenta</Button>
+        <div className={styles.headerActions}>
+          <Button
+            variant="secondary"
+            disabled={accounts.filter((a) => !a.is_archived).length < 2}
+            onClick={() => setTransferOpen(true)}
+          >
+            <IconArrowsExchange size={16} stroke={1.75} /> Transferir
+          </Button>
+          <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nueva cuenta</Button>
+        </div>
       </div>
 
       {loading ? (
@@ -79,6 +111,24 @@ export function Accounts() {
           ))}
         </div>
       )}
+
+      {transfers.length > 0 && (
+        <section className={styles.transfers}>
+          <h2 className={styles.sectionTitle}>Transferencias recientes</h2>
+          <Card padded={false}>
+            <TransferList transfers={transfers} onDelete={removeTransfer} />
+          </Card>
+        </section>
+      )}
+
+      <Modal isOpen={transferOpen} onClose={() => setTransferOpen(false)} title="Transferir entre cuentas">
+        <TransferForm
+          accounts={accounts}
+          onSubmit={handleTransfer}
+          onCancel={() => setTransferOpen(false)}
+          loading={transferSaving}
+        />
+      </Modal>
 
       <ConfirmDialog
         isOpen={!!deletingId}
