@@ -1,79 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  TextInput, PasswordInput, Button, Title,
+  TextInput, PasswordInput, Button,
   Text, Anchor, Alert, Stack, useMantineColorScheme,
 } from '@mantine/core'
 import {
   IconSun, IconMoon, IconMail, IconLock, IconArrowRight,
-  IconTrendingUp, IconShieldCheck, IconDiamondFilled,
+  IconBrandGoogleFilled, IconShieldCheck,
 } from '@tabler/icons-react'
 import { useAuth } from './AuthContext'
+import { LogoMark } from '@/components/ui/Logo/LogoMark'
 import styles from './LoginPage.module.css'
-
-function ShowcasePanel() {
-  return (
-    <section className={styles.showcase}>
-      <div className={styles.showcaseGlowTop} />
-      <div className={styles.showcaseGlowBottom} />
-
-      <div className={styles.showcaseLogo}>
-        <div className={styles.logoMark}>
-          <IconDiamondFilled size={20} />
-        </div>
-        <div className={styles.logoText}>
-          God<span className={styles.logoAccent}>Money</span>
-        </div>
-      </div>
-
-      <div className={styles.showcaseBody}>
-        <h1 className={styles.showcaseTitle}>
-          Tu <span className={styles.showcaseTitleAccent}>finanzas personales</span>, bajo control real
-        </h1>
-        <p className={styles.showcaseDesc}>
-          Registra ingresos y gastos, organiza todo por categorías, arma presupuestos
-          y objetivos de ahorro, y consulta tus finanzas con un asistente de IA — todo
-          en un solo lugar.
-        </p>
-
-        <div className={styles.previewCard}>
-          <div className={styles.previewTop}>
-            <div>
-              <span className={styles.previewLabel}>Profit del mes</span>
-              <div className={styles.previewAmount}>S/ 1,240.32</div>
-            </div>
-            <div className={styles.previewIcon}>
-              <IconTrendingUp size={20} stroke={1.75} />
-            </div>
-          </div>
-          <div className={styles.previewBars}>
-            {[45, 60, 35, 75, 55, 88, 100].map((h, i) => (
-              <div key={i} className={styles.previewBarWrap}>
-                <div className={styles.previewBar} style={{ height: `${h}%` }} />
-              </div>
-            ))}
-          </div>
-          <div className={styles.previewDays}>
-            <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.showcaseFooter}>
-        <div className={styles.showcaseFooterIcon}>
-          <IconShieldCheck size={16} stroke={1.75} />
-        </div>
-        <div>
-          <span className={styles.showcaseFooterTitle}>Tus datos, protegidos.</span>
-          <span className={styles.showcaseFooterDesc}>Autenticación gestionada con Supabase Auth.</span>
-        </div>
-      </div>
-    </section>
-  )
-}
+import heroImg from '../../assets/login-hero.svg'
 
 export function LoginPage() {
-  const { signIn, signUp, user, loading: authLoading } = useAuth()
+  const { signIn, signUp, signInWithGoogle, user, loading: authLoading } = useAuth()
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   const navigate = useNavigate()
 
@@ -89,13 +30,25 @@ export function LoginPage() {
   const [info, setInfo]         = useState('')
   const [loading, setLoading]   = useState(false)
 
+  const isLogin = mode === 'login'
+
+  async function handleGoogle() {
+    setError('')
+    setInfo('')
+    try {
+      await signInWithGoogle()
+    } catch (err) {
+      setError(translateError(err.message))
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setInfo('')
     setLoading(true)
     try {
-      if (mode === 'login') {
+      if (isLogin) {
         await signIn(email, password)
         navigate('/', { replace: true })
       } else {
@@ -111,66 +64,87 @@ export function LoginPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <ShowcasePanel />
+    <main className={styles.page}>
+      <aside className={styles.brandPanel}>
+        <img src={heroImg} alt="" className={styles.heroImg} />
+        <div className={styles.scrim} />
 
-      <section className={styles.formColumn}>
-        <div className={styles.formHeader}>
-          <span className={styles.mobileLogo}>
-            <IconDiamondFilled size={16} />
-            GodMoney
+        <div className={styles.brandTop}>
+          <LogoMark size={36} />
+          <span className={styles.logoText}>
+            God<span className={styles.logoAccent}>Money</span>
           </span>
-          <button
-            className={styles.themeBtn}
-            onClick={toggleColorScheme}
-            aria-label="Cambiar tema"
-          >
-            {colorScheme === 'dark' ? <IconSun size={18} stroke={1.75} /> : <IconMoon size={18} stroke={1.75} />}
-          </button>
         </div>
 
-        <div className={styles.formCenter}>
-          <div className={styles.formWrap}>
-            <Title order={2} className={styles.title}>
-              {mode === 'login' ? 'Bienvenido de vuelta' : 'Crear cuenta'}
-            </Title>
-            <Text size="sm" className={styles.subtitle}>
-              {mode === 'login'
-                ? 'Ingresa tus credenciales para continuar'
-                : 'Comienza a gestionar tus finanzas'}
-            </Text>
+        <div className={styles.brandBottom}>
+          <span className={styles.eyebrowLight}>Finanzas personales</span>
+          <h1 className={styles.heroTitle}>
+            Tus finanzas personales, bajo control real.
+          </h1>
+          <p className={styles.heroDesc}>
+            Registra ingresos y gastos, arma presupuestos y metas de ahorro, y
+            consulta todo con un asistente de IA.
+          </p>
+        </div>
+      </aside>
 
-            {error && (
-              <Alert color="red" radius="md" variant="light" className={styles.alert}>
-                {error}
-              </Alert>
-            )}
-            {info && (
-              <Alert color="green" radius="md" variant="light" className={styles.alert}>
-                {info}
-              </Alert>
-            )}
+      <section className={styles.formColumn}>
+        <button
+          className={styles.themeBtn}
+          onClick={toggleColorScheme}
+          aria-label="Cambiar tema"
+        >
+          {colorScheme === 'dark' ? <IconSun size={18} stroke={1.75} /> : <IconMoon size={18} stroke={1.75} />}
+        </button>
 
+        <div className={styles.formWrap}>
+          <span className={styles.mobileLogo}>
+            <LogoMark size={32} />
+            <span>God<span className={styles.logoAccent}>Money</span></span>
+          </span>
+
+          <span className={styles.eyebrow}>Acceso seguro</span>
+          <h2 className={styles.title}>{isLogin ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
+          <p className={styles.subtitle}>
+            {isLogin ? 'Ingresa con tu correo y contraseña.' : 'Comienza a gestionar tus finanzas.'}
+          </p>
+
+          {error && (
+            <Alert color="red" radius="sm" variant="light" className={styles.alert} role="alert">
+              {error}
+            </Alert>
+          )}
+          {info && (
+            <Alert color="green" radius="sm" variant="light" className={styles.alert} role="status">
+              {info}
+            </Alert>
+          )}
+
+          <div className={styles.card}>
             <form onSubmit={handleSubmit}>
               <Stack gap="md">
                 <TextInput
                   label="Correo electrónico"
                   type="email"
+                  autoComplete="email"
                   placeholder="tu@correo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  radius="xl"
+                  size="md"
+                  radius="sm"
                   leftSection={<IconMail size={16} stroke={1.75} />}
                   classNames={{ input: styles.input, label: styles.inputLabel }}
                 />
                 <PasswordInput
                   label="Contraseña"
-                  placeholder="••••••••"
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                  placeholder="Mínimo 6 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  radius="xl"
+                  size="md"
+                  radius="sm"
                   minLength={6}
                   leftSection={<IconLock size={16} stroke={1.75} />}
                   classNames={{ input: styles.input, label: styles.inputLabel }}
@@ -179,32 +153,52 @@ export function LoginPage() {
                   type="submit"
                   fullWidth
                   loading={loading}
-                  radius="xl"
-                  size="md"
+                  radius="sm"
+                  size="lg"
                   className={styles.submitBtn}
                   rightSection={!loading && <IconArrowRight size={16} stroke={2} />}
                 >
-                  {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
+                  {isLogin ? 'Ingresar' : 'Crear cuenta'}
                 </Button>
               </Stack>
             </form>
 
-            <Text ta="center" size="sm" className={styles.switchMode}>
-              {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
+            <div className={styles.divider}><span>o</span></div>
+
+            <Button
+              type="button"
+              fullWidth
+              variant="default"
+              radius="sm"
+              size="md"
+              className={styles.googleBtn}
+              leftSection={<IconBrandGoogleFilled size={16} />}
+              onClick={handleGoogle}
+            >
+              Continuar con Google
+            </Button>
+          </div>
+
+          <div className={styles.footer}>
+            <Text size="sm" className={styles.switchMode}>
+              {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
               <Anchor
                 component="button"
                 type="button"
                 fw={600}
                 className={styles.switchModeLink}
-                onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setInfo('') }}
+                onClick={() => { setMode(isLogin ? 'register' : 'login'); setError(''); setInfo('') }}
               >
-                {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
+                {isLogin ? 'Crear cuenta' : 'Inicia sesión'}
               </Anchor>
             </Text>
+            <span className={styles.secure}>
+              <IconShieldCheck size={14} stroke={1.75} /> Conexión cifrada
+            </span>
           </div>
         </div>
       </section>
-    </div>
+    </main>
   )
 }
 

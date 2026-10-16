@@ -7,11 +7,11 @@ import {
   IconCashBanknote, IconShoppingCart, IconFlag,
   IconClipboard, IconTrendingUp, IconTag, IconKey, IconBulb,
   IconHandGrab, IconWallet, IconReportAnalytics, IconBellRinging,
-  IconDiamondFilled,
 } from '@tabler/icons-react'
 import { useMantineColorScheme } from '@mantine/core'
 import { useStore } from '@/store'
 import { useAuth } from '@/features/auth/AuthContext'
+import { LogoMark } from '@/components/ui/Logo/LogoMark'
 import styles from './Sidebar.module.css'
 
 const NAV = [
@@ -115,7 +115,7 @@ export function Sidebar() {
 
       {/* Logo */}
       <div className={styles.logo}>
-        <span className={styles.logoEmoji}><IconDiamondFilled size={20} /></span>
+        <span className={styles.logoEmoji}><LogoMark size={28} /></span>
         <span className={styles.logoText}>GodMoney</span>
       </div>
 

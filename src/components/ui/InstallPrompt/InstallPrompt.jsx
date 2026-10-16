@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { IconDownload, IconX, IconDiamondFilled } from '@tabler/icons-react'
+import { IconDownload, IconX } from '@tabler/icons-react'
+import { LogoMark } from '@/components/ui/Logo/LogoMark'
 import styles from './InstallPrompt.module.css'
 
 export function InstallPrompt() {
@@ -37,7 +38,7 @@ export function InstallPrompt() {
   return (
     <div className={styles.banner}>
       <div className={styles.left}>
-        <span className={styles.icon}><IconDiamondFilled size={20} /></span>
+        <span className={styles.icon}><LogoMark size={28} /></span>
         <div>
           <div className={styles.title}>Instalar GodMoney</div>
           <div className={styles.subtitle}>Accede sin internet, como una app nativa</div>

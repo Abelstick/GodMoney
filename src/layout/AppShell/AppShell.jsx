@@ -1,7 +1,7 @@
 import { Suspense, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useMantineColorScheme } from '@mantine/core'
-import { IconMoon, IconSun, IconLogout, IconDiamondFilled } from '@tabler/icons-react'
+import { IconMoon, IconSun, IconLogout } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useAuth }   from '@/features/auth/AuthContext'
 import { useHideOnScroll } from '@/hooks/useHideOnScroll'
@@ -11,6 +11,7 @@ import { QuickAddFab } from '../QuickAddFab/QuickAddFab'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
 import { InstallPrompt } from '@/components/ui/InstallPrompt/InstallPrompt'
 import { ChatBot }       from '@/features/chat/ChatBot'
+import { LogoMark } from '@/components/ui/Logo/LogoMark'
 import styles from './AppShell.module.css'
 
 function MobileHeader() {
@@ -21,7 +22,7 @@ function MobileHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.headerLogo}>
-        <IconDiamondFilled size={18} />
+        <LogoMark size={24} />
         <span>GodMoney</span>
       </div>
       <div className={styles.headerActions}>
