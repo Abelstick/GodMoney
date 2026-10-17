@@ -1,4 +1,5 @@
 import { expenseService } from '@/services/expenseService'
+import { offlineQueue, mergePending, isRetryableError } from '@/lib/offlineQueue'
 
 // Los gastos de ahorro con cuenta destino mueven el saldo de esa cuenta vía
 // trigger en BD; se refrescan las cuentas para que objetivos y patrimonio
@@ -17,14 +18,25 @@ export const createExpenseSlice = (set, get) => ({
     set({ expensesLoading: true, expensesError: null })
     try {
       const data = await expenseService.getByMonth(from, to)
-      set({ expenses: data, expensesRange: { from, to }, expensesLoading: false })
+      // Los gastos guardados sin conexión siguen visibles hasta que se sincronicen.
+      const rows = mergePending(data, offlineQueue.pendingRows('expense', from, to))
+      set({ expenses: rows, expensesRange: { from, to }, expensesLoading: false })
     } catch (err) {
       set({ expensesError: err.message, expensesLoading: false })
     }
   },
 
   addExpense: async (payload) => {
-    const data = await expenseService.create(payload)
+    // El id se genera aquí para que un reintento tras un fallo de red no duplique el gasto.
+    const body = { ...payload, id: crypto.randomUUID() }
+    if (globalThis.navigator?.onLine === false) return get().queueOffline('expense', body)
+    let data
+    try {
+      data = await expenseService.create(body)
+    } catch (err) {
+      if (isRetryableError(err)) return get().queueOffline('expense', body)
+      throw err
+    }
     set((s) => ({ expenses: [data, ...s.expenses] }))
     if (touchesAccount(data)) await get().fetchAccounts()
     get().showToast(touchesAccount(data) ? 'Ahorro registrado y sumado a la cuenta' : 'Gasto registrado', 'success')
@@ -65,6 +77,8 @@ export const createExpenseSlice = (set, get) => ({
 
   removeExpense: async (id) => {
     const previous = get().expenses.find((e) => e.id === id)
+    // Un gasto pendiente nunca llegó al servidor: basta con quitarlo de la cola.
+    if (previous?._pending) return get().discardPending('expense', id)
     await expenseService.remove(id)
     set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) }))
     if (touchesAccount(previous)) await get().fetchAccounts()

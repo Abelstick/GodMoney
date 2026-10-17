@@ -31,6 +31,7 @@ function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, select
           className={styles.checkbox}
           checked={selected}
           onChange={() => onToggle(expense.id)}
+          disabled={expense._pending}
           aria-label={`Seleccionar ${expense.description || expense.category?.name || 'gasto'}`}
         />
       )}
@@ -53,6 +54,11 @@ function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, select
               {expense.savings_account ? `Ahorro → ${expense.savings_account.name}` : 'Ahorro'}
             </Badge>
           )}
+          {expense._pending && (
+            <Badge color={expense._syncError ? 'var(--color-danger)' : 'var(--color-warning)'}>
+              {expense._syncError ? 'Error al sincronizar' : 'Sin sincronizar'}
+            </Badge>
+          )}
           {expense.tags?.map((t) => <span key={t} className={styles.tag}>#{t}</span>)}
         </div>
         <AttachmentStrip attachments={expense.attachments} />
@@ -66,9 +72,11 @@ function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, select
           <button className={styles.actionBtn} onClick={() => onDuplicate(expense)} aria-label="Duplicar gasto" title="Duplicar con la fecha de hoy">
             <IconCopy size={15} stroke={1.75} />
           </button>
-          <button className={styles.actionBtn} onClick={() => onEdit(expense)} aria-label="Editar gasto">
-            <IconEdit size={15} stroke={1.75} />
-          </button>
+          {!expense._pending && (
+            <button className={styles.actionBtn} onClick={() => onEdit(expense)} aria-label="Editar gasto">
+              <IconEdit size={15} stroke={1.75} />
+            </button>
+          )}
           <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(expense.id)} aria-label="Eliminar gasto">
             <IconTrash size={15} stroke={1.75} />
           </button>
@@ -310,11 +318,11 @@ export function ExpenseList({
         <BulkBar
           count={selected.size}
           total={selectedTotal}
-          totalCount={filtered.length}
+          totalCount={filtered.filter((r) => !r._pending).length}
           sign="-"
           categories={categoryOptions}
           busy={busy}
-          onSelectAll={() => selectAll(filtered.map((e) => e.id))}
+          onSelectAll={() => selectAll(filtered.filter((r) => !r._pending).map((e) => e.id))}
           onClear={stopSelecting}
           onChangeCategory={(categoryId) => runBulk((ids) => onBulkCategory(ids, categoryOptions.find((c) => c.id === categoryId) ?? null))}
           onAddTag={(tag) => runBulk((ids) => onBulkTag(ids, tag))}

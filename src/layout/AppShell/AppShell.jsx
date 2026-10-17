@@ -5,6 +5,8 @@ import { IconMoon, IconSun, IconLogout } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useAuth }   from '@/features/auth/AuthContext'
 import { useHideOnScroll } from '@/hooks/useHideOnScroll'
+import { runRecurringGeneration } from '@/lib/runRecurringGeneration'
+import { OfflineBanner } from '../OfflineBanner/OfflineBanner'
 import { Sidebar }   from '../Sidebar/Sidebar'
 import { BottomNav } from '../BottomNav/BottomNav'
 import { QuickAddFab } from '../QuickAddFab/QuickAddFab'
@@ -54,6 +56,25 @@ export function AppShell() {
   const collapsed       = useStore((s) => s.sidebarCollapsed)
   const hideFabs        = useHideOnScroll()
 
+  // Al abrir la app se crean los gastos/ingresos recurrentes que ya vencieron.
+  useEffect(() => { runRecurringGeneration() }, [])
+
+  // Movimientos guardados sin conexión: se envían al abrir la app, al volver
+  // internet y al volver a la pestaña.
+  const syncOfflineQueue    = useStore((s) => s.syncOfflineQueue)
+  const refreshOfflineCount = useStore((s) => s.refreshOfflineCount)
+  useEffect(() => {
+    refreshOfflineCount()
+    syncOfflineQueue()
+    const onVisible = () => { if (document.visibilityState === 'visible') syncOfflineQueue() }
+    window.addEventListener('online', syncOfflineQueue)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener('online', syncOfflineQueue)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [syncOfflineQueue, refreshOfflineCount])
+
   useEffect(() => {
     if (!toast) return
     // Con botón de acción (Deshacer) se da más tiempo para alcanzarlo.
@@ -69,6 +90,7 @@ export function AppShell() {
         <MobileHeader />
 
         <main className={styles.content}>
+          <OfflineBanner />
           <Suspense fallback={<LoadingSpinner />}>
             <Outlet />
           </Suspense>

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase }       from '@/lib/supabase'
 import { profileService } from '@/services/profileService'
+import { readCachedUser } from '@/lib/cachedSession'
 
 const AuthContext = createContext(null)
 
@@ -17,9 +18,14 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const u = session?.user ?? null
+      let u = session?.user ?? null
+      // Sin conexión y con el token caducado no se puede renovar: se muestra la app con
+      // el usuario guardado en el dispositivo (solo UI) para poder registrar movimientos.
+      // Supabase renueva la sesión por su cuenta al volver internet.
+      const offlineFallback = !u && navigator.onLine === false
+      if (offlineFallback) u = readCachedUser()
       setUser(u)
-      await ensureOnce(u)
+      if (!offlineFallback) await ensureOnce(u)
       setLoading(false)
     })
 

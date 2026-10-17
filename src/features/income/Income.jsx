@@ -10,6 +10,7 @@ import { RangeFilter } from '@/components/common/RangeFilter/RangeFilter'
 import { Card }      from '@/components/ui/Card/Card'
 import { Button }    from '@/components/ui/Button/Button'
 import { StatCard }  from '@/components/ui/StatCard/StatCard'
+import { RecurringTransactionsModal } from '@/components/common/RecurringTransactions/RecurringTransactionsModal'
 import { Modal }     from '@/components/common/Modal/Modal'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { IncomeForm } from './components/IncomeForm'
@@ -30,6 +31,7 @@ export function Income() {
   const periodLabel = range ? rangeLabel(range) : formatMonth(parseISO(`${activeMonth}-01`))
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [autoOpen,  setAutoOpen]  = useState(false)
   const [editing,   setEditing]   = useState(null)
   // Ingreso que se está duplicando: el formulario se abre prellenado pero guarda uno nuevo.
   const [duplicating, setDuplicating] = useState(null)
@@ -104,7 +106,12 @@ export function Income() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Ingresos</h1>
-        <Button onClick={openNew}>+ Nuevo ingreso</Button>
+        <div className={styles.headerActions}>
+          <Button variant="secondary" onClick={() => setAutoOpen(true)}>
+            <IconRepeat size={16} stroke={1.75} /> Automáticos
+          </Button>
+          <Button onClick={openNew}>+ Nuevo ingreso</Button>
+        </div>
       </div>
 
       {/* Filtro de mes */}
@@ -170,6 +177,8 @@ export function Income() {
           </Card>
         </>
       )}
+
+      <RecurringTransactionsModal isOpen={autoOpen} onClose={() => setAutoOpen(false)} kind="income" />
 
       <Modal
         isOpen={modalOpen}

@@ -1,4 +1,5 @@
 import { incomeService } from '@/services/incomeService'
+import { offlineQueue, mergePending, isRetryableError } from '@/lib/offlineQueue'
 
 export const createIncomeSlice = (set, get) => ({
   incomes: [],
@@ -10,14 +11,25 @@ export const createIncomeSlice = (set, get) => ({
     set({ incomesLoading: true, incomesError: null })
     try {
       const data = await incomeService.getByMonth(from, to)
-      set({ incomes: data, incomesRange: { from, to }, incomesLoading: false })
+      // Los ingresos guardados sin conexión siguen visibles hasta que se sincronicen.
+      const rows = mergePending(data, offlineQueue.pendingRows('income', from, to))
+      set({ incomes: rows, incomesRange: { from, to }, incomesLoading: false })
     } catch (err) {
       set({ incomesError: err.message, incomesLoading: false })
     }
   },
 
   addIncome: async (payload) => {
-    const data = await incomeService.create(payload)
+    // El id se genera aquí para que un reintento tras un fallo de red no duplique el ingreso.
+    const body = { ...payload, id: crypto.randomUUID() }
+    if (globalThis.navigator?.onLine === false) return get().queueOffline('income', body)
+    let data
+    try {
+      data = await incomeService.create(body)
+    } catch (err) {
+      if (isRetryableError(err)) return get().queueOffline('income', body)
+      throw err
+    }
     set((s) => ({ incomes: [data, ...s.incomes] }))
     get().showToast('Ingreso registrado', 'success')
     return data
@@ -53,6 +65,8 @@ export const createIncomeSlice = (set, get) => ({
 
   removeIncome: async (id) => {
     const previous = get().incomes.find((i) => i.id === id)
+    // Un ingreso pendiente nunca llegó al servidor: basta con quitarlo de la cola.
+    if (previous?._pending) return get().discardPending('income', id)
     await incomeService.remove(id)
     set((s) => ({ incomes: s.incomes.filter((i) => i.id !== id) }))
     get().showToast('Ingreso eliminado', 'info', previous && {

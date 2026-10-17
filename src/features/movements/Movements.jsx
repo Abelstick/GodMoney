@@ -9,7 +9,9 @@ import { movementService } from '@/services/movementService'
 import { useCategories } from '@/hooks/useCategories'
 import { useStore } from '@/store'
 import { getMonthRange, formatCurrency, formatDate } from '@/lib/formatters'
-import { summarize, exportMovementsCSV, printMovementsReport } from '@/lib/movementReport'
+import { summarize, exportMovementsCSV, printMovementsReport, isCalendarMonth } from '@/lib/movementReport'
+import { previousRange } from '@/lib/dateRanges'
+import { budgetService } from '@/services/budgetService'
 import { Card }  from '@/components/ui/Card/Card'
 import { Input } from '@/components/ui/Input/Input'
 import { Button } from '@/components/ui/Button/Button'
@@ -75,6 +77,7 @@ export function Movements() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [preparingPdf, setPreparingPdf] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -108,11 +111,12 @@ export function Movements() {
     return [...set].sort()
   }, [all])
 
-  const filtered = useMemo(() => {
+  // Mismo criterio para la lista y para el periodo anterior del informe.
+  const matches = useMemo(() => {
     const q = query.trim().toLowerCase()
     const min = minAmount === '' ? null : Number(minAmount)
     const max = maxAmount === '' ? null : Number(maxAmount)
-    return all.filter((m) => {
+    return (m) => {
       if (kind !== 'all' && m.kind !== kind) return false
       if (catIds.length && !catIds.includes(m.category_id)) return false
       const amount = Number(m.amount)
@@ -124,8 +128,10 @@ export function Movements() {
         if (!hay.includes(q)) return false
       }
       return true
-    })
-  }, [all, kind, catIds, minAmount, maxAmount, tag, query])
+    }
+  }, [kind, catIds, minAmount, maxAmount, tag, query])
+
+  const filtered = useMemo(() => all.filter(matches), [all, matches])
 
   useEffect(() => { setVisible(PAGE_SIZE) }, [filtered])
 
@@ -145,9 +151,30 @@ export function Movements() {
     exportMovementsCSV(filtered, `${fileBase}.csv`)
   }
 
-  function handlePDF() {
+  // El informe suma comparativa con el periodo anterior y, si el rango es un mes
+  // completo, el estado de los presupuestos. Si esos datos extra no cargan, el
+  // informe sale igual sin esas secciones.
+  async function handlePDF() {
     if (!filtered.length) return showToast('No hay movimientos para exportar', 'info')
-    printMovementsReport(filtered, { title: 'Reporte de movimientos', periodLabel })
+    setPreparingPdf(true)
+    try {
+      const prevRange = previousRange(range)
+      const [previousAll, budgets] = await Promise.all([
+        movementService.getRange(prevRange.from, prevRange.to).catch(() => null),
+        isCalendarMonth(range) ? budgetService.getAll().catch(() => null) : null,
+      ])
+      printMovementsReport(filtered, {
+        title: 'Reporte de movimientos',
+        periodLabel,
+        previous: previousAll && previousAll.filter(matches),
+        previousLabel: `${formatDate(prevRange.from)} – ${formatDate(prevRange.to)}`,
+        budgets,
+        allMovements: all,
+        range,
+      })
+    } finally {
+      setPreparingPdf(false)
+    }
   }
 
   return (
@@ -164,8 +191,8 @@ export function Movements() {
           <Button variant="secondary" onClick={handleCSV}>
             <IconDownload size={16} stroke={1.75} /> CSV
           </Button>
-          <Button onClick={handlePDF}>
-            <IconFileTypePdf size={16} stroke={1.75} /> PDF
+          <Button onClick={handlePDF} disabled={preparingPdf}>
+            <IconFileTypePdf size={16} stroke={1.75} /> {preparingPdf ? 'Preparando…' : 'PDF'}
           </Button>
         </div>
       </div>

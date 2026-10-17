@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
-import { IconReceipt2, IconPinned, IconPigMoney } from '@tabler/icons-react'
+import { IconReceipt2, IconPinned, IconPigMoney, IconRepeat } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useExpenses }    from '@/hooks/useExpenses'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
@@ -13,6 +13,7 @@ import { RangeFilter } from '@/components/common/RangeFilter/RangeFilter'
 import { Card }     from '@/components/ui/Card/Card'
 import { Button }   from '@/components/ui/Button/Button'
 import { StatCard } from '@/components/ui/StatCard/StatCard'
+import { RecurringTransactionsModal } from '@/components/common/RecurringTransactions/RecurringTransactionsModal'
 import { Modal }    from '@/components/common/Modal/Modal'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { ExpenseForm } from './components/ExpenseForm'
@@ -93,6 +94,7 @@ export function Expenses() {
   const periodLabel = range ? rangeLabel(range) : formatMonth(parseISO(`${activeMonth}-01`))
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [autoOpen,  setAutoOpen]  = useState(false)
   const [editing,   setEditing]   = useState(null)
   // Gasto que se está duplicando: el formulario se abre prellenado pero guarda uno nuevo.
   const [duplicating, setDuplicating] = useState(null)
@@ -178,7 +180,12 @@ export function Expenses() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Gastos</h1>
-        <Button onClick={openNew}>+ Nuevo gasto</Button>
+        <div className={styles.headerActions}>
+          <Button variant="secondary" onClick={() => setAutoOpen(true)}>
+            <IconRepeat size={16} stroke={1.75} /> Automáticos
+          </Button>
+          <Button onClick={openNew}>+ Nuevo gasto</Button>
+        </div>
       </div>
 
       {/* Filtro de mes */}
@@ -302,6 +309,8 @@ export function Expenses() {
           </div>
         </>
       )}
+
+      <RecurringTransactionsModal isOpen={autoOpen} onClose={() => setAutoOpen(false)} kind="expense" />
 
       <Modal
         isOpen={modalOpen}

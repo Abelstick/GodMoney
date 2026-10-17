@@ -31,6 +31,7 @@ function IncomeItem({ income, onEdit, onDelete, onDuplicate, selecting, selected
           className={styles.checkbox}
           checked={selected}
           onChange={() => onToggle(income.id)}
+          disabled={income._pending}
           aria-label={`Seleccionar ${income.description || income.category?.name || 'ingreso'}`}
         />
       )}
@@ -52,6 +53,11 @@ function IncomeItem({ income, onEdit, onDelete, onDuplicate, selecting, selected
           {income.is_recurring && (
             <Badge color="var(--color-info)">Recurrente</Badge>
           )}
+          {income._pending && (
+            <Badge color={income._syncError ? 'var(--color-danger)' : 'var(--color-warning)'}>
+              {income._syncError ? 'Error al sincronizar' : 'Sin sincronizar'}
+            </Badge>
+          )}
           {income.tags?.map((t) => <span key={t} className={styles.tag}>#{t}</span>)}
         </div>
         <AttachmentStrip attachments={income.attachments} />
@@ -65,9 +71,11 @@ function IncomeItem({ income, onEdit, onDelete, onDuplicate, selecting, selected
           <button className={styles.actionBtn} onClick={() => onDuplicate(income)} aria-label="Duplicar ingreso" title="Duplicar con la fecha de hoy">
             <IconCopy size={15} stroke={1.75} />
           </button>
-          <button className={styles.actionBtn} onClick={() => onEdit(income)} aria-label="Editar ingreso">
-            <IconEdit size={15} stroke={1.75} />
-          </button>
+          {!income._pending && (
+            <button className={styles.actionBtn} onClick={() => onEdit(income)} aria-label="Editar ingreso">
+              <IconEdit size={15} stroke={1.75} />
+            </button>
+          )}
           <button className={`${styles.actionBtn} ${styles.delete}`} onClick={() => onDelete(income.id)} aria-label="Eliminar ingreso">
             <IconTrash size={15} stroke={1.75} />
           </button>
@@ -308,11 +316,11 @@ export function IncomeList({
         <BulkBar
           count={selected.size}
           total={selectedTotal}
-          totalCount={filtered.length}
+          totalCount={filtered.filter((r) => !r._pending).length}
           sign="+"
           categories={categoryOptions}
           busy={busy}
-          onSelectAll={() => selectAll(filtered.map((i) => i.id))}
+          onSelectAll={() => selectAll(filtered.filter((r) => !r._pending).map((i) => i.id))}
           onClear={stopSelecting}
           onChangeCategory={(categoryId) => runBulk((ids) => onBulkCategory(ids, categoryOptions.find((c) => c.id === categoryId) ?? null))}
           onAddTag={(tag) => runBulk((ids) => onBulkTag(ids, tag))}
