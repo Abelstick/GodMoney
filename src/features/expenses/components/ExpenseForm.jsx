@@ -10,7 +10,7 @@ import styles from './ExpenseForm.module.css'
 
 const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_fixed: false, savings_account_id: '', ...EMPTY_EXTRAS }
 
-export function ExpenseForm({ initial, onSubmit, onCancel, loading }) {
+export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading }) {
   const [form, setForm] = useState(initial ?? EMPTY)
   const [errors, setErrors] = useState({})
   const { categories } = useCategories('expense')
@@ -118,7 +118,7 @@ export function ExpenseForm({ initial, onSubmit, onCancel, loading }) {
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>
         <Button type="submit" disabled={loading}>
-          {loading ? 'Guardando…' : initial ? 'Actualizar' : 'Guardar'}
+          {loading ? 'Guardando…' : submitLabel ?? (initial ? 'Actualizar' : 'Guardar')}
         </Button>
       </div>
     </form>

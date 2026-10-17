@@ -1,4 +1,7 @@
 import { supabase } from '@/lib/supabase'
+import { toRestorePayload } from '@/lib/restorePayload'
+
+const SELECT = '*, category:categories(id,name,color,icon)'
 
 async function getUserId() {
   const { data: { session } } = await supabase.auth.getSession()
@@ -10,7 +13,7 @@ export const incomeService = {
   async getByMonth(from, to) {
     const { data, error } = await supabase
       .from('incomes')
-      .select('*, category:categories(id,name,color,icon)')
+      .select(SELECT)
       .gte('date', from)
       .lte('date', to)
       .order('date', { ascending: false })
@@ -35,7 +38,7 @@ export const incomeService = {
     const { data, error } = await supabase
       .from('incomes')
       .insert({ ...payload, user_id })
-      .select('*, category:categories(id,name,color,icon)')
+      .select(SELECT)
       .single()
     if (error) throw error
     return data
@@ -46,7 +49,7 @@ export const incomeService = {
       .from('incomes')
       .update(payload)
       .eq('id', id)
-      .select('*, category:categories(id,name,color,icon)')
+      .select(SELECT)
       .single()
     if (error) throw error
     return data
@@ -55,5 +58,28 @@ export const incomeService = {
   async remove(id) {
     const { error } = await supabase.from('incomes').delete().eq('id', id)
     if (error) throw error
+  },
+
+  // Mismo cambio para varios ingresos a la vez.
+  async updateMany(ids, patch) {
+    const { data, error } = await supabase.from('incomes').update(patch).in('id', ids).select(SELECT)
+    if (error) throw error
+    return data
+  },
+
+  async removeMany(ids) {
+    const { error } = await supabase.from('incomes').delete().in('id', ids)
+    if (error) throw error
+  },
+
+  // Vuelve a insertar ingresos eliminados (Deshacer).
+  async restore(rows) {
+    const user_id = await getUserId()
+    const { data, error } = await supabase
+      .from('incomes')
+      .insert(rows.map((r) => ({ ...toRestorePayload('income', r), user_id })))
+      .select(SELECT)
+    if (error) throw error
+    return data
   },
 }

@@ -8,7 +8,8 @@ export const createUiSlice = (set) => ({
   toggleSidebarCollapsed: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 
   toast: null,
-  showToast: (message, type = 'info') =>
-    set({ toast: { message, type, id: Date.now() } }),
+  // `action` ({ label, onClick }) agrega un botón al aviso, p. ej. "Deshacer".
+  showToast: (message, type = 'info', action) =>
+    set({ toast: { message, type, action, id: Date.now() } }),
   clearToast: () => set({ toast: null }),
 })

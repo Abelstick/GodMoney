@@ -290,3 +290,10 @@
 
 .tag { font-size: var(--text-xs); color: var(--color-text-muted); }
 .clip { display: inline-flex; align-items: center; gap: 2px; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* ── Selección múltiple ── */
+.checkbox { width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; accent-color: var(--color-primary); }
+.itemSelected { border-color: var(--color-primary); background: var(--color-primary-alpha); }
+.itemSelected:hover { background: var(--color-primary-alpha); }
+.viewToggleActive { border-color: var(--color-primary); color: var(--color-primary); }
+.tagChip { font-variant-numeric: tabular-nums; }

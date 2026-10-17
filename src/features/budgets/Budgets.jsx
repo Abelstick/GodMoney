@@ -93,7 +93,7 @@ export function Budgets() {
         <EmptyState
           icon={<IconClipboardList size={44} stroke={1.5} />}
           title="Sin presupuestos"
-          description="Crea un presupuesto para controlar tus gastos por categoría"
+          description="Crea un presupuesto para controlar tus gastos, agrupando una o varias categorías"
           action={<Button onClick={() => setModalOpen(true)}>Crear presupuesto</Button>}
         />
       ) : (
@@ -137,7 +137,7 @@ export function Budgets() {
           initial={editing ? {
             name:        editing.name,
             amount:      String(editing.amount),
-            category_id: editing.category_id ?? '',
+            category_ids: editing.category_ids ?? [],
             period:      editing.period,
             color:       editing.color,
           } : undefined}

@@ -1,6 +1,6 @@
 import { getDate, getDaysInMonth, format } from 'date-fns'
 import { groupByMonth, simpleMean, percentChange } from '@/features/predictions/utils/predictionAlgorithms'
-import { getBudgetStatus, BUDGET_STATUS, getBudgetAlertMessage } from '@/lib/budgetStatus'
+import { getBudgetStatus, BUDGET_STATUS, getBudgetAlertMessage, sumBudgetSpent } from '@/lib/budgetStatus'
 import { formatCurrency } from '@/lib/formatters'
 import { isSavingsExpense, getSavingsRate } from '@/lib/savings'
 
@@ -15,7 +15,7 @@ function severityRank(severity) {
 // ── Presupuestos del mes actual con su estado (mismo cálculo que useBudgets) ─
 export function buildBudgetsWithSpent(budgets, spentByCategory) {
   return budgets.map((b) => {
-    const spent  = spentByCategory[b.category_id] ?? 0
+    const spent  = sumBudgetSpent(b, spentByCategory)
     const amount = Number(b.amount)
     return {
       ...b,

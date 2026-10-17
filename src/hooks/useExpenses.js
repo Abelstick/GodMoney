@@ -2,8 +2,11 @@ import { useEffect } from 'react'
 import { useStore, selectTotalExpense } from '@/store'
 import { useMonthFilter } from './useMonthFilter'
 
-export function useExpenses() {
-  const { from, to } = useMonthFilter()
+// `range` ({from, to}) sustituye al mes activo cuando se pasa.
+export function useExpenses(range) {
+  const month = useMonthFilter()
+  const from = range?.from ?? month.from
+  const to   = range?.to   ?? month.to
 
   const expenses       = useStore((s) => s.expenses)
   const loading        = useStore((s) => s.expensesLoading)
@@ -13,6 +16,9 @@ export function useExpenses() {
   const addExpense     = useStore((s) => s.addExpense)
   const updateExpense  = useStore((s) => s.updateExpense)
   const removeExpense  = useStore((s) => s.removeExpense)
+  const updateManyExpenses = useStore((s) => s.updateManyExpenses)
+  const addTagToExpenses   = useStore((s) => s.addTagToExpenses)
+  const removeManyExpenses = useStore((s) => s.removeManyExpenses)
 
   useEffect(() => {
     fetchExpenses(from, to)
@@ -20,5 +26,8 @@ export function useExpenses() {
 
   const refetch = () => fetchExpenses(from, to)
 
-  return { expenses, loading, error, totalExpense, addExpense, updateExpense, removeExpense, refetch }
+  return {
+    expenses, loading, error, totalExpense, from, to,
+    addExpense, updateExpense, removeExpense, updateManyExpenses, addTagToExpenses, removeManyExpenses, refetch,
+  }
 }

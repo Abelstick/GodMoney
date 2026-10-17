@@ -2,22 +2,38 @@ import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
 import {
   IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown,
-  IconCoin, IconEdit, IconTrash, IconRepeat, IconX,
+  IconCoin, IconEdit, IconTrash, IconRepeat, IconX, IconCopy, IconChecks,
 } from '@tabler/icons-react'
+import { useStore } from '@/store'
+import { useCategories } from '@/hooks/useCategories'
+import { usePersistentState } from '@/hooks/usePersistentState'
+import { useSelection } from '@/hooks/useSelection'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { getSortOptions, sortTransactions } from '@/lib/transactionSort'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
+import { BulkBar } from '@/components/common/BulkBar/BulkBar'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import styles from './IncomeList.module.css'
 
 const PAGE_SIZE = 8
 const SORT_OPTIONS = getSortOptions('ingreso')
+const SORT_VALUES = SORT_OPTIONS.map((o) => o.value)
 
-function IncomeItem({ income, onEdit, onDelete }) {
+function IncomeItem({ income, onEdit, onDelete, onDuplicate, selecting, selected, onToggle }) {
   return (
-    <div className={styles.item}>
+    <div className={`${styles.item} ${selected ? styles.itemSelected : ''}`}>
+      {selecting && (
+        <input
+          type="checkbox"
+          className={styles.checkbox}
+          checked={selected}
+          onChange={() => onToggle(income.id)}
+          aria-label={`Seleccionar ${income.description || income.category?.name || 'ingreso'}`}
+        />
+      )}
       <div
         className={styles.iconWrap}
         style={{ background: `color-mix(in srgb, ${income.category?.color ?? 'var(--color-success)'} 15%, transparent)`, color: income.category?.color ?? 'var(--color-success)' }}
@@ -46,6 +62,9 @@ function IncomeItem({ income, onEdit, onDelete }) {
       <div className={styles.right}>
         <span className={styles.amount}>+{formatCurrency(income.amount)}</span>
         <div className={styles.actions}>
+          <button className={styles.actionBtn} onClick={() => onDuplicate(income)} aria-label="Duplicar ingreso" title="Duplicar con la fecha de hoy">
+            <IconCopy size={15} stroke={1.75} />
+          </button>
           <button className={styles.actionBtn} onClick={() => onEdit(income)} aria-label="Editar ingreso">
             <IconEdit size={15} stroke={1.75} />
           </button>
@@ -58,19 +77,29 @@ function IncomeItem({ income, onEdit, onDelete }) {
   )
 }
 
-export function IncomeList({ incomes, onEdit, onDelete }) {
+export function IncomeList({
+  incomes, onEdit, onDelete, onDuplicate,
+  onBulkCategory, onBulkTag, onBulkDelete,
+}) {
+  const showToast = useStore((s) => s.showToast)
+  const { categories: categoryOptions } = useCategories('income')
+
   const [query,         setQuery]         = useState('')
   const [activeCats,    setActiveCats]    = useState(new Set())
+  const [activeTags,    setActiveTags]    = useState(new Set())
   const [onlyRecurring, setOnlyRecurring] = useState(false)
-  const [grouped,       setGrouped]       = useState(false)
   const [collapsed,     setCollapsed]     = useState(new Set())
   const [page,          setPage]          = useState(1)
-  // Por defecto: orden por fecha de registro, ascendente (lo más reciente al final).
-  const [sortBy,        setSortBy]        = useState('created_at')
-  const [sortDir,       setSortDir]       = useState('asc')
+  const [selecting,     setSelecting]     = useState(false)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [busy,          setBusy]          = useState(false)
+  // Orden y vista se recuerdan entre visitas. Por defecto: fecha de registro, ascendente (lo más reciente al final).
+  const [grouped,       setGrouped]       = usePersistentState('godmoney:incomes:grouped', false, (v) => typeof v === 'boolean')
+  const [sortBy,        setSortBy]        = usePersistentState('godmoney:incomes:sortBy', 'created_at', (v) => SORT_VALUES.includes(v))
+  const [sortDir,       setSortDir]       = usePersistentState('godmoney:incomes:sortDir', 'asc', (v) => v === 'asc' || v === 'desc')
 
-  useEffect(() => { setActiveCats(new Set()); setOnlyRecurring(false); setCollapsed(new Set()); setPage(1) }, [incomes])
-  useEffect(() => { setPage(1) }, [query, activeCats, onlyRecurring, grouped, sortBy, sortDir])
+  useEffect(() => { setActiveCats(new Set()); setActiveTags(new Set()); setOnlyRecurring(false); setCollapsed(new Set()); setPage(1) }, [incomes])
+  useEffect(() => { setPage(1) }, [query, activeCats, activeTags, onlyRecurring, grouped, sortBy, sortDir])
 
   const categories = useMemo(() => {
     const map = new Map()
@@ -84,6 +113,13 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
       .sort((a, b) => b.count - a.count)
   }, [incomes])
 
+  // Etiquetas presentes en la lista, de más a menos usadas
+  const tags = useMemo(() => {
+    const map = new Map()
+    incomes.forEach((i) => i.tags?.forEach((t) => map.set(t, (map.get(t) ?? 0) + 1)))
+    return [...map.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
+  }, [incomes])
+
   const hasRecurring = useMemo(() => incomes.some((i) => i.is_recurring), [incomes])
 
   const filtered = useMemo(() => {
@@ -91,10 +127,11 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
     return incomes.filter((i) => {
       if (q && !i.description?.toLowerCase().includes(q) && !i.category?.name?.toLowerCase().includes(q)) return false
       if (activeCats.size > 0 && !activeCats.has(i.category?.name ?? 'Sin categoría')) return false
+      if (activeTags.size > 0 && !i.tags?.some((t) => activeTags.has(t))) return false
       if (onlyRecurring && !i.is_recurring) return false
       return true
     })
-  }, [incomes, query, activeCats, onlyRecurring])
+  }, [incomes, query, activeCats, activeTags, onlyRecurring])
 
   const sorted = useMemo(
     () => sortTransactions(filtered, sortBy, sortDir),
@@ -118,31 +155,52 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
 
   const filteredTotal = useMemo(() => filtered.reduce((a, i) => a + Number(i.amount), 0), [filtered])
 
+  const { selected, toggle, selectAll, clear } = useSelection(incomes)
+  const selectedTotal = useMemo(
+    () => incomes.filter((i) => selected.has(i.id)).reduce((a, i) => a + Number(i.amount), 0),
+    [incomes, selected]
+  )
+
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
   const flatSlice  = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const hasActiveFilters = query || activeCats.size > 0 || onlyRecurring
+  const hasActiveFilters = query || activeCats.size > 0 || activeTags.size > 0 || onlyRecurring
 
-  function toggleCat(name) {
-    setActiveCats((prev) => {
+  function toggleIn(setter) {
+    return (name) => setter((prev) => {
       const next = new Set(prev)
-      next.has(name) ? next.delete(name) : next.add(name)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
       return next
     })
   }
-
-  function toggleCollapse(name) {
-    setCollapsed((prev) => {
-      const next = new Set(prev)
-      next.has(name) ? next.delete(name) : next.add(name)
-      return next
-    })
-  }
+  const toggleCat = toggleIn(setActiveCats)
+  const toggleTag = toggleIn(setActiveTags)
+  const toggleCollapse = toggleIn(setCollapsed)
 
   function clearAll() {
     setQuery('')
     setActiveCats(new Set())
+    setActiveTags(new Set())
     setOnlyRecurring(false)
+  }
+
+  function stopSelecting() {
+    setSelecting(false)
+    clear()
+  }
+
+  // Ejecuta una acción masiva; la selección se conserva si falla para poder reintentar.
+  async function runBulk(action) {
+    setBusy(true)
+    try {
+      await action([...selected])
+      stopSelecting()
+    } catch (err) {
+      showToast(err.message ?? 'No se pudo completar la acción', 'error')
+    } finally {
+      setBusy(false)
+    }
   }
 
   function handleExport() {
@@ -155,9 +213,11 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
 
   if (!incomes.length) {
     return (
-      <EmptyState icon={<IconCoin size={44} stroke={1.5} />} title="Sin ingresos este mes" description="Registra tu primer ingreso del mes" />
+      <EmptyState icon={<IconCoin size={44} stroke={1.5} />} title="Sin ingresos en este periodo" description="Registra tu primer ingreso o cambia el rango de fechas" />
     )
   }
+
+  const itemProps = { onEdit, onDelete, onDuplicate, selecting, onToggle: toggle }
 
   return (
     <div className={styles.root}>
@@ -174,7 +234,7 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
       </div>
 
       {/* Filtros dinámicos */}
-      {(categories.length > 1 || hasRecurring) && (
+      {(categories.length > 1 || hasRecurring || tags.length > 0) && (
         <div className={styles.filters}>
           {categories.length > 1 && categories.map((cat) => {
             const active = activeCats.has(cat.name)
@@ -200,6 +260,19 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
               <IconRepeat size={13} stroke={1.75} /> Recurrente
             </button>
           )}
+
+          {tags.map((tag) => (
+            <button
+              key={tag.name}
+              className={`${styles.chip} ${styles.tagChip} ${activeTags.has(tag.name) ? styles.chipActive : ''}`}
+              style={activeTags.has(tag.name) ? { borderColor: 'var(--color-primary)', background: 'var(--color-primary-alpha)' } : {}}
+              aria-pressed={activeTags.has(tag.name)}
+              onClick={() => toggleTag(tag.name)}
+            >
+              #{tag.name}
+              <span className={styles.chipCount}>{tag.count}</span>
+            </button>
+          ))}
 
           {hasActiveFilters && (
             <button className={styles.clearFilters} onClick={clearAll}>
@@ -231,6 +304,22 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
         </button>
       </div>
 
+      {selecting && (
+        <BulkBar
+          count={selected.size}
+          total={selectedTotal}
+          totalCount={filtered.length}
+          sign="+"
+          categories={categoryOptions}
+          busy={busy}
+          onSelectAll={() => selectAll(filtered.map((i) => i.id))}
+          onClear={stopSelecting}
+          onChangeCategory={(categoryId) => runBulk((ids) => onBulkCategory(ids, categoryOptions.find((c) => c.id === categoryId) ?? null))}
+          onAddTag={(tag) => runBulk((ids) => onBulkTag(ids, tag))}
+          onDelete={() => setConfirmBulkDelete(true)}
+        />
+      )}
+
       {/* Lista o vacío */}
       {filtered.length === 0 ? (
         <EmptyState icon={<IconSearch size={44} stroke={1.5} />} title="Sin resultados" description="Prueba con otros filtros" />
@@ -246,6 +335,15 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
               <span className={styles.filterSummaryAmount}>+{formatCurrency(filteredTotal)}</span>
             </div>
             <div className={styles.filterSummaryActions}>
+              <button
+                className={`${styles.viewToggle} ${selecting ? styles.viewToggleActive : ''}`}
+                onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+                aria-pressed={selecting}
+                title="Seleccionar varios movimientos"
+              >
+                <IconChecks size={15} stroke={1.75} />
+                Seleccionar
+              </button>
               <button
                 className={styles.viewToggle}
                 onClick={() => setGrouped((v) => !v)}
@@ -281,7 +379,7 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
                     {!isCollapsed && (
                       <div className={styles.list}>
                         {g.items.map((income) => (
-                          <IncomeItem key={income.id} income={income} onEdit={onEdit} onDelete={onDelete} />
+                          <IncomeItem key={income.id} income={income} selected={selected.has(income.id)} {...itemProps} />
                         ))}
                       </div>
                     )}
@@ -293,7 +391,7 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
             <>
               <div className={styles.list}>
                 {flatSlice.map((income) => (
-                  <IncomeItem key={income.id} income={income} onEdit={onEdit} onDelete={onDelete} />
+                  <IncomeItem key={income.id} income={income} selected={selected.has(income.id)} {...itemProps} />
                 ))}
               </div>
 
@@ -309,6 +407,18 @@ export function IncomeList({ incomes, onEdit, onDelete }) {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmBulkDelete}
+        onClose={() => setConfirmBulkDelete(false)}
+        onConfirm={async () => {
+          await runBulk(onBulkDelete)
+          setConfirmBulkDelete(false)
+        }}
+        loading={busy}
+        title={`Eliminar ${selected.size} ingreso${selected.size !== 1 ? 's' : ''}`}
+        description={`Se eliminarán ${selected.size} ingreso${selected.size !== 1 ? 's' : ''} por ${formatCurrency(selectedTotal)}. Podrás deshacerlo unos segundos después.`}
+      />
     </div>
   )
 }

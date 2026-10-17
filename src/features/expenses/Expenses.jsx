@@ -1,16 +1,19 @@
 import { useState, useMemo } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { IconReceipt2, IconPinned, IconPigMoney } from '@tabler/icons-react'
+import { useStore } from '@/store'
 import { useExpenses }    from '@/hooks/useExpenses'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
-import { formatCurrency, formatMonth, getPastMonths } from '@/lib/formatters'
+import { formatCurrency, formatMonth, getPastMonths, toInputDate } from '@/lib/formatters'
 import { splitSavings } from '@/lib/savings'
 import { parseISO } from 'date-fns'
+import { percentDelta, rangeLabel } from '@/lib/dateRanges'
+import { usePreviousPeriodTotals } from '@/hooks/usePreviousPeriodTotals'
+import { RangeFilter } from '@/components/common/RangeFilter/RangeFilter'
 import { Card }     from '@/components/ui/Card/Card'
 import { Button }   from '@/components/ui/Button/Button'
 import { StatCard } from '@/components/ui/StatCard/StatCard'
 import { Modal }    from '@/components/common/Modal/Modal'
-import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
@@ -32,7 +35,20 @@ function PieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
   )
 }
 
-function PieLegend({ data, total }) {
+// Variación vs el periodo anterior. Gastar más es "malo": sube en rojo, baja en verde.
+function Delta({ current, previous, loading }) {
+  if (loading) return <span className={styles.delta} />
+  const pct = percentDelta(current, previous)
+  if (pct === null) return <span className={`${styles.delta} ${styles.deltaNew}`}>nuevo</span>
+  if (pct === 0)    return <span className={`${styles.delta} ${styles.deltaFlat}`}>=</span>
+  return (
+    <span className={`${styles.delta} ${pct > 0 ? styles.deltaUp : styles.deltaDown}`}>
+      {pct > 0 ? '↑' : '↓'} {Math.abs(pct)}%
+    </span>
+  )
+}
+
+function PieLegend({ data, total, previous }) {
   return (
     <div className={styles.pieLegend}>
       {data.map((entry) => {
@@ -43,6 +59,7 @@ function PieLegend({ data, total }) {
             <span className={styles.legendName}>{entry.name}</span>
             <span className={styles.legendPct}>{pct}%</span>
             <span className={styles.legendAmount}>{formatCurrency(entry.value)}</span>
+            <Delta current={entry.value} previous={previous.byCategory[entry.name] ?? 0} loading={previous.loading} />
           </div>
         )
       })}
@@ -65,18 +82,21 @@ function PieTooltipContent({ active, payload }) {
 export function Expenses() {
   const { activeMonth, setActiveMonth } = useMonthFilter()
   const months = useMemo(() => getPastMonths(6), [])
+  // null = manda el mes seleccionado; si no, un atajo o rango personalizado.
+  const [range, setRange] = useState(null)
   const {
-    expenses, loading, error, totalExpense,
-    addExpense, updateExpense, removeExpense, refetch,
-  } = useExpenses()
+    expenses, loading, error, totalExpense, from, to,
+    addExpense, updateExpense, removeExpense, updateManyExpenses, addTagToExpenses, removeManyExpenses, refetch,
+  } = useExpenses(range)
+  const showToast = useStore((s) => s.showToast)
+  const previous = usePreviousPeriodTotals(from, to)
+  const periodLabel = range ? rangeLabel(range) : formatMonth(parseISO(`${activeMonth}-01`))
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState(null)
+  // Gasto que se está duplicando: el formulario se abre prellenado pero guarda uno nuevo.
+  const [duplicating, setDuplicating] = useState(null)
   const [saving,    setSaving]    = useState(false)
-
-  const [deletingId, setDeletingId] = useState(null)
-  const [deleting,   setDeleting]   = useState(false)
-  const deletingExpense = expenses.find((e) => e.id === deletingId)
 
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   useMemo(() => { if (!loading) setHasLoadedOnce(true) }, [loading])
@@ -87,21 +107,57 @@ export function Expenses() {
     try {
       if (editing) await updateExpense(editing.id, payload)
       else         await addExpense(payload)
-      setModalOpen(false)
-      setEditing(null)
+      closeModal()
     } finally {
       setSaving(false)
     }
   }
 
-  async function handleConfirmDelete() {
-    if (!deletingId) return
-    setDeleting(true)
+  function closeModal() {
+    setModalOpen(false)
+    setEditing(null)
+    setDuplicating(null)
+  }
+
+  function openNew()         { setEditing(null); setDuplicating(null); setModalOpen(true) }
+  function openEdit(expense) { setEditing(expense); setDuplicating(null); setModalOpen(true) }
+  function openDuplicate(expense) { setEditing(null); setDuplicating(expense); setModalOpen(true) }
+
+  // Se elimina de inmediato; el aviso con "Deshacer" reemplaza al diálogo de confirmación.
+  async function handleDelete(id) {
     try {
-      await removeExpense(deletingId)
-      setDeletingId(null)
-    } finally {
-      setDeleting(false)
+      await removeExpense(id)
+    } catch (err) {
+      showToast(err.message ?? 'No se pudo eliminar el gasto', 'error')
+    }
+  }
+
+  // Al sacar un gasto de una categoría de ahorro hay que soltar su cuenta destino,
+  // igual que hace el formulario, para que el trigger de BD revierta el saldo.
+  function handleBulkCategory(ids, category) {
+    const patch = { category_id: category?.id ?? null }
+    if (!category?.is_savings) patch.savings_account_id = null
+    const label = category ? `a "${category.name}"` : 'a "Sin categoría"'
+    return updateManyExpenses(ids, patch, `${ids.length} gasto${ids.length !== 1 ? 's' : ''} movido${ids.length !== 1 ? 's' : ''} ${label}`)
+  }
+
+  let modalTitle = 'Nuevo gasto'
+  if (editing) modalTitle = 'Editar gasto'
+  else if (duplicating) modalTitle = 'Duplicar gasto'
+
+  // Valores iniciales del formulario: edición exacta, o copia con fecha de hoy y sin adjuntos.
+  let formInitial
+  if (editing || duplicating) {
+    const source = editing ?? duplicating
+    formInitial = {
+      amount:      String(source.amount),
+      description: source.description ?? '',
+      category_id: source.category_id ?? '',
+      date:        editing ? source.date : toInputDate(new Date()),
+      is_fixed:    source.is_fixed,
+      savings_account_id: source.savings_account_id ?? '',
+      ...extrasFrom(source),
+      ...(editing ? {} : { attachments: [] }),
     }
   }
 
@@ -122,7 +178,7 @@ export function Expenses() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Gastos</h1>
-        <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nuevo gasto</Button>
+        <Button onClick={openNew}>+ Nuevo gasto</Button>
       </div>
 
       {/* Filtro de mes */}
@@ -130,13 +186,15 @@ export function Expenses() {
         {months.map((m) => (
           <button
             key={m.key}
-            className={`${styles.monthBtn} ${activeMonth === m.key ? styles.monthActive : ''}`}
-            onClick={() => setActiveMonth(m.key)}
+            className={`${styles.monthBtn} ${!range && activeMonth === m.key ? styles.monthActive : ''}`}
+            onClick={() => { setRange(null); setActiveMonth(m.key) }}
           >
             {m.label} {m.year}
           </button>
         ))}
       </div>
+
+      <RangeFilter range={range} onChange={setRange} />
 
       {/* Error de carga */}
       {error && (
@@ -180,7 +238,7 @@ export function Expenses() {
             {/* Gráfico de dona */}
             {pieData.length > 0 && (
               <Card padded>
-                <Card.Header>Por categoría · {formatMonth(parseISO(`${activeMonth}-01`))}</Card.Header>
+                <Card.Header>Por categoría · {periodLabel}</Card.Header>
                 <div className={styles.pieWrap}>
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
@@ -209,21 +267,35 @@ export function Expenses() {
                   </div>
                 </div>
 
-                <PieLegend data={pieData} total={totalExpense} />
+                {!previous.loading && (
+                  <div className={styles.comparison}>
+                    <span>vs {rangeLabel({ type: 'custom', ...previous.prev })}</span>
+                    <span className={styles.comparisonValue}>
+                      <Delta current={totalExpense} previous={previous.total} />
+                      <span className={styles.comparisonPrev}>antes {formatCurrency(previous.total)}</span>
+                    </span>
+                  </div>
+                )}
+
+                <PieLegend data={pieData} total={totalExpense} previous={previous} />
               </Card>
             )}
 
             {/* Lista con paginación */}
             <Card padded={false}>
               <div className={styles.listHeader}>
-                <strong>Movimientos · {formatMonth(parseISO(`${activeMonth}-01`))}</strong>
+                <strong>Movimientos · {periodLabel}</strong>
                 <span className={styles.listCount}>{expenses.length} registros</span>
               </div>
               <div style={{ padding: '8px 12px 12px' }}>
                 <ExpenseList
                   expenses={expenses}
-                  onEdit={(e) => { setEditing(e); setModalOpen(true) }}
-                  onDelete={(id) => setDeletingId(id)}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  onDuplicate={openDuplicate}
+                  onBulkCategory={handleBulkCategory}
+                  onBulkTag={addTagToExpenses}
+                  onBulkDelete={removeManyExpenses}
                 />
               </div>
             </Card>
@@ -233,37 +305,17 @@ export function Expenses() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setEditing(null) }}
-        title={editing ? 'Editar gasto' : 'Nuevo gasto'}
+        onClose={closeModal}
+        title={modalTitle}
       >
         <ExpenseForm
-          initial={editing ? {
-            amount:      String(editing.amount),
-            description: editing.description ?? '',
-            category_id: editing.category_id ?? '',
-            date:        editing.date,
-            is_fixed:    editing.is_fixed,
-            savings_account_id: editing.savings_account_id ?? '',
-            ...extrasFrom(editing),
-          } : undefined}
+          initial={formInitial}
+          submitLabel={duplicating ? 'Crear copia' : undefined}
           onSubmit={handleSubmit}
-          onCancel={() => { setModalOpen(false); setEditing(null) }}
+          onCancel={closeModal}
           loading={saving}
         />
       </Modal>
-
-      <ConfirmDialog
-        isOpen={!!deletingId}
-        onClose={() => setDeletingId(null)}
-        onConfirm={handleConfirmDelete}
-        loading={deleting}
-        title="Eliminar gasto"
-        description={
-          deletingExpense
-            ? `¿Eliminar "${deletingExpense.description || deletingExpense.category?.name || 'este gasto'}" por ${formatCurrency(deletingExpense.amount)}? Esta acción no se puede deshacer.`
-            : '¿Eliminar este gasto? Esta acción no se puede deshacer.'
-        }
-      />
     </div>
   )
 }

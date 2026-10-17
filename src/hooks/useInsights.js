@@ -4,6 +4,7 @@ import { expenseService } from '@/services/expenseService'
 import { incomeService }  from '@/services/incomeService'
 import { budgetService }  from '@/services/budgetService'
 import { getMonthRange }  from '@/lib/formatters'
+import { allBudgetCategoryIds } from '@/lib/budgetStatus'
 import { MONTHS_HISTORY } from '@/lib/constants'
 import {
   buildBudgetsWithSpent,
@@ -50,7 +51,7 @@ export function useInsights() {
             budgetService.getAll(),
           ])
 
-        const categoryIds = budgets.map((b) => b.category_id).filter(Boolean)
+        const categoryIds = allBudgetCategoryIds(budgets)
         const spentByCategory = await budgetService.getSpentByCategory(categoryIds, from, to)
         const budgetsWithSpent = buildBudgetsWithSpent(budgets, spentByCategory)
 

@@ -3,11 +3,11 @@ import { BUDGET_STATUS_META } from './budgetStatus'
 const PERIOD_LABELS = { monthly: 'Mensual', weekly: 'Semanal', yearly: 'Anual' }
 
 export function exportBudgetCSV(budgets, monthLabel = '') {
-  const header = ['Nombre', 'Período', 'Categoría', 'Límite', 'Gastado', 'Restante', '% Usado', 'Estado']
+  const header = ['Nombre', 'Período', 'Categorías', 'Límite', 'Gastado', 'Restante', '% Usado', 'Estado']
   const rows = budgets.map((b) => [
     `"${b.name}"`,
     PERIOD_LABELS[b.period] ?? b.period,
-    b.category ? `"${b.category.name}"` : '—',
+    b.categories?.length ? `"${b.categories.map((c) => c.name).join(', ')}"` : '—',
     b.amount.toFixed(2),
     b.spent.toFixed(2),
     b.remaining.toFixed(2),

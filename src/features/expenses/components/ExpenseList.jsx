@@ -2,22 +2,38 @@ import { useState, useEffect, useMemo } from 'react'
 import { Pagination } from '@mantine/core'
 import {
   IconSearch, IconChevronDown, IconLayoutGrid, IconList, IconDownload, IconArrowUp, IconArrowDown,
-  IconReceipt2, IconEdit, IconTrash, IconPinned, IconX,
+  IconReceipt2, IconEdit, IconTrash, IconPinned, IconX, IconCopy, IconChecks,
 } from '@tabler/icons-react'
+import { useStore } from '@/store'
+import { useCategories } from '@/hooks/useCategories'
+import { usePersistentState } from '@/hooks/usePersistentState'
+import { useSelection } from '@/hooks/useSelection'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { getSortOptions, sortTransactions } from '@/lib/transactionSort'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
+import { BulkBar } from '@/components/common/BulkBar/BulkBar'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import styles from './ExpenseList.module.css'
 
 const PAGE_SIZE = 8
 const SORT_OPTIONS = getSortOptions('gasto')
+const SORT_VALUES = SORT_OPTIONS.map((o) => o.value)
 
-function ExpenseItem({ expense, onEdit, onDelete }) {
+function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, selected, onToggle }) {
   return (
-    <div className={styles.item}>
+    <div className={`${styles.item} ${selected ? styles.itemSelected : ''}`}>
+      {selecting && (
+        <input
+          type="checkbox"
+          className={styles.checkbox}
+          checked={selected}
+          onChange={() => onToggle(expense.id)}
+          aria-label={`Seleccionar ${expense.description || expense.category?.name || 'gasto'}`}
+        />
+      )}
       <div
         className={styles.iconWrap}
         style={{ background: `color-mix(in srgb, ${expense.category?.color ?? 'var(--color-danger)'} 15%, transparent)`, color: expense.category?.color ?? 'var(--color-danger)' }}
@@ -47,6 +63,9 @@ function ExpenseItem({ expense, onEdit, onDelete }) {
       <div className={styles.right}>
         <span className={styles.amount}>-{formatCurrency(expense.amount)}</span>
         <div className={styles.actions}>
+          <button className={styles.actionBtn} onClick={() => onDuplicate(expense)} aria-label="Duplicar gasto" title="Duplicar con la fecha de hoy">
+            <IconCopy size={15} stroke={1.75} />
+          </button>
           <button className={styles.actionBtn} onClick={() => onEdit(expense)} aria-label="Editar gasto">
             <IconEdit size={15} stroke={1.75} />
           </button>
@@ -59,19 +78,29 @@ function ExpenseItem({ expense, onEdit, onDelete }) {
   )
 }
 
-export function ExpenseList({ expenses, onEdit, onDelete }) {
+export function ExpenseList({
+  expenses, onEdit, onDelete, onDuplicate,
+  onBulkCategory, onBulkTag, onBulkDelete,
+}) {
+  const showToast = useStore((s) => s.showToast)
+  const { categories: categoryOptions } = useCategories('expense')
+
   const [query,      setQuery]      = useState('')
   const [activeCats, setActiveCats] = useState(new Set())
+  const [activeTags, setActiveTags] = useState(new Set())
   const [onlyFixed,  setOnlyFixed]  = useState(false)
-  const [grouped,    setGrouped]    = useState(false)
   const [collapsed,  setCollapsed]  = useState(new Set())
   const [page,       setPage]       = useState(1)
-  // Por defecto: orden por fecha de registro, ascendente (lo más reciente al final).
-  const [sortBy,     setSortBy]     = useState('created_at')
-  const [sortDir,    setSortDir]    = useState('desc')
+  const [selecting,  setSelecting]  = useState(false)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [busy,       setBusy]       = useState(false)
+  // Orden y vista se recuerdan entre visitas. Por defecto: fecha de registro, lo más reciente primero.
+  const [grouped,    setGrouped]    = usePersistentState('godmoney:expenses:grouped', false, (v) => typeof v === 'boolean')
+  const [sortBy,     setSortBy]     = usePersistentState('godmoney:expenses:sortBy', 'created_at', (v) => SORT_VALUES.includes(v))
+  const [sortDir,    setSortDir]    = usePersistentState('godmoney:expenses:sortDir', 'desc', (v) => v === 'asc' || v === 'desc')
 
-  useEffect(() => { setActiveCats(new Set()); setOnlyFixed(false); setCollapsed(new Set()); setPage(1) }, [expenses])
-  useEffect(() => { setPage(1) }, [query, activeCats, onlyFixed, grouped, sortBy, sortDir])
+  useEffect(() => { setActiveCats(new Set()); setActiveTags(new Set()); setOnlyFixed(false); setCollapsed(new Set()); setPage(1) }, [expenses])
+  useEffect(() => { setPage(1) }, [query, activeCats, activeTags, onlyFixed, grouped, sortBy, sortDir])
 
   // Categorías únicas derivadas de la lista completa
   const categories = useMemo(() => {
@@ -86,6 +115,13 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
       .sort((a, b) => b.count - a.count)
   }, [expenses])
 
+  // Etiquetas presentes en la lista, de más a menos usadas
+  const tags = useMemo(() => {
+    const map = new Map()
+    expenses.forEach((e) => e.tags?.forEach((t) => map.set(t, (map.get(t) ?? 0) + 1)))
+    return [...map.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
+  }, [expenses])
+
   const hasFixed = useMemo(() => expenses.some((e) => e.is_fixed), [expenses])
 
   const filtered = useMemo(() => {
@@ -93,10 +129,11 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
     return expenses.filter((e) => {
       if (q && !e.description?.toLowerCase().includes(q) && !e.category?.name?.toLowerCase().includes(q)) return false
       if (activeCats.size > 0 && !activeCats.has(e.category?.name ?? 'Sin categoría')) return false
+      if (activeTags.size > 0 && !e.tags?.some((t) => activeTags.has(t))) return false
       if (onlyFixed && !e.is_fixed) return false
       return true
     })
-  }, [expenses, query, activeCats, onlyFixed])
+  }, [expenses, query, activeCats, activeTags, onlyFixed])
 
   const sorted = useMemo(
     () => sortTransactions(filtered, sortBy, sortDir),
@@ -120,31 +157,52 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
 
   const filteredTotal = useMemo(() => filtered.reduce((a, e) => a + Number(e.amount), 0), [filtered])
 
+  const { selected, toggle, selectAll, clear } = useSelection(expenses)
+  const selectedTotal = useMemo(
+    () => expenses.filter((e) => selected.has(e.id)).reduce((a, e) => a + Number(e.amount), 0),
+    [expenses, selected]
+  )
+
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
   const flatSlice  = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const hasActiveFilters = query || activeCats.size > 0 || onlyFixed
+  const hasActiveFilters = query || activeCats.size > 0 || activeTags.size > 0 || onlyFixed
 
-  function toggleCat(name) {
-    setActiveCats((prev) => {
+  function toggleIn(setter) {
+    return (name) => setter((prev) => {
       const next = new Set(prev)
-      next.has(name) ? next.delete(name) : next.add(name)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
       return next
     })
   }
-
-  function toggleCollapse(name) {
-    setCollapsed((prev) => {
-      const next = new Set(prev)
-      next.has(name) ? next.delete(name) : next.add(name)
-      return next
-    })
-  }
+  const toggleCat = toggleIn(setActiveCats)
+  const toggleTag = toggleIn(setActiveTags)
+  const toggleCollapse = toggleIn(setCollapsed)
 
   function clearAll() {
     setQuery('')
     setActiveCats(new Set())
+    setActiveTags(new Set())
     setOnlyFixed(false)
+  }
+
+  function stopSelecting() {
+    setSelecting(false)
+    clear()
+  }
+
+  // Ejecuta una acción masiva; la selección se conserva si falla para poder reintentar.
+  async function runBulk(action) {
+    setBusy(true)
+    try {
+      await action([...selected])
+      stopSelecting()
+    } catch (err) {
+      showToast(err.message ?? 'No se pudo completar la acción', 'error')
+    } finally {
+      setBusy(false)
+    }
   }
 
   function handleExport() {
@@ -157,9 +215,11 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
 
   if (!expenses.length) {
     return (
-      <EmptyState icon={<IconReceipt2 size={44} stroke={1.5} />} title="Sin gastos este mes" description="Registra tu primer gasto del mes" />
+      <EmptyState icon={<IconReceipt2 size={44} stroke={1.5} />} title="Sin gastos en este periodo" description="Registra tu primer gasto o cambia el rango de fechas" />
     )
   }
+
+  const itemProps = { onEdit, onDelete, onDuplicate, selecting, onToggle: toggle }
 
   return (
     <div className={styles.root}>
@@ -176,7 +236,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
       </div>
 
       {/* Filtros dinámicos */}
-      {(categories.length > 1 || hasFixed) && (
+      {(categories.length > 1 || hasFixed || tags.length > 0) && (
         <div className={styles.filters}>
           {categories.length > 1 && categories.map((cat) => {
             const active = activeCats.has(cat.name)
@@ -202,6 +262,19 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
               <IconPinned size={13} stroke={1.75} /> Fijo
             </button>
           )}
+
+          {tags.map((tag) => (
+            <button
+              key={tag.name}
+              className={`${styles.chip} ${styles.tagChip} ${activeTags.has(tag.name) ? styles.chipActive : ''}`}
+              style={activeTags.has(tag.name) ? { borderColor: 'var(--color-primary)', background: 'var(--color-primary-alpha)' } : {}}
+              aria-pressed={activeTags.has(tag.name)}
+              onClick={() => toggleTag(tag.name)}
+            >
+              #{tag.name}
+              <span className={styles.chipCount}>{tag.count}</span>
+            </button>
+          ))}
 
           {hasActiveFilters && (
             <button className={styles.clearFilters} onClick={clearAll}>
@@ -233,6 +306,22 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
         </button>
       </div>
 
+      {selecting && (
+        <BulkBar
+          count={selected.size}
+          total={selectedTotal}
+          totalCount={filtered.length}
+          sign="-"
+          categories={categoryOptions}
+          busy={busy}
+          onSelectAll={() => selectAll(filtered.map((e) => e.id))}
+          onClear={stopSelecting}
+          onChangeCategory={(categoryId) => runBulk((ids) => onBulkCategory(ids, categoryOptions.find((c) => c.id === categoryId) ?? null))}
+          onAddTag={(tag) => runBulk((ids) => onBulkTag(ids, tag))}
+          onDelete={() => setConfirmBulkDelete(true)}
+        />
+      )}
+
       {/* Lista o vacío */}
       {filtered.length === 0 ? (
         <EmptyState icon={<IconSearch size={44} stroke={1.5} />} title="Sin resultados" description="Prueba con otros filtros" />
@@ -248,6 +337,15 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
               <span className={styles.filterSummaryAmount}>-{formatCurrency(filteredTotal)}</span>
             </div>
             <div className={styles.filterSummaryActions}>
+              <button
+                className={`${styles.viewToggle} ${selecting ? styles.viewToggleActive : ''}`}
+                onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+                aria-pressed={selecting}
+                title="Seleccionar varios movimientos"
+              >
+                <IconChecks size={15} stroke={1.75} />
+                Seleccionar
+              </button>
               <button
                 className={styles.viewToggle}
                 onClick={() => setGrouped((v) => !v)}
@@ -283,7 +381,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
                     {!isCollapsed && (
                       <div className={styles.list}>
                         {g.items.map((expense) => (
-                          <ExpenseItem key={expense.id} expense={expense} onEdit={onEdit} onDelete={onDelete} />
+                          <ExpenseItem key={expense.id} expense={expense} selected={selected.has(expense.id)} {...itemProps} />
                         ))}
                       </div>
                     )}
@@ -295,7 +393,7 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
             <>
               <div className={styles.list}>
                 {flatSlice.map((expense) => (
-                  <ExpenseItem key={expense.id} expense={expense} onEdit={onEdit} onDelete={onDelete} />
+                  <ExpenseItem key={expense.id} expense={expense} selected={selected.has(expense.id)} {...itemProps} />
                 ))}
               </div>
 
@@ -311,6 +409,18 @@ export function ExpenseList({ expenses, onEdit, onDelete }) {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmBulkDelete}
+        onClose={() => setConfirmBulkDelete(false)}
+        onConfirm={async () => {
+          await runBulk(onBulkDelete)
+          setConfirmBulkDelete(false)
+        }}
+        loading={busy}
+        title={`Eliminar ${selected.size} gasto${selected.size !== 1 ? 's' : ''}`}
+        description={`Se eliminarán ${selected.size} gasto${selected.size !== 1 ? 's' : ''} por ${formatCurrency(selectedTotal)}. Podrás deshacerlo unos segundos después.`}
+      />
     </div>
   )
 }

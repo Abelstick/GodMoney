@@ -14,6 +14,16 @@ const SEVERITY = {
   [BUDGET_STATUS.NORMAL]:   0,
 }
 
+// Lo gastado por un presupuesto = suma de lo gastado en cada una de sus categorías.
+export function sumBudgetSpent(budget, spentByCategory) {
+  return (budget.category_ids ?? []).reduce((acc, id) => acc + (spentByCategory[id] ?? 0), 0)
+}
+
+// Ids únicos de todas las categorías cubiertas por una lista de presupuestos.
+export function allBudgetCategoryIds(budgets) {
+  return [...new Set(budgets.flatMap((b) => b.category_ids ?? []))]
+}
+
 function toCents(value) {
   return Math.round(Number(value) * 100)
 }

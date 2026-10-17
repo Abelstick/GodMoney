@@ -83,7 +83,7 @@ async function getFinancialContext(userId) {
       .eq('user_id', userId).eq('is_archived', false),
     supabase.from('loans').select('type, person_name, remaining_principal, remaining_interest, due_date')
       .eq('user_id', userId).eq('status', 'ACTIVE'),
-    supabase.from('budgets').select('name, amount, period, category_id')
+    supabase.from('budgets').select('name, amount, period, budget_categories(category_id)')
       .eq('user_id', userId),
   ])
 
@@ -112,7 +112,7 @@ async function getFinancialContext(userId) {
   }
   const budgetLine = budgets.data.map((b) => {
     if (b.period !== 'monthly') return `${b.name} límite ${n(b.amount)} (${b.period})`
-    const spent = spentByCat[b.category_id] ?? 0
+    const spent = b.budget_categories.reduce((acc, l) => acc + (spentByCat[l.category_id] ?? 0), 0)
     let flag = ''
     if (spent > Number(b.amount)) flag = ' EXCEDIDO'
     else if (spent >= Number(b.amount) * 0.8) flag = ' casi'

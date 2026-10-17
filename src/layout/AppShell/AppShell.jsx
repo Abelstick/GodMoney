@@ -56,7 +56,8 @@ export function AppShell() {
 
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(clearToast, 3000)
+    // Con botón de acción (Deshacer) se da más tiempo para alcanzarlo.
+    const t = setTimeout(clearToast, toast.action ? 8000 : 3000)
     return () => clearTimeout(t)
   }, [toast])
 
@@ -81,7 +82,16 @@ export function AppShell() {
 
       {toast && (
         <div className={`${styles.toast} ${styles[toast.type] ?? ''}`}>
-          {toast.message}
+          <span>{toast.message}</span>
+          {toast.action && (
+            <button
+              type="button"
+              className={styles.toastAction}
+              onClick={() => { clearToast(); toast.action.onClick() }}
+            >
+              {toast.action.label}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -40,9 +40,9 @@ export function BudgetCard({ budget, onEdit, onDelete, isCurrentMonth }) {
           <div className={styles.period}>{periodLabel}</div>
         </div>
         <div className={styles.badges}>
-          {budget.category && (
-            <Badge color={budget.category.color}>{budget.category.name}</Badge>
-          )}
+          {budget.categories?.map((c) => (
+            <Badge key={c.id} color={c.color}>{c.name}</Badge>
+          ))}
           {budget.status !== BUDGET_STATUS.NORMAL && (
             <Badge color={statusMeta.color}>{statusMeta.label}</Badge>
           )}

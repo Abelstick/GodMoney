@@ -1,4 +1,5 @@
 import { budgetService } from '@/services/budgetService'
+import { allBudgetCategoryIds } from '@/lib/budgetStatus'
 
 export const createBudgetSlice = (set, get) => ({
   budgets: [],
@@ -17,10 +18,7 @@ export const createBudgetSlice = (set, get) => ({
   },
 
   fetchBudgetsSpent: async (from, to) => {
-    const { budgets } = get()
-    const categoryIds = budgets
-      .map((b) => b.category_id)
-      .filter(Boolean)
+    const categoryIds = allBudgetCategoryIds(get().budgets)
     const spent = await budgetService.getSpentByCategory(categoryIds, from, to)
     set({ budgetsSpent: spent })
   },

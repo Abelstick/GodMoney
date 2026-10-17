@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '@/store'
 import { useMonthFilter } from './useMonthFilter'
-import { getBudgetStatus } from '@/lib/budgetStatus'
+import { getBudgetStatus, sumBudgetSpent } from '@/lib/budgetStatus'
 
 export function useBudgets() {
   const { from, to } = useMonthFilter()
@@ -23,7 +23,7 @@ export function useBudgets() {
   }, [budgets.length, from, to])
 
   const budgetsWithSpent = budgets.map((b) => {
-    const spent  = budgetsSpent[b.category_id] ?? 0
+    const spent  = sumBudgetSpent(b, budgetsSpent)
     const amount = Number(b.amount)
 
     return {

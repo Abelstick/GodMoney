@@ -114,8 +114,16 @@ position: relative;
   animation: slideUp 200ms ease;
   white-space: nowrap;
   box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
 }
 
+.toastAction {
+  background: transparent; border: 0; color: inherit; cursor: pointer;
+  font: inherit; font-weight: var(--weight-bold); text-decoration: underline;
+  padding: var(--space-1) var(--space-2); margin: calc(var(--space-1) * -1) calc(var(--space-2) * -1) calc(var(--space-1) * -1) 0;
+}
 .toast.success { background: var(--color-success); }
 .toast.error   { background: var(--color-danger);  }
 .toast.info    { background: var(--color-info);    }
