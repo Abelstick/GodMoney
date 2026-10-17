@@ -6,13 +6,14 @@ import {
 } from '@tabler/icons-react'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
-import { SORT_OPTIONS, sortTransactions } from '@/lib/transactionSort'
+import { getSortOptions, sortTransactions } from '@/lib/transactionSort'
 import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import styles from './IncomeList.module.css'
 
 const PAGE_SIZE = 8
+const SORT_OPTIONS = getSortOptions('ingreso')
 
 function IncomeItem({ income, onEdit, onDelete }) {
   return (
