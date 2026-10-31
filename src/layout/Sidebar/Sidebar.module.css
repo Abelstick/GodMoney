@@ -61,29 +61,95 @@
 }
 
 /* ── Nav ── */
-/* ── Botón Registrar ── */
+/* ── Acción principal: Registrar movimiento ──
+   Jerarquía: logo → acción principal (único fill sólido de la sidebar) →
+   navegación (ítems planos; el activo solo lleva tinte). */
 .quickAddWrap {
-  padding: var(--space-3) var(--space-2) 0;
+  padding: var(--space-3) var(--space-2);
+  border-bottom: 0.5px solid var(--color-border);
   flex-shrink: 0;
 }
 
 .quickAdd {
+  position: relative;
   width: 100%;
-  min-height: 40px;
+  min-height: 44px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  /* mismo padding horizontal que los ítems: el ícono cae en el eje de los íconos del menú */
+  padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   background: var(--color-primary-dark);
   color: var(--color-on-primary-dark);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12), 0 4px 12px -4px rgba(79, 70, 229, 0.45);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
-.quickAdd:hover  { filter: brightness(1.1); }
+/* Hover/active oscurecen (no aclaran) para no bajar el contraste del texto blanco: 7.9:1 */
+.quickAdd:hover  { background: var(--mantine-color-brand-8); }
 .quickAdd:active { transform: scale(0.98); }
+
+/* Foco: anillo separado del fondo de color por un hueco del color de la superficie */
+.quickAdd:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
+}
+
+.quickAddIcon { flex-shrink: 0; }
+
+.quickAddLabel {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity var(--transition-fast);
+}
+
+/* Pista del atajo: discreta, sobre el fill */
+.quickAddKbd {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  transition: opacity var(--transition-fast);
+}
+
+/* Colapsada: botón cuadrado centrado, solo el ícono (el texto sigue en el
+   árbol de accesibilidad como nombre del botón; el Tooltip lo muestra) */
+.collapsed .quickAddWrap {
+  padding: var(--space-3) 6px; /* 56 − 2×6 = 44px: cuadrado táctil */
+}
+
+.collapsed .quickAdd {
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+}
+
+.collapsed .quickAddLabel,
+.collapsed .quickAddKbd {
+  opacity: 0;
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}
 
 .nav {
   flex: 1;

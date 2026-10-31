@@ -9,7 +9,7 @@ import {
   IconClipboard, IconTrendingUp, IconTag, IconKey, IconBulb,
   IconHandGrab, IconWallet, IconListSearch, IconReportAnalytics, IconBellRinging,
 } from '@tabler/icons-react'
-import { useMantineColorScheme } from '@mantine/core'
+import { Tooltip, useMantineColorScheme } from '@mantine/core'
 import { useStore } from '@/store'
 import { useAuth } from '@/features/auth/AuthContext'
 import { LogoMark } from '@/components/ui/Logo/LogoMark'
@@ -121,18 +121,28 @@ export function Sidebar({ onQuickAdd }) {
         <span className={styles.logoText}>GodMoney</span>
       </div>
 
-      {/* Registro rápido (en móvil está en el + del bottom nav) */}
+      {/* Acción principal: zona propia entre el logo y la navegación
+          (en móvil está en el + del bottom nav). */}
       <div className={styles.quickAddWrap}>
-        <button
-          type="button"
-          className={styles.quickAdd}
-          onClick={onQuickAdd}
-          title={collapsed ? 'Registrar movimiento' : undefined}
-          aria-label="Registrar movimiento"
+        <Tooltip
+          label="Registrar movimiento (N)"
+          position="right"
+          withArrow
+          disabled={!collapsed}
+          events={{ hover: true, focus: true, touch: false }}
         >
-          <IconPlus size={18} stroke={2.25} />
-          <span className={styles.itemLabel}>Registrar</span>
-        </button>
+          <button
+            type="button"
+            className={styles.quickAdd}
+            onClick={onQuickAdd}
+            aria-haspopup="dialog"
+            aria-keyshortcuts="N"
+          >
+            <IconPlus size={18} stroke={2.25} className={styles.quickAddIcon} aria-hidden="true" />
+            <span className={styles.quickAddLabel}>Registrar movimiento</span>
+            <kbd className={styles.quickAddKbd} aria-hidden="true">N</kbd>
+          </button>
+        </Tooltip>
       </div>
 
       {/* Nav */}

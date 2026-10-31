@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useMantineColorScheme } from '@mantine/core'
+import { useHotkeys } from '@mantine/hooks'
 import { IconMoon, IconSun, IconLogout, IconSparkles } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useAuth }   from '@/features/auth/AuthContext'
@@ -64,6 +65,10 @@ export function AppShell() {
   const hideFabs        = useHideOnScroll()
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [chatOpen, setChatOpen]         = useState(false)
+
+  // Atajo global "N" → registrar movimiento (Mantine ignora la tecla mientras
+  // se escribe en inputs, textareas y selects).
+  useHotkeys([['n', () => setQuickAddOpen(true)]])
 
   // Al abrir la app se crean los gastos/ingresos recurrentes que ya vencieron.
   useEffect(() => { runRecurringGeneration() }, [])
