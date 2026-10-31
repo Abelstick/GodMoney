@@ -1,15 +1,17 @@
 .card {
-  background: var(--surface-glass) !important;
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  border-radius: var(--radius-lg) !important;
-  border: 1px solid var(--color-border) !important;
-  box-shadow: var(--shadow-glass) !important;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
 .padded {
-  padding: var(--space-5);
+  padding: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .padded { padding: var(--space-5); }
 }
 
 .padded-sm {
@@ -20,6 +22,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
 
@@ -37,12 +40,13 @@
 
 .hoverable {
   cursor: pointer;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
 .hoverable:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 @media (prefers-reduced-motion: reduce) {

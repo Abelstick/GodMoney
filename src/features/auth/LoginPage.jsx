@@ -112,17 +112,17 @@ export function LoginPage() {
           </p>
 
           {error && (
-            <Alert color="red" radius="sm" variant="light" className={styles.alert} role="alert">
+            <Alert color="expense" radius="sm" variant="light" className={styles.alert} role="alert">
               {error}
             </Alert>
           )}
           {info && (
-            <Alert color="green" radius="sm" variant="light" className={styles.alert} role="status">
+            <Alert color="income" radius="sm" variant="light" className={styles.alert} role="status">
               {info}
             </Alert>
           )}
 
-          <div className={styles.card}>
+          <div>
             <form onSubmit={handleSubmit}>
               <Stack gap="md">
                 <TextInput

@@ -10,6 +10,7 @@ import { StatCard }        from '@/components/ui/StatCard/StatCard'
 import { Badge }           from '@/components/ui/Badge/Badge'
 import { Skeleton }        from '@/components/common/Skeleton/Skeleton'
 import { Disclaimer } from '@/components/common/Disclaimer/Disclaimer'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { PredictionChart } from './components/PredictionChart'
 import styles from './Predictions.module.css'
 
@@ -73,13 +74,11 @@ export function Predictions() {
 
   if (loading) {
     return (
-      <div className={styles.page}>
-        <div className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Predicciones financieras</h1>
-            <p className={styles.subtitle}>{subtitleText(true, 0)}</p>
-          </div>
-        </div>
+      <div>
+        <PageHeader
+          title="Predicciones financieras"
+          subtitle={subtitleText(true, 0)}
+        />
         <div className={styles.statsGrid}>
           <Skeleton className={styles.statSkeleton} />
           <Skeleton className={styles.statSkeleton} />
@@ -96,14 +95,16 @@ export function Predictions() {
   const confidenceMeta = PREDICTION_CONFIDENCE_META[confidence]
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Predicciones financieras</h1>
-          <p className={styles.subtitle}>{subtitleText(noData, monthsOfData)}</p>
-        </div>
-        {!noData && <Badge color={confidenceMeta.color}>{confidenceMeta.label}</Badge>}
-      </div>
+    <div>
+      <PageHeader
+        title="Predicciones financieras"
+        subtitle={subtitleText(noData, monthsOfData)}
+        actions={
+          <>
+            {!noData && <Badge color={confidenceMeta.color}>{confidenceMeta.label}</Badge>}
+          </>
+        }
+      />
 
       {noData ? (
         <div className={styles.infoBox}>

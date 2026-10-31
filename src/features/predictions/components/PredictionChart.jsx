@@ -2,32 +2,11 @@ import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine, Cell,
 } from 'recharts'
-import { formatCurrency } from '@/lib/formatters'
+import { formatCurrencyCompact } from '@/lib/formatters'
+import { ChartTooltip, AXIS_PROPS, GRID_PROPS, CURSOR } from '@/components/common/ChartTooltip/ChartTooltip'
 import styles from './PredictionChart.module.css'
 
-function CustomTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null
-  const isProjected = payload[0]?.payload?.projected
-  return (
-    <div style={{
-      background: 'var(--color-surface)',
-      border: `1px solid ${isProjected ? 'var(--color-primary)' : 'var(--color-border)'}`,
-      borderRadius: 'var(--radius-md)',
-      padding: '10px 14px',
-      fontSize: 'var(--text-sm)',
-      boxShadow: 'var(--shadow-md)',
-    }}>
-      <p style={{ fontWeight: 600, marginBottom: 6 }}>
-        {label} {isProjected && <span style={{ color: 'var(--color-primary)', fontSize: 11 }}>(Proyectado)</span>}
-      </p>
-      {payload.map((p) => p.value != null && (
-        <div key={p.dataKey} style={{ color: p.color ?? 'inherit', marginBottom: 2 }}>
-          {p.name}: {formatCurrency(p.value)}
-        </div>
-      ))}
-    </div>
-  )
-}
+const projectedBadge = (payload) => (payload[0]?.payload?.projected ? 'Proyectado' : null)
 
 export function PredictionChart({ data }) {
   if (!data.length) return null
@@ -38,22 +17,11 @@ export function PredictionChart({ data }) {
     <div>
       <div className={styles.wrap}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} barGap={4} barSize={14}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-            <XAxis
-              dataKey="label"
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-              width={38}
-            />
-            <Tooltip content={<CustomTooltip />} />
+          <ComposedChart data={data} barGap={4} barSize={14} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+            <CartesianGrid {...GRID_PROPS} />
+            <XAxis dataKey="label" {...AXIS_PROPS} />
+            <YAxis {...AXIS_PROPS} tickFormatter={formatCurrencyCompact} width={64} tickCount={4} />
+            <Tooltip content={<ChartTooltip getBadge={projectedBadge} />} cursor={CURSOR} />
 
             {/* Línea divisoria entre histórico y proyección */}
             {lastHistoricalIdx >= 0 && (
@@ -62,7 +30,7 @@ export function PredictionChart({ data }) {
                 stroke="var(--color-primary)"
                 strokeDasharray="4 4"
                 strokeWidth={1.5}
-                label={{ value: 'Hoy', position: 'insideTopRight', fontSize: 10, fill: 'var(--color-primary)' }}
+                label={{ value: 'Hoy', position: 'insideTopRight', fontSize: 12, fill: 'var(--color-primary)' }}
               />
             )}
 
@@ -70,7 +38,7 @@ export function PredictionChart({ data }) {
               {data.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill="var(--color-success)"
+                  fill="var(--color-income)"
                   fillOpacity={entry.projected ? 0.45 : 1}
                 />
               ))}
@@ -80,7 +48,7 @@ export function PredictionChart({ data }) {
               {data.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill="var(--color-danger)"
+                  fill="var(--color-expense)"
                   fillOpacity={entry.projected ? 0.45 : 1}
                 />
               ))}
@@ -90,7 +58,7 @@ export function PredictionChart({ data }) {
             <Line
               dataKey="expenseMA"
               name="Tendencia gastos"
-              stroke="var(--color-danger)"
+              stroke="var(--color-expense)"
               strokeWidth={2}
               dot={false}
               strokeDasharray="4 2"
@@ -102,11 +70,11 @@ export function PredictionChart({ data }) {
 
       <div className={styles.legend}>
         {[
-          { type: 'bar',  color: 'var(--color-success)', opacity: 1,    label: 'Ingresos (real)' },
-          { type: 'bar',  color: 'var(--color-success)', opacity: 0.45, label: 'Ingresos (proyectado)' },
-          { type: 'bar',  color: 'var(--color-danger)',  opacity: 1,    label: 'Gastos (real)' },
-          { type: 'bar',  color: 'var(--color-danger)',  opacity: 0.45, label: 'Gastos (proyectado)' },
-          { type: 'dash', color: 'var(--color-danger)',  opacity: 1,    label: 'Tendencia gastos (MA3)' },
+          { type: 'bar',  color: 'var(--color-income)', opacity: 1,    label: 'Ingresos (real)' },
+          { type: 'bar',  color: 'var(--color-income)', opacity: 0.45, label: 'Ingresos (proyectado)' },
+          { type: 'bar',  color: 'var(--color-expense)',  opacity: 1,    label: 'Gastos (real)' },
+          { type: 'bar',  color: 'var(--color-expense)',  opacity: 0.45, label: 'Gastos (proyectado)' },
+          { type: 'dash', color: 'var(--color-expense)',  opacity: 1,    label: 'Tendencia gastos (MA3)' },
         ].map((l) => (
           <div key={l.label} className={styles.legendItem}>
             {l.type === 'bar'

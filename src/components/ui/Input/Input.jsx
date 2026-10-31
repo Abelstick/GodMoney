@@ -11,6 +11,11 @@ export function Input({
   style,
   ...props
 }) {
+  // En móvil, los campos numéricos abren el teclado numérico; con decimales
+  // (step="0.01") el que trae punto.
+  const inputMode = props.inputMode
+    ?? (props.type === 'number' ? (String(props.step ?? '').includes('.') ? 'decimal' : 'numeric') : undefined)
+
   return (
     <TextInput
       label={label}
@@ -31,6 +36,7 @@ export function Input({
         description: { color: 'var(--color-text-muted)' },
       }}
       {...props}
+      inputMode={inputMode}
     />
   )
 }

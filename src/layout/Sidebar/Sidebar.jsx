@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
+  IconPlus,
   IconLayoutDashboard, IconArrowsRightLeft, IconTarget,
   IconChartBar, IconSettings2, IconChevronRight,
   IconMoon, IconSun, IconLogout, IconMenu2, IconX,
@@ -74,7 +75,7 @@ function getSectionsWithActive(pathname) {
   return open
 }
 
-export function Sidebar() {
+export function Sidebar({ onQuickAdd }) {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   const { user, signOut }         = useAuth()
   const collapsed                 = useStore((s) => s.sidebarCollapsed)
@@ -118,6 +119,20 @@ export function Sidebar() {
       <div className={styles.logo}>
         <span className={styles.logoEmoji}><LogoMark size={28} /></span>
         <span className={styles.logoText}>GodMoney</span>
+      </div>
+
+      {/* Registro rápido (en móvil está en el + del bottom nav) */}
+      <div className={styles.quickAddWrap}>
+        <button
+          type="button"
+          className={styles.quickAdd}
+          onClick={onQuickAdd}
+          title={collapsed ? 'Registrar movimiento' : undefined}
+          aria-label="Registrar movimiento"
+        >
+          <IconPlus size={18} stroke={2.25} />
+          <span className={styles.itemLabel}>Registrar</span>
+        </button>
       </div>
 
       {/* Nav */}

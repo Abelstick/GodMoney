@@ -1,13 +1,41 @@
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+const MINUS = String.fromCharCode(0x2212) // signo menos tipográfico: mismo ancho que "+" y no se confunde con un guion
+const NBSP  = String.fromCharCode(0xa0) // el mismo espacio que pone Intl entre "S/" y la cifra (no deja cortar la línea)
+
+const currencyFormatters = {}
+
+// "S/ 1,234.56" · negativos como "−S/ 1,234.56"
 export function formatCurrency(amount, currency = 'PEN') {
-  return new Intl.NumberFormat('es-PE', {
+  currencyFormatters[currency] ??= new Intl.NumberFormat('es-PE', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount ?? 0)
+  })
+  return currencyFormatters[currency].format(amount ?? 0).replace('-', MINUS)
+}
+
+// Siempre con signo: "+S/ 50.00" / "−S/ 50.00". `sign` fuerza el signo cuando
+// el monto viene en positivo pero representa una salida (p. ej. un gasto).
+export function formatSignedCurrency(amount, { sign } = {}) {
+  const value = Number(amount ?? 0)
+  const direction = sign ?? (value < 0 ? -1 : 1)
+  if (value === 0 && sign === undefined) return formatCurrency(0)
+  return (direction < 0 ? MINUS : '+') + formatCurrency(Math.abs(value))
+}
+
+// Para ejes de gráficos: "S/ 850", "S/ 1.2k", "S/ 15k"
+export function formatCurrencyCompact(amount) {
+  const value = Number(amount ?? 0)
+  const abs = Math.abs(value)
+  const prefix = (value < 0 ? MINUS : '') + 'S/' + NBSP
+  if (abs >= 1000) {
+    const k = abs / 1000
+    return `${prefix}${k >= 10 ? Math.round(k) : k.toFixed(1).replace(/\.0$/, '')}k`
+  }
+  return `${prefix}${Math.round(abs)}`
 }
 
 export function formatDate(dateStr) {

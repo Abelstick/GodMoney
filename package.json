@@ -18,6 +18,7 @@
     "@google/genai": "^1.50.1",
     "@mantine/core": "^7.17.8",
     "@mantine/hooks": "^7.17.8",
+    "@mantine/notifications": "^7.17.8",
     "@supabase/supabase-js": "^2.45.0",
     "@tabler/icons-react": "^3.41.1",
     "date-fns": "^3.6.0",

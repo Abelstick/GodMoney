@@ -408,7 +408,7 @@ export function IncomeList({
                   <span className={styles.paginationInfo}>
                     {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}
                   </span>
-                  <Pagination total={totalPages} value={page} onChange={setPage} size="sm" color="violet" radius="md" />
+                  <Pagination total={totalPages} value={page} onChange={setPage} size="sm" color="brand" radius="md" />
                 </div>
               )}
             </>

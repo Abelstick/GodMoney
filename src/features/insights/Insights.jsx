@@ -2,6 +2,7 @@ import { useInsights } from '@/hooks/useInsights'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { Disclaimer } from '@/components/common/Disclaimer/Disclaimer'
 import { Button }   from '@/components/ui/Button/Button'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { MonthEndProjectionCard } from './components/MonthEndProjectionCard'
 import { DailyAvailableCard }     from './components/DailyAvailableCard'
 import { SmartAlertsPanel }       from './components/SmartAlertsPanel'
@@ -13,11 +14,11 @@ export function Insights() {
   const { loading, error, projection, dailyAvailable, alerts, recurring, autoInsights, refetch } = useInsights()
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Inteligencia financiera</h1>
-        <p className={styles.subtitle}>Un vistazo a cómo va tu mes actual, en tiempo real</p>
-      </div>
+    <div>
+      <PageHeader
+        title="Inteligencia financiera"
+        subtitle="Un vistazo a cómo va tu mes actual, en tiempo real"
+      />
 
       {loading ? (
         <div className={styles.skeletonWrap}>

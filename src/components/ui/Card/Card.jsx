@@ -10,7 +10,7 @@ export function Card({ children, padded = true, small = false, hoverable = false
   ].filter(Boolean).join(' ')
 
   return (
-    <Paper shadow="xs" className={classes} onClick={onClick} style={style}>
+    <Paper className={classes} onClick={onClick} style={style}>
       {children}
     </Paper>
   )

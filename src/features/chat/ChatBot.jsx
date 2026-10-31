@@ -71,9 +71,17 @@ function useVisualViewport(ref, active, onResize) {
   }, [active])
 }
 
-export function ChatBot({ hidden = false }) {
+// `opened`/`onOpenChange` permiten abrirlo desde fuera (botón del header en
+// móvil); sin ellos maneja su propio estado.
+export function ChatBot({ hidden = false, opened, onOpenChange }) {
   const { user } = useAuth()
-  const [open,     setOpen]     = useState(false)
+  const [innerOpen, setInnerOpen] = useState(false)
+  const open = opened ?? innerOpen
+  const setOpen = (value) => {
+    const next = typeof value === 'function' ? value(open) : value
+    if (onOpenChange) onOpenChange(next)
+    else setInnerOpen(next)
+  }
   const [apiKey,   setApiKey]   = useState(null)
   const [messages, setMessages] = useState(() => [makeMsg('model', WELCOME)])
   const [input,    setInput]    = useState('')

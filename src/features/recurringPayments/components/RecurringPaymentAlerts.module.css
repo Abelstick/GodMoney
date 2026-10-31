@@ -2,8 +2,6 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--surface-glass);
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   padding: var(--space-4);
   box-shadow: var(--shadow-glass);
   margin-bottom: var(--space-5);
@@ -27,8 +25,8 @@
 
 .count {
   background: var(--color-danger);
-  color: white;
-  font-size: 11px;
+  color: var(--color-text-inverse);
+  font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   border-radius: 10px;
   padding: 1px 8px;

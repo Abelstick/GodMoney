@@ -314,3 +314,9 @@
   text-align: center;
   color: var(--color-text-muted);
 }
+
+/* En móvil el asistente se abre desde el header: un solo botón flotante
+   en pantalla (el + del bottom nav). */
+@media (max-width: 767px) {
+  .fab { display: none; }
+}

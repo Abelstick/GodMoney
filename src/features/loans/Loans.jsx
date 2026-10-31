@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
-import { IconHeartHandshake, IconFileText } from '@tabler/icons-react'
+import { SegmentedControl, Chip, TextInput } from '@mantine/core'
+import { IconHeartHandshake, IconFileText, IconSearch } from '@tabler/icons-react'
 import { useLoans } from '@/hooks/useLoans'
 import { Button } from '@/components/ui/Button/Button'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { Modal } from '@/components/common/Modal/Modal'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
-import { getEffectiveLoanStatus, LOAN_TYPE } from '@/lib/loanStatus'
+import { getEffectiveLoanStatus, getLoanDisplayStatus, LOAN_TYPE } from '@/lib/loanStatus'
 import { LoanSummary } from './components/LoanSummary'
 import { LoanAlerts } from './components/LoanAlerts'
 import { LoanCard } from './components/LoanCard'
@@ -19,12 +21,22 @@ const TABS = [
   { value: LOAN_TYPE.BORROWED, label: 'Yo debo'   },
 ]
 
+// Filtros por estado visible (getLoanDisplayStatus): al día / por vencer / vencido.
 const FILTERS = [
-  { value: 'all',       label: 'Todos'    },
-  { value: 'ACTIVE',    label: 'Activos'  },
-  { value: 'PAID',      label: 'Pagados'  },
-  { value: 'OVERDUE',   label: 'Vencidos' },
+  { value: 'all',     label: 'Todos'      },
+  { value: 'ok',      label: 'Al día'     },
+  { value: 'warning', label: 'Por vencer' },
+  { value: 'danger',  label: 'Vencidos'   },
+  { value: 'PAID',    label: 'Pagados'    },
 ]
+
+function matchesFilter(loan, nextInstallment, filter) {
+  if (filter === 'all') return true
+  const status = getEffectiveLoanStatus(loan)
+  if (filter === 'PAID') return status === 'PAID'
+  if (status === 'PAID' || status === 'CANCELLED') return false
+  return getLoanDisplayStatus(loan, nextInstallment).tone === filter
+}
 
 export function Loans() {
   const {
@@ -60,9 +72,9 @@ export function Loans() {
     const term = search.trim().toLowerCase()
     return loans
       .filter((l) => l.type === tab)
-      .filter((l) => statusFilter === 'all' || getEffectiveLoanStatus(l) === statusFilter)
+      .filter((l) => matchesFilter(l, nextInstallmentByLoan[l.id], statusFilter))
       .filter((l) => !term || l.person_name.toLowerCase().includes(term) || (l.description ?? '').toLowerCase().includes(term))
-  }, [loans, tab, statusFilter, search])
+  }, [loans, tab, statusFilter, search, nextInstallmentByLoan])
 
   async function handleCreate(payload) {
     setCreating(true)
@@ -85,44 +97,40 @@ export function Loans() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Préstamos y deudas</h1>
-        <Button onClick={() => setCreateOpen(true)}>+ Nuevo préstamo</Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Préstamos y deudas"
+        subtitle="Lo que te deben, lo que debes y qué vence pronto"
+        actions={<Button onClick={() => setCreateOpen(true)}>+ Nuevo préstamo</Button>}
+      />
 
       <LoanSummary loans={loans} pendingInstallments={pendingInstallments} activeTab={tab} />
       <LoanAlerts />
 
-      <div className={styles.tabs}>
-        {TABS.map((t) => (
-          <button
-            key={t.value}
-            className={`${styles.tab} ${tab === t.value ? styles.active : ''}`}
-            onClick={() => setTab(t.value)}
-          >
-            {t.label} ({loans.filter((l) => l.type === t.value).length})
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        className={styles.tabs}
+        fullWidth
+        value={tab}
+        onChange={setTab}
+        data={TABS.map((t) => ({ value: t.value, label: `${t.label} (${loans.filter((l) => l.type === t.value).length})` }))}
+        aria-label="Tipo de préstamo"
+      />
 
       <div className={styles.toolbar}>
-        <div className={styles.filters}>
-          {FILTERS.map((f) => (
-            <button
-              key={f.value}
-              className={`${styles.filterChip} ${statusFilter === f.value ? styles.filterChipActive : ''}`}
-              onClick={() => setStatusFilter(f.value)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        <input
+        <Chip.Group value={statusFilter} onChange={setStatusFilter}>
+          <div className={styles.filters} role="radiogroup" aria-label="Filtrar por estado">
+            {FILTERS.map((f) => (
+              <Chip key={f.value} value={f.value} size="sm" variant="light" radius="sm">{f.label}</Chip>
+            ))}
+          </div>
+        </Chip.Group>
+        <TextInput
           className={styles.search}
+          aria-label="Buscar préstamos"
           placeholder="Buscar por persona o descripción…"
+          leftSection={<IconSearch size={16} />}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.currentTarget.value)}
         />
       </div>
 
@@ -138,10 +146,16 @@ export function Loans() {
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={tab === LOAN_TYPE.LENT ? <IconHeartHandshake size={44} stroke={1.5} /> : <IconFileText size={44} stroke={1.5} />}
-          title={tab === LOAN_TYPE.LENT ? 'Nadie te debe todavía' : 'No tienes préstamos pendientes'}
-          description="Registra un préstamo para empezar a hacer seguimiento"
-          action={<Button onClick={() => setCreateOpen(true)}>Crear préstamo</Button>}
+          icon={tab === LOAN_TYPE.LENT ? <IconHeartHandshake size={32} stroke={1.5} /> : <IconFileText size={32} stroke={1.5} />}
+          title={statusFilter !== 'all' || search
+            ? 'Ningún préstamo coincide con el filtro'
+            : tab === LOAN_TYPE.LENT ? 'Nadie te debe todavía' : 'No tienes préstamos pendientes'}
+          description={statusFilter !== 'all' || search
+            ? 'Prueba con otro estado o borra la búsqueda.'
+            : 'Registra un préstamo y te avisaremos antes de cada vencimiento.'}
+          action={statusFilter !== 'all' || search
+            ? <Button variant="secondary" onClick={() => { setStatusFilter('all'); setSearch('') }}>Quitar filtros</Button>
+            : <Button onClick={() => setCreateOpen(true)}>Crear préstamo</Button>}
         />
       ) : (
         <div className={styles.grid}>
@@ -164,7 +178,7 @@ export function Loans() {
       <LoanDetail loan={detailLoan} isOpen={!!detailLoan} onClose={() => setDetailLoanId(null)} />
 
       {payingLoan && (
-        <Modal isOpen={!!payingLoan} onClose={() => setPayingLoanId(null)} title="Registrar pago">
+        <Modal isOpen={!!payingLoan} onClose={() => setPayingLoanId(null)} title={payingLoan.type === LOAN_TYPE.LENT ? "Registrar cobro" : "Registrar pago"}>
           <LoanPaymentForm
             loan={payingLoan}
             pendingInstallments={pendingInstallments.filter((i) => i.loan_id === payingLoan.id)}

@@ -52,6 +52,15 @@ export const BUDGET_STATUS_META = {
   [BUDGET_STATUS.EXCEEDED]: { label: 'Excedido',         color: 'var(--color-danger)'      },
 }
 
+// Estado para la UI (StatusBadge): tono semántico + texto corto. Las etiquetas
+// de BUDGET_STATUS_META se mantienen para los exports (CSV / reporte).
+export const BUDGET_STATUS_TONE = {
+  [BUDGET_STATUS.NORMAL]:   { tone: 'ok',      label: 'Dentro',           progress: 'income'  },
+  [BUDGET_STATUS.WARNING]:  { tone: 'warning', label: 'Cerca del límite', progress: 'warning' },
+  [BUDGET_STATUS.REACHED]:  { tone: 'warning', label: 'Al límite',        progress: 'warning' },
+  [BUDGET_STATUS.EXCEEDED]: { tone: 'danger',  label: 'Excedido',         progress: 'expense' },
+}
+
 // Mensaje descriptivo para el panel de alertas. Siempre incluye el límite del presupuesto.
 export function getBudgetAlertMessage(budget) {
   switch (budget.status) {

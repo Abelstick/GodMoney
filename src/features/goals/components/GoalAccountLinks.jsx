@@ -111,7 +111,7 @@ export function GoalAccountLinks({ goal, accounts, allLinks, onLink, onUnlink })
             fullWidth
             size="xs"
             radius="md"
-            color="violet"
+            color="brand"
             value={mode}
             onChange={setMode}
             data={MODE_OPTIONS}

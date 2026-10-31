@@ -4,6 +4,7 @@ import { IconClipboardList } from '@tabler/icons-react'
 import { useBudgets }      from '@/hooks/useBudgets'
 import { useMonthFilter }  from '@/hooks/useMonthFilter'
 import { Button }          from '@/components/ui/Button/Button'
+import { PageHeader }      from '@/components/ui/PageHeader/PageHeader'
 import { Modal }           from '@/components/common/Modal/Modal'
 import { EmptyState }      from '@/components/common/EmptyState/EmptyState'
 import { Skeleton }        from '@/components/common/Skeleton/Skeleton'
@@ -51,33 +52,28 @@ export function Budgets() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Presupuestos</h1>
-        <div className={styles.headerActions}>
-          {budgets.length > 0 && (
-            <>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => exportBudgetCSV(budgets, activeMonth)}
-              >
-                Exportar CSV
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={printBudgets}
-              >
-                Imprimir / PDF
-              </Button>
-            </>
-          )}
-          <Button onClick={() => { setEditing(null); setModalOpen(true) }}>
-            + Nuevo presupuesto
-          </Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Presupuestos"
+        subtitle="Cuánto te queda en cada uno y si vas dentro del límite"
+        actions={
+          <>
+            {budgets.length > 0 && (
+              <>
+                <Button size="sm" variant="secondary" onClick={() => exportBudgetCSV(budgets, activeMonth)}>
+                  Exportar CSV
+                </Button>
+                <Button size="sm" variant="secondary" onClick={printBudgets}>
+                  Imprimir / PDF
+                </Button>
+              </>
+            )}
+            <Button onClick={() => { setEditing(null); setModalOpen(true) }}>
+              + Nuevo presupuesto
+            </Button>
+          </>
+        }
+      />
 
       {loading ? (
         <div className={styles.skeletonWrap}>
@@ -91,9 +87,9 @@ export function Budgets() {
         </div>
       ) : budgets.length === 0 ? (
         <EmptyState
-          icon={<IconClipboardList size={44} stroke={1.5} />}
-          title="Sin presupuestos"
-          description="Crea un presupuesto para controlar tus gastos, agrupando una o varias categorías"
+          icon={<IconClipboardList size={32} stroke={1.5} />}
+          title="Aún no tienes presupuestos"
+          description="Ponle un límite mensual a una o varias categorías y te avisaremos al acercarte."
           action={<Button onClick={() => setModalOpen(true)}>Crear presupuesto</Button>}
         />
       ) : (

@@ -8,6 +8,7 @@ import { Modal }  from '@/components/common/Modal/Modal'
 import { EmptyState }    from '@/components/common/EmptyState/EmptyState'
 import { Skeleton }      from '@/components/common/Skeleton/Skeleton'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { CategoryForm }   from './components/CategoryForm'
 import { useStore }       from '@/store'
 import styles from './Categories.module.css'
@@ -107,14 +108,16 @@ export function Categories() {
     type === 'all' ? categories.length : categories.filter((c) => c.type === type || (type !== 'both' && c.type === 'both')).length
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.pageTitle}>Categorías</h1>
-          <p className={styles.subtitle}>Administra las categorías de tus ingresos y egresos</p>
-        </div>
-        <Button onClick={openNew}>+ Nueva categoría</Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Categorías"
+        subtitle="Administra las categorías de tus ingresos y egresos"
+        actions={
+          <>
+            <Button onClick={openNew}>+ Nueva categoría</Button>
+          </>
+        }
+      />
 
       <Tabs value={activeTab} onChange={setActiveTab} mb="lg">
         <Tabs.List>
@@ -123,7 +126,7 @@ export function Categories() {
               key={t.value}
               value={t.value}
               rightSection={
-                <Badge size="xs" variant="light" color="violet" circle>
+                <Badge size="xs" variant="light" color="brand" circle>
                   {countByType(t.value)}
                 </Badge>
               }
@@ -168,7 +171,7 @@ export function Categories() {
                   </ActionIcon>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="expense"
                     size="sm"
                     onClick={() => setDeletingId(cat.id)}
                     title="Eliminar"
@@ -191,7 +194,7 @@ export function Categories() {
                   {cat.type === 'income' ? 'Ingreso' : cat.type === 'expense' ? 'Egreso' : 'Ambos'}
                 </Badge>
                 {cat.is_savings && (
-                  <Badge size="xs" variant="light" color="violet">Ahorro</Badge>
+                  <Badge size="xs" variant="light" color="savings">Ahorro</Badge>
                 )}
                 {cat.is_default && (
                   <Badge size="xs" variant="light" color="gray">Por defecto</Badge>

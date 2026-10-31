@@ -73,6 +73,38 @@ export function getEffectiveInstallmentStatus(installment) {
   return hasPartial ? INSTALLMENT_STATUS.PARTIAL : INSTALLMENT_STATUS.PENDING
 }
 
+function daysFromToday(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const [ty, tm, td] = todayISO().split('-').map(Number)
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86_400_000)
+}
+
+/**
+ * Estado para mostrar en pantalla (no se persiste): al día / por vencer / vencido.
+ * Considera la próxima cuota pendiente además de la fecha final del préstamo.
+ * Devuelve { tone, label } con tone ∈ ok | warning | danger | neutral.
+ */
+export function getLoanDisplayStatus(loan, nextInstallment = null) {
+  const status = getEffectiveLoanStatus(loan)
+  if (status === LOAN_STATUS.PAID)      return { tone: 'ok',      label: 'Pagado' }
+  if (status === LOAN_STATUS.CANCELLED) return { tone: 'neutral', label: 'Perdonado' }
+
+  const nextDue = nextInstallment?.due_date ?? null
+  if (status === LOAN_STATUS.OVERDUE || (nextDue && nextDue < todayISO())) {
+    return { tone: 'danger', label: 'Vencido' }
+  }
+
+  const candidates = [nextDue, loan.due_date].filter(Boolean).map(daysFromToday)
+  const soonest = candidates.length ? Math.min(...candidates) : null
+  if (soonest !== null && soonest <= LOAN_UPCOMING_DAYS) {
+    let when = `en ${soonest} días`
+    if (soonest === 0) when = 'hoy'
+    else if (soonest === 1) when = 'mañana'
+    return { tone: 'warning', label: `Vence ${when}` }
+  }
+  return { tone: 'ok', label: 'Al día' }
+}
+
 export function loanStatusSeverity(status) {
   return LOAN_SEVERITY[status] ?? 0
 }

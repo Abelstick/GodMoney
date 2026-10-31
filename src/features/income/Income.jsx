@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { IconCoin, IconRepeat, IconBolt } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useIncome }      from '@/hooks/useIncome'
@@ -7,6 +8,7 @@ import { formatCurrency, formatMonth, getPastMonths, toInputDate } from '@/lib/f
 import { parseISO } from 'date-fns'
 import { rangeLabel } from '@/lib/dateRanges'
 import { RangeFilter } from '@/components/common/RangeFilter/RangeFilter'
+import { MonthPicker } from '@/components/common/MonthPicker/MonthPicker'
 import { Card }      from '@/components/ui/Card/Card'
 import { Button }    from '@/components/ui/Button/Button'
 import { StatCard }  from '@/components/ui/StatCard/StatCard'
@@ -16,11 +18,12 @@ import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { IncomeForm } from './components/IncomeForm'
 import { IncomeList } from './components/IncomeList'
 import { extrasFrom } from '@/components/common/TransactionExtras/TransactionExtras'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import styles from './Income.module.css'
 
 export function Income() {
   const { activeMonth, setActiveMonth } = useMonthFilter()
-  const months = useMemo(() => getPastMonths(6), [])
+  const months = useMemo(() => getPastMonths(12), [])
   // null = manda el mes seleccionado; si no, un atajo o rango personalizado.
   const [range, setRange] = useState(null)
   const {
@@ -59,6 +62,15 @@ export function Income() {
   }
 
   function openNew()            { setEditing(null); setDuplicating(null); setModalOpen(true) }
+
+  // Desde el registro rápido ("Agregar notas, etiquetas o adjuntos") se llega
+  // con ?nuevo=1: abre el formulario completo y limpia la URL.
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('nuevo') !== '1') return
+    openNew()
+    setSearchParams({}, { replace: true })
+  }, [searchParams])
   function openEdit(income)     { setEditing(income); setDuplicating(null); setModalOpen(true) }
   function openDuplicate(income) { setEditing(null); setDuplicating(income); setModalOpen(true) }
 
@@ -103,31 +115,30 @@ export function Income() {
   const oneTime   = incomes.filter((i) => !i.is_recurring)
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Ingresos</h1>
-        <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={() => setAutoOpen(true)}>
-            <IconRepeat size={16} stroke={1.75} /> Automáticos
-          </Button>
-          <Button onClick={openNew}>+ Nuevo ingreso</Button>
+    <div>
+      <PageHeader
+        title="Ingresos"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setAutoOpen(true)}>
+              <IconRepeat size={16} stroke={1.75} /> Automáticos
+            </Button>
+            <Button onClick={openNew}>+ Nuevo ingreso</Button>
+          </>
+        }
+      />
+
+      {/* Periodo: mes (selector compacto) o un rango personalizado */}
+      <div className={styles.periodRow}>
+        <div className={range ? styles.periodInactive : undefined}>
+          <MonthPicker
+            value={activeMonth}
+            onChange={(key) => { setRange(null); setActiveMonth(key) }}
+            months={months}
+          />
         </div>
+        <RangeFilter range={range} onChange={setRange} />
       </div>
-
-      {/* Filtro de mes */}
-      <div className={styles.monthFilter}>
-        {months.map((m) => (
-          <button
-            key={m.key}
-            className={`${styles.monthBtn} ${!range && activeMonth === m.key ? styles.monthActive : ''}`}
-            onClick={() => { setRange(null); setActiveMonth(m.key) }}
-          >
-            {m.label} {m.year}
-          </button>
-        ))}
-      </div>
-
-      <RangeFilter range={range} onChange={setRange} />
 
       {/* Error de carga */}
       {error && (

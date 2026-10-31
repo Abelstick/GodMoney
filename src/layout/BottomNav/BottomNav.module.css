@@ -5,7 +5,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: var(--space-3) var(--space-3) calc(var(--space-2) + env(safe-area-inset-bottom, 0));
+  padding: var(--space-3) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0));
   background: linear-gradient(to top, var(--color-bg) 40%, transparent);
   display: flex;
   z-index: var(--z-nav);
@@ -20,11 +20,11 @@
   width: 100%;
   height: var(--nav-height);
   border-radius: var(--radius-xl);
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  background: var(--surface-overlay);
+  backdrop-filter: blur(var(--overlay-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--overlay-blur)) saturate(180%);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-glass);
+  box-shadow: var(--shadow-overlay);
   display: flex;
   align-items: stretch;
   pointer-events: auto;
@@ -33,13 +33,14 @@
 /* ── Tab ── */
 .tab {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   color: var(--color-text-muted);
-  font-size: 0.625rem;
+  font-size: var(--text-xs);
   font-weight: var(--weight-medium);
   font-family: inherit;
   text-decoration: none;
@@ -48,35 +49,62 @@
   transition: color var(--transition-fast);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  letter-spacing: 0.02em;
-  padding-bottom: 2px;
 }
 
 .tab:hover { color: var(--color-text-secondary); }
 
-.active { color: var(--color-primary) !important; }
+.active {
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+}
 
-/* ── Icon wrapper con punto indicador ── */
+/* ── Ícono: el activo lleva una pastilla detrás (no solo color) ── */
 .iconWrap {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 24px;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  transition: background var(--transition-base);
 }
 
-.activeDot {
-  position: absolute;
-  top: -3px;
-  right: 3px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-primary);
+.active .iconWrap {
+  background: var(--color-primary-alpha);
 }
 
 .label {
-  line-height: 1;
+  max-width: 100%;
+  padding: 0 2px;
+  line-height: 1.2;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+/* ── Botón central "+" ── */
+.addSlot {
+  flex: 0 0 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addBtn {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-dark);
+  color: var(--color-on-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--glow-primary);
+  transform: translateY(-10px);
+  transition: transform var(--transition-fast), background var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addBtn:hover  { filter: brightness(1.1); }
+.addBtn:active { transform: translateY(-10px) scale(0.94); }

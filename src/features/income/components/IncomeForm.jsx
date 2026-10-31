@@ -54,6 +54,7 @@ export function IncomeForm({ initial, submitLabel, onSubmit, onCancel, loading }
         min="0"
         step="0.01"
         prefix="S/"
+        data-autofocus={initial ? undefined : true}
         value={form.amount}
         onChange={set('amount')}
         error={errors.amount}

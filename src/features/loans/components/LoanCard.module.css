@@ -1,56 +1,85 @@
 .card {
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-glass);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   position: relative;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+
+@media (min-width: 768px) {
+  .card { padding: var(--space-5); gap: var(--space-4); }
+}
+
 .card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-md); }
+
+/* Borde izquierdo de estado: refuerza el badge (que ya lleva ícono y texto) */
+.warning { border-left: 4px solid var(--color-warning); }
+.danger  { border-left: 4px solid var(--color-expense); }
 
 .top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
 
 .person { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.personText { min-width: 0; }
 .avatar {
-  width: 36px; height: 36px; border-radius: var(--radius-full);
-  background: var(--color-primary-alpha); color: var(--color-primary);
+  width: 40px; height: 40px; border-radius: var(--radius-full);
+  background: var(--color-surface-2); color: var(--color-text-secondary);
   display: flex; align-items: center; justify-content: center;
   font-weight: var(--weight-bold); font-size: var(--text-sm); flex-shrink: 0;
 }
 .name {
-  font-size: var(--text-base); font-weight: var(--weight-semibold); overflow-wrap: break-word;
-  color: inherit; text-align: left;
+  font-size: var(--text-base); font-weight: var(--weight-semibold); overflow-wrap: anywhere;
+  color: var(--color-text-primary); text-align: left;
 }
 /* Enlace estirado: toda la tarjeta abre el detalle, accesible con teclado */
-.name::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius-xl); cursor: pointer; }
+.name::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius-md); cursor: pointer; }
 .name:focus-visible { outline: none; }
 .name:focus-visible::after { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-.description { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
-
-.amounts {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--space-2);
+.description {
+  font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.amountItem { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.amountLabel { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.amountValue { font-size: var(--text-sm); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
-.emphasis { color: var(--color-primary); }
+
+/* ── Saldo pendiente: la cifra principal ── */
+.pendingRow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+.pendingLabel { font-size: var(--text-sm); color: var(--color-text-secondary); }
+.pendingValue {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+.original { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* ── Próxima cuota ── */
+.next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: var(--text-sm);
+}
+.nextLabel { color: var(--color-text-secondary); }
+.nextValue { font-weight: var(--weight-semibold); color: var(--color-text-primary); text-align: right; }
+.next-warning { color: var(--color-warning); }
+.next-danger  { color: var(--color-expense); }
+
+.progress { display: flex; flex-direction: column; gap: var(--space-1); }
+.progressInfo {
+  display: flex; justify-content: space-between; gap: var(--space-2);
+  font-size: var(--text-xs); color: var(--color-text-muted);
+}
 
 .actions { display: flex; gap: var(--space-2); position: relative; z-index: 1; }
 .actions > * { flex: 1; }
-
-@media (max-width: 640px) {
-  .card { padding: var(--space-4); gap: var(--space-3); }
-  /* Prioriza saldo pendiente / próxima cuota / estado / acción, como pide el spec mobile */
-  .description { display: none; }
-  .amounts { grid-template-columns: 1fr 1fr; }
-  .amounts .amountItem:first-child { display: none; }
-  .actions > * { min-height: 40px; }
-}

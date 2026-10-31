@@ -9,7 +9,7 @@ export function ProgressBar({ percent = 0, color, leftLabel, rightLabel, size = 
     <div className={styles.wrapper}>
       <Progress
         value={clamped}
-        color={isOver ? 'red' : (color ?? 'violet')}
+        color={isOver ? 'expense' : (color ?? 'brand')}
         size={size === 'sm' ? 'xs' : size === 'lg' ? 'md' : 'sm'}
         radius="xl"
       />

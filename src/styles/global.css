@@ -18,6 +18,8 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   line-height: 1.5;
+  /* App financiera: todas las cifras con ancho fijo para que alineen en columnas */
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -136,13 +138,36 @@ h1, h2, h3, h4, h5, h6 {
   .mantine-Button-root,
   .mantine-ActionIcon-root,
   .mantine-CloseButton-root,
-  .mantine-Modal-close {
+  .mantine-Modal-close,
+  .mantine-Drawer-close,
+  .mantine-Pagination-control {
     min-height: 44px;
     min-width: 44px;
   }
+
+  .mantine-Chip-label,
+  .mantine-Tabs-tab,
+  .mantine-Menu-item,
+  .mantine-Combobox-option {
+    min-height: 44px;
+  }
+
+  /* El root del SegmentedControl suma 4px de padding: 40 + 4 = 44 */
+  .mantine-SegmentedControl-label {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
-/* ── Movimiento reducido (las entradas y elevaciones se resuelven en cada módulo) ── */
+/* ── Movimiento reducido: red de seguridad global (además de lo que resuelve
+   cada módulo) — las transiciones quedan casi instantáneas, nada se desplaza ── */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

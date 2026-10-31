@@ -1,27 +1,33 @@
 .card {
-  background: var(--surface-glass) !important;
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl) !important;
-  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  box-shadow: var(--shadow-glass) !important;
+  box-shadow: var(--shadow-card);
 }
 
 .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 40px;
+  gap: var(--space-2);
+  min-height: 32px;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .iconWrap {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,8 +43,15 @@
 
 .label {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-weight: var(--weight-medium);
+}
+
+.extra {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: auto;
 }
 
 .amount {
@@ -71,13 +84,12 @@
   flex-shrink: 0;
 }
 
-/* Pastilla translúcida + texto a color sólido (así se ve el mockup real):
-   lo que hacía ilegibles mis badges no era la opacidad del fondo, sino que
-   usaba tonos success/danger equivocados (más oscuros que los del mockup). */
+/* Pastilla con fondo suave + texto semántico (ambos AA, ver theme/tokens.js) */
 .badge-success { background: var(--color-success-light); color: var(--color-success); }
 .badge-danger  { background: var(--color-danger-light);  color: var(--color-danger-soft); }
 .badge-warning { background: var(--color-warning-light); color: var(--color-warning); }
 .badge-brand   { background: var(--color-primary-alpha); color: var(--color-primary-light); }
+.badge-savings { background: var(--color-savings-light); color: var(--color-savings); }
 .badge-plain   { background: var(--color-surface-4); color: var(--color-text-secondary); }
 
 @media (max-width: 640px) {

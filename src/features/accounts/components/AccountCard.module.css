@@ -1,7 +1,5 @@
 .card {
   background: var(--surface-glass);
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-5);

@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Modal } from '@/components/common/Modal/Modal'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { ImportModal } from './components/ImportModal'
 import styles from './Movements.module.css'
 
@@ -179,23 +180,23 @@ export function Movements() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Movimientos</h1>
-          <p className={styles.subtitle}>Busca, filtra, exporta e importa tus ingresos y gastos</p>
-        </div>
-        <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={() => setImportOpen(true)}>
-            <IconUpload size={16} stroke={1.75} /> Importar
-          </Button>
-          <Button variant="secondary" onClick={handleCSV}>
-            <IconDownload size={16} stroke={1.75} /> CSV
-          </Button>
-          <Button onClick={handlePDF} disabled={preparingPdf}>
-            <IconFileTypePdf size={16} stroke={1.75} /> {preparingPdf ? 'Preparando…' : 'PDF'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Movimientos"
+        subtitle="Busca, filtra, exporta e importa tus ingresos y gastos"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setImportOpen(true)}>
+              <IconUpload size={16} stroke={1.75} /> Importar
+            </Button>
+            <Button variant="secondary" onClick={handleCSV}>
+              <IconDownload size={16} stroke={1.75} /> CSV
+            </Button>
+            <Button onClick={handlePDF} disabled={preparingPdf}>
+              <IconFileTypePdf size={16} stroke={1.75} /> {preparingPdf ? 'Preparando…' : 'PDF'}
+            </Button>
+          </>
+        }
+      />
 
       {/* ── Filtros ── */}
       <Card padded>

@@ -1,16 +1,17 @@
 import { Drawer } from '@mantine/core'
 import { NavLink } from 'react-router-dom'
 import {
-  IconClipboard, IconBulb, IconTrendingUp, IconTag, IconKey,
-  IconHandGrab, IconWallet, IconListSearch, IconReportAnalytics, IconBellRinging,
+  IconBulb, IconTrendingUp, IconTag, IconKey, IconFlag, IconCashBanknote, IconShoppingCart,
+  IconHandGrab, IconWallet, IconReportAnalytics, IconBellRinging,
 } from '@tabler/icons-react'
 import styles from './MoreSheet.module.css'
 
 const MORE_ITEMS = [
-  { to: '/movimientos',      icon: IconListSearch,      label: 'Movimientos'      },
+  { to: '/objetivos',        icon: IconFlag,            label: 'Objetivos'        },
+  { to: '/gastos',           icon: IconShoppingCart,    label: 'Gastos'           },
+  { to: '/ingresos',         icon: IconCashBanknote,    label: 'Ingresos'         },
   { to: '/prestamos',        icon: IconHandGrab,        label: 'Préstamos'        },
   { to: '/pagos-recurrentes', icon: IconBellRinging,    label: 'Pagos recurrentes' },
-  { to: '/presupuestos',     icon: IconClipboard,       label: 'Presupuestos'     },
   { to: '/inteligencia',     icon: IconBulb,            label: 'Inteligencia'     },
   { to: '/predicciones',     icon: IconTrendingUp,      label: 'Predicciones'     },
   { to: '/score-crediticio', icon: IconReportAnalytics, label: 'Score crediticio' },

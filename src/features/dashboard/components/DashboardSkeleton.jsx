@@ -1,32 +1,24 @@
+import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import styles from './DashboardSkeleton.module.css'
 
-function Block({ className }) {
-  return <div className={`${styles.block} ${className ?? ''}`} />
-}
-
+// Misma silueta que el dashboard: hero, 3 indicadores, listas y gráfico.
 export function DashboardSkeleton() {
   return (
-    <div aria-hidden="true" aria-label="Cargando dashboard">
-      <Block className={styles.hero} />
+    <div role="status" aria-label="Cargando resumen" aria-busy="true">
+      <Skeleton className={styles.hero} />
 
-      <div className={styles.grid}>
-        <Block className={styles.stat} />
-        <Block className={styles.stat} />
-        <Block className={styles.stat} />
-        <Block className={styles.stat} />
-      </div>
-
-      <div className={styles.grid}>
-        <Block className={styles.stat} />
-        <Block className={styles.stat} />
-        <Block className={styles.stat} />
-        <Block className={styles.stat} />
+      <div className={styles.kpis}>
+        <Skeleton className={`${styles.kpi} ${styles.kpiMain}`} />
+        <Skeleton className={styles.kpi} />
+        <Skeleton className={styles.kpi} />
       </div>
 
       <div className={styles.twoCol}>
-        <Block className={styles.chart} />
-        <Block className={styles.list} />
+        <Skeleton className={styles.list} />
+        <Skeleton className={styles.list} />
       </div>
+
+      <Skeleton className={styles.chart} />
     </div>
   )
 }

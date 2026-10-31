@@ -1,10 +1,9 @@
 import { getDaysInMonth } from 'date-fns'
-import { IconAlertTriangle, IconTrendingUp } from '@tabler/icons-react'
-import { formatCurrency } from '@/lib/formatters'
-import { BUDGET_STATUS, BUDGET_STATUS_META } from '@/lib/budgetStatus'
-import { ProgressBar } from '@/components/ui/ProgressBar/ProgressBar'
-import { Badge }       from '@/components/ui/Badge/Badge'
-import { Button }      from '@/components/ui/Button/Button'
+import { ActionIcon, Badge, Menu, Progress } from '@mantine/core'
+import { IconAlertTriangle, IconTrendingUp, IconDots, IconPencil, IconTrash } from '@tabler/icons-react'
+import { BUDGET_STATUS, BUDGET_STATUS_TONE } from '@/lib/budgetStatus'
+import { Money }       from '@/components/ui/Money/Money'
+import { StatusBadge } from '@/components/ui/StatusBadge/StatusBadge'
 import { BUDGET_PERIODS } from '@/lib/constants'
 import styles from './BudgetCard.module.css'
 
@@ -20,78 +19,98 @@ export function BudgetCard({ budget, onEdit, onDelete, isCurrentMonth }) {
   const periodLabel = BUDGET_PERIODS.find((p) => p.value === budget.period)?.label ?? budget.period
 
   const isExceeded = budget.status === BUDGET_STATUS.EXCEEDED
-  const isReached  = budget.status === BUDGET_STATUS.REACHED
-  const statusMeta = BUDGET_STATUS_META[budget.status]
+  const statusUi = BUDGET_STATUS_TONE[budget.status] ?? BUDGET_STATUS_TONE[BUDGET_STATUS.NORMAL]
 
   const projected = isCurrentMonth ? getMonthProjection(budget) : null
   const projectedOver = projected !== null && projected > budget.amount
 
-  let progressRightLabel = `${formatCurrency(budget.remaining)} disponible`
-  if (isExceeded) progressRightLabel = `Excedido en ${formatCurrency(budget.overBy)}`
-  else if (isReached) progressRightLabel = 'Presupuesto alcanzado'
-
-  const spentClass = isExceeded ? styles.over : ''
-
   return (
-    <div className={styles.card} style={{ '--budget-color': budget.color }}>
+    <article
+      className={`${styles.card} ${styles[statusUi.tone] ?? ''}`}
+      style={{ '--budget-color': budget.color }}
+    >
       <div className={styles.top}>
-        <div>
-          <div className={styles.name}>{budget.name}</div>
-          <div className={styles.period}>{periodLabel}</div>
+        <div className={styles.heading}>
+          <h3 className={styles.name}>
+            <span className={styles.dot} aria-hidden="true" />
+            {budget.name}
+          </h3>
+          <span className={styles.period}>{periodLabel}</span>
         </div>
-        <div className={styles.badges}>
-          {budget.categories?.map((c) => (
-            <Badge key={c.id} color={c.color}>{c.name}</Badge>
+        <StatusBadge tone={statusUi.tone} size="sm">{statusUi.label}</StatusBadge>
+        <Menu position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon variant="subtle" color="gray" size="lg" aria-label={`Más acciones para ${budget.name}`}>
+              <IconDots size={18} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item leftSection={<IconPencil size={16} />} onClick={() => onEdit(budget)}>Editar</Menu.Item>
+            <Menu.Item leftSection={<IconTrash size={16} />} color="expense" onClick={() => onDelete(budget.id)}>Eliminar</Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </div>
+
+      {/* ── Cifra principal: cuánto queda (o cuánto se pasó) ── */}
+      <div className={styles.main}>
+        {isExceeded ? (
+          <>
+            <Money value={-budget.overBy} tone="expense" className={styles.mainValue} />
+            <span className={styles.mainLabel}>por encima del límite</span>
+          </>
+        ) : (
+          <>
+            <Money value={budget.remaining} className={styles.mainValue} />
+            <span className={styles.mainLabel}>disponibles</span>
+          </>
+        )}
+      </div>
+
+      <div className={styles.progress}>
+        <Progress
+          value={Math.min(budget.percent, 100)}
+          color={statusUi.progress}
+          size="md"
+          aria-label={`${budget.percent}% del presupuesto usado`}
+        />
+        <div className={styles.progressInfo}>
+          <span>
+            Gastado <Money value={budget.spent} className={isExceeded ? styles.over : undefined} /> de <Money value={budget.amount} />
+          </span>
+          <span className={styles.pct}>{budget.percent}%</span>
+        </div>
+      </div>
+
+      {budget.categories?.length > 0 && (
+        <div className={styles.categories}>
+          {budget.categories.map((c) => (
+            <Badge
+              key={c.id}
+              size="sm"
+              variant="dot"
+              color="gray"
+              styles={{ root: { '--badge-dot-color': c.color } }}
+            >
+              {c.name}
+            </Badge>
           ))}
-          {budget.status !== BUDGET_STATUS.NORMAL && (
-            <Badge color={statusMeta.color}>{statusMeta.label}</Badge>
-          )}
-        </div>
-      </div>
-
-      <ProgressBar
-        percent={budget.percent}
-        color={isExceeded ? undefined : budget.color}
-        leftLabel={`${budget.percent}% usado`}
-        rightLabel={progressRightLabel}
-      />
-
-      <div className={styles.amounts}>
-        <div className={styles.amountItem}>
-          <span className={styles.amountLabel}>Límite</span>
-          <span className={styles.amountValue}>{formatCurrency(budget.amount)}</span>
-        </div>
-        <div className={styles.amountItem}>
-          <span className={styles.amountLabel}>Gastado</span>
-          <span className={`${styles.amountValue} ${spentClass}`}>
-            {formatCurrency(budget.spent)}
-          </span>
-        </div>
-        <div className={styles.amountItem}>
-          <span className={styles.amountLabel}>Restante</span>
-          <span className={`${styles.amountValue} ${isExceeded ? styles.over : ''}`}>
-            {isExceeded ? `-${formatCurrency(budget.overBy)}` : formatCurrency(budget.remaining)}
-          </span>
-        </div>
-      </div>
-
-      {projected !== null && (
-        <div className={`${styles.prediction} ${projectedOver ? styles.predictionOver : styles.predictionOk}`}>
-          <span className={styles.predictionIcon}>
-            {projectedOver ? <IconAlertTriangle size={15} stroke={1.75} /> : <IconTrendingUp size={15} stroke={1.75} />}
-          </span>
-          <span className={styles.predictionText}>
-            Proyección fin de mes:{' '}
-            <strong>{formatCurrency(projected)}</strong>
-            {projectedOver && ` · excedería en ${formatCurrency(projected - budget.amount)}`}
-          </span>
         </div>
       )}
 
-      <div className={styles.actions}>
-        <Button size="sm" variant="secondary" onClick={() => onEdit(budget)}>Editar</Button>
-        <Button size="sm" variant="danger"    onClick={() => onDelete(budget.id)}>Eliminar</Button>
-      </div>
-    </div>
+      {projected !== null && (
+        <div className={`${styles.prediction} ${projectedOver ? styles.predictionOver : styles.predictionOk}`}>
+          <span className={styles.predictionIcon} aria-hidden="true">
+            {projectedOver ? <IconAlertTriangle size={15} stroke={1.75} /> : <IconTrendingUp size={15} stroke={1.75} />}
+          </span>
+          <span className={styles.predictionText}>
+            A este ritmo cerrarías el mes en{' '}
+            <strong><Money value={projected} /></strong>
+            {projectedOver
+              ? <> · te pasarías por <strong><Money value={projected - budget.amount} /></strong></>
+              : ' · dentro del límite'}
+          </span>
+        </div>
+      )}
+    </article>
   )
 }

@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { IconReceipt2, IconPinned, IconPigMoney, IconRepeat } from '@tabler/icons-react'
 import { useStore } from '@/store'
@@ -10,6 +11,7 @@ import { parseISO } from 'date-fns'
 import { percentDelta, rangeLabel } from '@/lib/dateRanges'
 import { usePreviousPeriodTotals } from '@/hooks/usePreviousPeriodTotals'
 import { RangeFilter } from '@/components/common/RangeFilter/RangeFilter'
+import { MonthPicker } from '@/components/common/MonthPicker/MonthPicker'
 import { Card }     from '@/components/ui/Card/Card'
 import { Button }   from '@/components/ui/Button/Button'
 import { StatCard } from '@/components/ui/StatCard/StatCard'
@@ -19,22 +21,8 @@ import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { ExpenseForm } from './components/ExpenseForm'
 import { ExpenseList } from './components/ExpenseList'
 import { extrasFrom } from '@/components/common/TransactionExtras/TransactionExtras'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import styles from './Expenses.module.css'
-
-const RADIAN = Math.PI / 180
-
-function PieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
-  if (percent < 0.05) return null
-  const r = innerRadius + (outerRadius - innerRadius) * 0.55
-  const x = cx + r * Math.cos(-midAngle * RADIAN)
-  const y = cy + r * Math.sin(-midAngle * RADIAN)
-  return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
-      fontSize={11} fontWeight={700}>
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  )
-}
 
 // Variación vs el periodo anterior. Gastar más es "malo": sube en rojo, baja en verde.
 function Delta({ current, previous, loading }) {
@@ -82,7 +70,7 @@ function PieTooltipContent({ active, payload }) {
 
 export function Expenses() {
   const { activeMonth, setActiveMonth } = useMonthFilter()
-  const months = useMemo(() => getPastMonths(6), [])
+  const months = useMemo(() => getPastMonths(12), [])
   // null = manda el mes seleccionado; si no, un atajo o rango personalizado.
   const [range, setRange] = useState(null)
   const {
@@ -122,6 +110,15 @@ export function Expenses() {
   }
 
   function openNew()         { setEditing(null); setDuplicating(null); setModalOpen(true) }
+
+  // Desde el registro rápido ("Agregar notas, etiquetas o adjuntos") se llega
+  // con ?nuevo=1: abre el formulario completo y limpia la URL.
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('nuevo') !== '1') return
+    openNew()
+    setSearchParams({}, { replace: true })
+  }, [searchParams])
   function openEdit(expense) { setEditing(expense); setDuplicating(null); setModalOpen(true) }
   function openDuplicate(expense) { setEditing(null); setDuplicating(expense); setModalOpen(true) }
 
@@ -177,31 +174,30 @@ export function Expenses() {
   const { consumptionTotal, savingsTotal } = useMemo(() => splitSavings(expenses), [expenses])
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Gastos</h1>
-        <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={() => setAutoOpen(true)}>
-            <IconRepeat size={16} stroke={1.75} /> Automáticos
-          </Button>
-          <Button onClick={openNew}>+ Nuevo gasto</Button>
+    <div>
+      <PageHeader
+        title="Gastos"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setAutoOpen(true)}>
+              <IconRepeat size={16} stroke={1.75} /> Automáticos
+            </Button>
+            <Button onClick={openNew}>+ Nuevo gasto</Button>
+          </>
+        }
+      />
+
+      {/* Periodo: mes (selector compacto) o un rango personalizado */}
+      <div className={styles.periodRow}>
+        <div className={range ? styles.periodInactive : undefined}>
+          <MonthPicker
+            value={activeMonth}
+            onChange={(key) => { setRange(null); setActiveMonth(key) }}
+            months={months}
+          />
         </div>
+        <RangeFilter range={range} onChange={setRange} />
       </div>
-
-      {/* Filtro de mes */}
-      <div className={styles.monthFilter}>
-        {months.map((m) => (
-          <button
-            key={m.key}
-            className={`${styles.monthBtn} ${!range && activeMonth === m.key ? styles.monthActive : ''}`}
-            onClick={() => { setRange(null); setActiveMonth(m.key) }}
-          >
-            {m.label} {m.year}
-          </button>
-        ))}
-      </div>
-
-      <RangeFilter range={range} onChange={setRange} />
 
       {/* Error de carga */}
       {error && (
@@ -256,8 +252,6 @@ export function Expenses() {
                         innerRadius={55}
                         outerRadius={95}
                         paddingAngle={2}
-                        labelLine={false}
-                        label={<PieLabel />}
                       >
                         {pieData.map((entry) => (
                           <Cell key={entry.name} fill={entry.color} stroke="none" />

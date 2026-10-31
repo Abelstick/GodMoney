@@ -1,11 +1,11 @@
 import { Button as MButton } from '@mantine/core'
 
 const VARIANT_MAP = {
-  primary:   { variant: 'filled',  color: 'violet' },
-  secondary: { variant: 'outline', color: 'gray'   },
-  danger:    { variant: 'filled',  color: 'red'    },
-  ghost:     { variant: 'subtle',  color: 'gray'   },
-  success:   { variant: 'filled',  color: 'green'  },
+  primary:   { variant: 'filled',  color: 'brand'   },
+  secondary: { variant: 'default', color: 'gray'    },
+  danger:    { variant: 'filled',  color: 'expense' },
+  ghost:     { variant: 'subtle',  color: 'gray'    },
+  success:   { variant: 'filled',  color: 'income'  },
 }
 
 const SIZE_MAP = {

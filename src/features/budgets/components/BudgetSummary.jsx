@@ -1,4 +1,5 @@
-import { formatCurrency } from '@/lib/formatters'
+import { formatCurrency, formatCurrencyCompact } from '@/lib/formatters'
+import { ChartTooltip, AXIS_PROPS, GRID_PROPS, CURSOR } from '@/components/common/ChartTooltip/ChartTooltip'
 import { BUDGET_STATUS } from '@/lib/budgetStatus'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -63,31 +64,13 @@ export function BudgetSummary({ budgets }) {
           <p className={styles.chartTitle}>Límite vs Gastado por presupuesto</p>
           <ResponsiveContainer width="100%" height={210}>
             <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
-                tickFormatter={(v) => `S/${v}`}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                formatter={(v) => formatCurrency(v)}
-                contentStyle={{
-                  background: 'var(--color-surface)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              />
+              <CartesianGrid {...GRID_PROPS} />
+              <XAxis dataKey="name" {...AXIS_PROPS} />
+              <YAxis {...AXIS_PROPS} tickFormatter={formatCurrencyCompact} width={64} tickCount={4} />
+              <Tooltip content={<ChartTooltip />} cursor={CURSOR} />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Límite" fill="var(--color-primary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              <Bar dataKey="Gastado" fill="var(--color-danger)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="Límite" fill="var(--color-text-muted)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="Gastado" fill="var(--color-expense)" radius={[4, 4, 0, 0]} maxBarSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>

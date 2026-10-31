@@ -1,31 +1,19 @@
-.page {}
 
-.header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-3);
-}
 
-.title {
-  font-size: var(--text-2xl); font-weight: var(--weight-bold); letter-spacing: -0.02em;
-}
 
 /* ── Filtro de mes ── */
-.monthFilter {
-  display: flex; gap: var(--space-2); overflow-x: auto;
-  padding-bottom: var(--space-2); margin-bottom: var(--space-6);
-  scrollbar-width: none;
-}
-.monthFilter::-webkit-scrollbar { display: none; }
 
-.monthBtn {
-  flex-shrink: 0; padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 500;
-  border: 1.5px solid var(--color-border); background: var(--color-surface);
-  color: var(--color-text-secondary); cursor: pointer; white-space: nowrap;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+
+.periodRow {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
-.monthBtn:hover  { border-color: var(--color-primary); color: var(--color-primary); }
-.monthActive     { background: var(--color-primary-dark) !important; border-color: var(--color-primary-dark) !important; color: var(--color-on-primary-dark) !important; }
+
+/* Con un rango personalizado activo, el mes queda en segundo plano */
+.periodInactive { opacity: 0.55; }
 
 .mb6 { margin-bottom: var(--space-6); }
 
@@ -38,8 +26,6 @@
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-md);
   background: var(--surface-glass);
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
   border: 1px solid var(--color-danger);
   box-shadow: var(--glow-danger);
 }
@@ -185,4 +171,3 @@
   font-weight: var(--weight-normal);
 }
 
-.headerActions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }

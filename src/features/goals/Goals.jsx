@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { SegmentedControl } from '@mantine/core'
 import { IconTarget } from '@tabler/icons-react'
 import { useGoals }    from '@/hooks/useGoals'
 import { Button }      from '@/components/ui/Button/Button'
+import { PageHeader }  from '@/components/ui/PageHeader/PageHeader'
 import { Modal }       from '@/components/common/Modal/Modal'
 import { EmptyState }  from '@/components/common/EmptyState/EmptyState'
 import { Skeleton }    from '@/components/common/Skeleton/Skeleton'
@@ -56,23 +58,24 @@ export function Goals() {
   const filtered = goals.filter((g) => g.status === tab)
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Objetivos financieros</h1>
-        <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nuevo objetivo</Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Objetivos"
+        subtitle="Lo que quieres lograr, cuánto falta y cuándo llegarías"
+        actions={<Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nuevo objetivo</Button>}
+      />
 
-      <div className={styles.tabs}>
-        {TABS.map((t) => (
-          <button
-            key={t.value}
-            className={`${styles.tab} ${tab === t.value ? styles.active : ''}`}
-            onClick={() => setTab(t.value)}
-          >
-            {t.label} ({goals.filter((g) => g.status === t.value).length})
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        className={styles.tabs}
+        fullWidth
+        value={tab}
+        onChange={setTab}
+        data={TABS.map((t) => ({
+          value: t.value,
+          label: `${t.label} (${goals.filter((g) => g.status === t.value).length})`,
+        }))}
+        aria-label="Filtrar objetivos por estado"
+      />
 
       {loading ? (
         <div className={styles.grid}>
@@ -82,9 +85,11 @@ export function Goals() {
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<IconTarget size={44} stroke={1.5} />}
+          icon={<IconTarget size={32} stroke={1.5} />}
           title={`Sin objetivos ${tab === 'active' ? 'activos' : tab === 'completed' ? 'completados' : 'pausados'}`}
-          description={tab === 'active' ? 'Crea un objetivo para empezar a ahorrar' : ''}
+          description={tab === 'active'
+            ? 'Ponle nombre y monto a lo que quieres lograr; te diremos cuánto ahorrar por mes.'
+            : 'Cuando cambies el estado de un objetivo aparecerá aquí.'}
           action={tab === 'active' && (
             <Button onClick={() => setModalOpen(true)}>Crear objetivo</Button>
           )}

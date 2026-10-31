@@ -57,8 +57,8 @@
 }
 
 .headerBtn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-md);
   background: var(--color-surface-2);
   border: 0.5px solid var(--color-border);
@@ -68,12 +68,17 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast);
-position: relative;
+  position: relative;
 }
 
 .headerBtn:hover {
   background: var(--color-primary-alpha);
   color: var(--color-primary);
+}
+
+.headerBtnAi {
+  color: var(--color-primary);
+  background: var(--color-primary-alpha);
 }
 
 .headerBtnLogout:hover {
@@ -84,8 +89,8 @@ position: relative;
 /* ── Contenido de página ── */
 .content {
   flex: 1;
-  padding: var(--space-6) var(--space-6);
-  padding-bottom: calc(var(--nav-height) + var(--space-6) + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-5) var(--content-padding);
+  padding-bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom, 0px));
   max-width: var(--content-max-w);
   width: 100%;
   margin: 0 auto;
@@ -98,41 +103,15 @@ position: relative;
   }
 }
 
-/* ── Toast ── */
-.toast {
-  position: fixed;
-  bottom: calc(var(--nav-height) + var(--space-4));
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-text-primary);
-  color: var(--color-text-inverse);
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-full);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  z-index: calc(var(--z-modal) + 1);
-  animation: slideUp 200ms ease;
-  white-space: nowrap;
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
+/* ── Entrada de página: 180ms, solo opacidad + 4px (la regla global de
+   prefers-reduced-motion la deja instantánea) ── */
+.pageEnter {
+  animation: pageEnter 180ms var(--ease-out);
 }
 
-.toastAction {
-  background: transparent; border: 0; color: inherit; cursor: pointer;
-  font: inherit; font-weight: var(--weight-bold); text-decoration: underline;
-  padding: var(--space-1) var(--space-2); margin: calc(var(--space-1) * -1) calc(var(--space-2) * -1) calc(var(--space-1) * -1) 0;
-}
-.toast.success { background: var(--color-success); }
-.toast.error   { background: var(--color-danger);  }
-.toast.info    { background: var(--color-info);    }
-
-@media (min-width: 768px) {
-  .toast {
-    bottom: var(--space-6);
-    left: 50%;
-  }
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* Área táctil mínima de 44px sin alterar el diseño visible */
@@ -143,9 +122,3 @@ position: relative;
   width: max(100%, 44px); height: max(100%, 44px);
   transform: translate(-50%, -50%);
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .toast { animation-name: rm-fade; }
-}
-
-@keyframes rm-fade  { from { opacity: 0; } to { opacity: 1; } }

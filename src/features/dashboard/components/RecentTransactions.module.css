@@ -8,8 +8,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  margin: 0 calc(var(--space-2) * -1);
+  border-radius: var(--radius-sm);
   transition: background var(--transition-fast);
 }
 
@@ -18,7 +19,7 @@
 .dot {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,6 +50,3 @@
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
-
-.income  { color: var(--color-success); }
-.expense { color: var(--color-danger-soft); }

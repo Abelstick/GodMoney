@@ -1,6 +1,11 @@
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Alert, Anchor, Button, Progress } from '@mantine/core'
+import { IconAlertCircle, IconReceipt2, IconCoin, IconPigMoney } from '@tabler/icons-react'
+import { parseISO, subMonths, format as formatDate } from 'date-fns'
+import { es } from 'date-fns/locale'
 import {
-  useStore, selectTotalIncome, selectTotalExpense, selectProfit,
+  useStore, selectTotalIncome, selectProfit,
   selectAvailableMoney, selectReceivable, selectPayable, selectNetWorth,
 } from '@/store'
 import { useIncome }     from '@/hooks/useIncome'
@@ -9,34 +14,33 @@ import { useGoals }      from '@/hooks/useGoals'
 import { useBudgets }    from '@/hooks/useBudgets'
 import { useAccounts }   from '@/hooks/useAccounts'
 import { useLoans }      from '@/hooks/useLoans'
+import { useLoanAlerts } from '@/hooks/useLoanAlerts'
+import { useRecurringPaymentAlerts } from '@/hooks/useRecurringPaymentAlerts'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
-import { formatCurrency, formatMonth } from '@/lib/formatters'
-import { getPastMonths } from '@/lib/formatters'
-import { Card }          from '@/components/ui/Card/Card'
-import { StatCard }      from '@/components/ui/StatCard/StatCard'
-import { ProgressBar }   from '@/components/ui/ProgressBar/ProgressBar'
-import { Button }        from '@/components/ui/Button/Button'
-import { IconCoin, IconReceipt2, IconPigMoney, IconClipboardList, IconTarget } from '@tabler/icons-react'
+import { formatMonth } from '@/lib/formatters'
 import { splitSavings, isSavingsExpense, getSavingsRate } from '@/lib/savings'
-import { EmptyState }    from '@/components/common/EmptyState/EmptyState'
-import { DashboardSkeleton } from './components/DashboardSkeleton'
-import { ProfitHero }    from './components/ProfitHero'
-import { PatrimonioCard } from './components/PatrimonioCard'
-import { MonthlyChart }  from './components/MonthlyChart'
-import { RecentTransactions } from './components/RecentTransactions'
-import styles from './Dashboard.module.css'
-import { useMemo } from 'react'
+import { allBudgetCategoryIds, getBudgetStatus, BUDGET_STATUS_TONE } from '@/lib/budgetStatus'
+import { getPriorityAlert } from '@/lib/priorityAlert'
+import { MONTHS_HISTORY } from '@/lib/constants'
 import { buildChartData } from '@/features/predictions/utils/predictionAlgorithms'
 import { incomeService }  from '@/services/incomeService'
 import { expenseService } from '@/services/expenseService'
-import { useState, useEffect } from 'react'
-import { MONTHS_HISTORY } from '@/lib/constants'
-import { parseISO, subMonths, format as formatDate } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { Card }          from '@/components/ui/Card/Card'
+import { StatCard }      from '@/components/ui/StatCard/StatCard'
+import { Money }         from '@/components/ui/Money/Money'
+import { StatusBadge }   from '@/components/ui/StatusBadge/StatusBadge'
+import { PageHeader }    from '@/components/ui/PageHeader/PageHeader'
+import { MonthPicker }   from '@/components/common/MonthPicker/MonthPicker'
+import { DashboardSkeleton } from './components/DashboardSkeleton'
+import { PriorityAlert } from './components/PriorityAlert'
+import { BalanceHero }   from './components/BalanceHero'
+import { GoalsPreview }  from './components/GoalsPreview'
+import { MonthlyChart }  from './components/MonthlyChart'
+import { RecentTransactions } from './components/RecentTransactions'
+import styles from './Dashboard.module.css'
 
 export function Dashboard() {
-  const { activeMonth, setActiveMonth } = useMonthFilter()
-  const months = useMemo(() => getPastMonths(6), [])
+  const { activeMonth, setActiveMonth, months } = useMonthFilter()
 
   const {
     incomes, loading: incLoading, error: incError, refetch: refetchIncomes,
@@ -48,14 +52,16 @@ export function Dashboard() {
   const { budgets, loading: budgetsLoading }     = useBudgets()
   const { accounts, loading: accLoading }        = useAccounts()
   const { loans, loading: loansLoading }         = useLoans()
+  const { alerts: loanAlerts, markLoanAlertRead } = useLoanAlerts()
+  const { alerts: recurringAlerts, markAlertRead: markRecurringAlertRead } = useRecurringPaymentAlerts()
+  const budgetsSpent = useStore((s) => s.budgetsSpent)
 
-  const totalIncome  = useStore(selectTotalIncome)
-  const totalExpense = useStore(selectTotalExpense)
-  const profit       = useStore(selectProfit)
+  const totalIncome    = useStore(selectTotalIncome)
+  const profit         = useStore(selectProfit)
   const availableMoney = useStore(selectAvailableMoney)
-  const receivable      = useStore(selectReceivable)
-  const payable          = useStore(selectPayable)
-  const netWorth          = useStore(selectNetWorth)
+  const receivable     = useStore(selectReceivable)
+  const payable        = useStore(selectPayable)
+  const netWorth       = useStore(selectNetWorth)
 
   // Datos históricos para el gráfico de barras del dashboard
   const [histIncome,  setHistIncome]  = useState([])
@@ -69,8 +75,9 @@ export function Dashboard() {
     ]).then(([inc, exp]) => {
       setHistIncome(inc)
       setHistExpense(exp)
-      setHistoryLoaded(true)
-    })
+    }).catch(() => {
+      // Sin histórico el gráfico muestra su estado vacío; el resto del resumen sigue.
+    }).finally(() => setHistoryLoaded(true))
   }, [])
 
   const chartData = useMemo(() => {
@@ -85,6 +92,7 @@ export function Dashboard() {
 
   const activeGoals = goals.filter((g) => g.status === 'active')
   const activeMonthLabel = formatMonth(parseISO(`${activeMonth}-01`))
+  const isCurrentMonth = activeMonth === formatDate(new Date(), 'yyyy-MM')
 
   // ── Comparación vs. mes anterior: derivada del histórico que ya se trae
   // para el gráfico (buildChartData), no es una llamada ni un cálculo nuevo ──
@@ -99,7 +107,7 @@ export function Dashboard() {
     return Math.round(((current - previous) / Math.abs(previous)) * 100)
   }
 
-  // ── Gasto real vs ahorro: el ahorro sigue restando al profit del mes (es
+  // ── Gasto real vs ahorro: el ahorro sigue restando al resultado del mes (es
   // dinero que no se toca), pero no se muestra como consumo ──
   const { consumptionTotal, savingsTotal } = useMemo(() => splitSavings(expenses), [expenses])
   const savingsRate = getSavingsRate(savingsTotal, totalIncome)
@@ -109,20 +117,32 @@ export function Dashboard() {
 
   const incomeTrendPct  = trendPct(totalIncome, prevEntry?.income ?? 0)
   const expenseTrendPct = trendPct(consumptionTotal, prevConsumption)
-  const profitTrendPct  = trendPct(profit, prevEntry?.profit ?? 0)
 
-  // ── Split ingresos/gastos del mes (mini barra bajo el hero) ──
-  const flowTotal = totalIncome + totalExpense
-  const incomeSharePct  = flowTotal > 0 ? (totalIncome  / flowTotal) * 100 : 0
-  const expenseSharePct = flowTotal > 0 ? (totalExpense / flowTotal) * 100 : 0
+  // ── Gastado vs presupuesto: solo presupuestos mensuales. Lo gastado se toma
+  // de las categorías cubiertas (sin contar dos veces una categoría que esté
+  // en dos presupuestos), para que el % no se infle con gastos sin presupuesto ──
+  const budgetOverview = useMemo(() => {
+    const monthly = budgets.filter((b) => b.period === 'monthly')
+    if (!monthly.length) return null
+    const limit = monthly.reduce((acc, b) => acc + Number(b.amount), 0)
+    const spent = allBudgetCategoryIds(monthly).reduce((acc, id) => acc + (budgetsSpent[id] ?? 0), 0)
+    const status = getBudgetStatus(spent, limit)
+    return { limit, spent, percent: limit > 0 ? Math.round((spent / limit) * 100) : 0, ...BUDGET_STATUS_TONE[status] }
+  }, [budgets, budgetsSpent])
 
-  // ── Badges derivados de datos ya cargados ──
-  const budgetsAtLimit = budgets.filter((b) => b.percent >= 100).length
+  // ── Alerta prioritaria: pagos (siempre) y presupuestos (solo el mes en curso,
+  // los de meses pasados ya son historia) ──
+  const priority = useMemo(() => getPriorityAlert({
+    loanAlerts,
+    recurringAlerts,
+    budgets: isCurrentMonth ? budgets : [],
+  }), [loanAlerts, recurringAlerts, budgets, isCurrentMonth])
 
-  // ── Sub-etiquetas de Patrimonio: conteos derivados de accounts/loans ──
-  const accountsCount = accounts.length
-  const receivableCount = loans.filter((l) => l.type === 'LENT' && l.status !== 'CANCELLED' && l.status !== 'PAID').length
-  const payableCount = loans.filter((l) => l.type === 'BORROWED' && l.status !== 'CANCELLED' && l.status !== 'PAID').length
+  function dismissPriority() {
+    const { top } = priority
+    if (top.source === 'loan') markLoanAlertRead(top.id)
+    if (top.source === 'recurring') markRecurringAlertRead(top.id)
+  }
 
   const isLoading = incLoading || expLoading || goalsLoading || budgetsLoading || accLoading || loansLoading
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
@@ -138,167 +158,144 @@ export function Dashboard() {
 
   const showSkeleton   = isLoading && !hasLoadedOnce
   const showRefreshing = isLoading && hasLoadedOnce
+  const trendLabel = `vs ${prevMonthShortLabel}`
 
   return (
-    <div className={styles.page}>
-      <h1 className={styles.pageTitle}>Dashboard</h1>
-      <p className={styles.subtitle}>Resumen de tus finanzas personales</p>
+    <div>
+      <PageHeader
+        title="Resumen"
+        actions={
+          <>
+            {showRefreshing && <span className={styles.refreshingTag} aria-live="polite">Actualizando…</span>}
+            <MonthPicker value={activeMonth} onChange={setActiveMonth} months={months} />
+          </>
+        }
+      />
 
-      {/* ── Filtro de meses ── */}
-      <div className={styles.monthFilterRow}>
-        <div className={styles.monthFilter}>
-          {months.map((m) => (
-            <button
-              key={m.key}
-              className={`${styles.monthBtn} ${activeMonth === m.key ? styles.active : ''}`}
-              onClick={() => setActiveMonth(m.key)}
-            >
-              {m.label} {m.year}
-            </button>
-          ))}
-        </div>
-        {showRefreshing && <span className={styles.refreshingTag}>Actualizando…</span>}
-      </div>
-
-      {/* ── Error de carga ── */}
       {hasError && (
-        <div className={`${styles.errorBanner} ${styles.mb6}`} role="alert">
-          <div>
-            <p className={styles.errorTitle}>No pudimos cargar tus movimientos</p>
-            <p className={styles.errorDesc}>Revisa tu conexión e inténtalo de nuevo.</p>
+        <Alert
+          color="expense"
+          variant="light"
+          icon={<IconAlertCircle size={20} />}
+          title="No pudimos cargar tus movimientos"
+          className={styles.section}
+        >
+          <div className={styles.errorRow}>
+            <span>Revisa tu conexión e inténtalo de nuevo.</span>
+            <Button size="xs" variant="default" onClick={handleRetry}>Reintentar</Button>
           </div>
-          <Button size="sm" variant="secondary" onClick={handleRetry}>Reintentar</Button>
-        </div>
+        </Alert>
       )}
 
       {showSkeleton ? (
         <DashboardSkeleton />
       ) : (
         <>
-          {/* ── Profit destacado (hero) ── */}
-          <div className={styles.mb6}>
-            <ProfitHero
-              profit={profit}
-              monthLabel={activeMonthLabel}
-              trendPct={profitTrendPct}
-              prevMonthShortLabel={prevMonthShortLabel}
-              incomeSharePct={incomeSharePct}
-              expenseSharePct={expenseSharePct}
-              flowTotal={flowTotal}
-            />
+          <PriorityAlert
+            alert={priority.top}
+            total={priority.total}
+            onDismiss={priority.top && priority.top.source !== 'budget' ? dismissPriority : undefined}
+          />
+
+          <BalanceHero
+            availableMoney={availableMoney}
+            receivable={receivable}
+            payable={payable}
+            netWorth={netWorth}
+            accountsCount={accounts.length}
+          />
+
+          {/* ── Los 3 indicadores del mes ── */}
+          <div className={styles.kpis}>
+            <StatCard
+              className={styles.kpiMain}
+              label="Gastado"
+              amount={<Money value={consumptionTotal} />}
+              icon={<IconReceipt2 size={18} stroke={1.75} />}
+              iconBg="var(--color-expense-light)"
+              iconColor="var(--color-expense)"
+              trend={expenseTrendPct !== null ? `${Math.abs(expenseTrendPct)}%` : undefined}
+              trendUp={expenseTrendPct !== null ? expenseTrendPct >= 0 : undefined}
+              trendLabel={trendLabel}
+              invertTrendColor
+            >
+              {budgetOverview ? (
+                <>
+                  <Progress
+                    value={Math.min(budgetOverview.percent, 100)}
+                    color={budgetOverview.progress}
+                    size="md"
+                    aria-label={`${budgetOverview.percent}% del presupuesto usado`}
+                  />
+                  <div className={styles.budgetRow}>
+                    <span className={styles.budgetText}>
+                      <Money value={budgetOverview.spent} /> de <Money value={budgetOverview.limit} /> presupuestado
+                    </span>
+                    <StatusBadge tone={budgetOverview.tone} size="sm">{budgetOverview.label}</StatusBadge>
+                  </div>
+                </>
+              ) : (
+                <span className={styles.budgetText}>
+                  Sin presupuesto mensual · <Anchor component={Link} to="/presupuestos" size="xs" fw={600}>Crear uno</Anchor>
+                </span>
+              )}
+            </StatCard>
+
+            <StatCard
+              label="Ingresos"
+              amount={<Money value={totalIncome} />}
+              icon={<IconCoin size={18} stroke={1.75} />}
+              iconBg="var(--color-income-light)"
+              iconColor="var(--color-income)"
+              trend={incomeTrendPct !== null ? `${Math.abs(incomeTrendPct)}%` : undefined}
+              trendUp={incomeTrendPct !== null ? incomeTrendPct >= 0 : undefined}
+              trendLabel={trendLabel}
+            >
+              <span className={styles.budgetText}>
+                Resultado del mes: <Money value={profit} tone="auto" signed />
+              </span>
+            </StatCard>
+
+            <StatCard
+              label="Ahorro real"
+              amount={<Money value={savingsTotal} tone={savingsTotal > 0 ? 'savings' : 'neutral'} />}
+              icon={<IconPigMoney size={18} stroke={1.75} />}
+              iconBg="var(--color-savings-light)"
+              iconColor="var(--color-savings)"
+            >
+              <span className={styles.budgetText}>
+                {savingsRate !== null && savingsTotal > 0
+                  ? `${savingsRate}% de tus ingresos`
+                  : 'Registra un gasto con categoría de ahorro para verlo aquí'}
+              </span>
+            </StatCard>
           </div>
 
-          {/* ── Resumen del mes ── */}
-          <Card className={styles.mb6}>
-            <Card.Header>Resumen del mes</Card.Header>
-            <div className={styles.statsGrid}>
-              <StatCard
-                label="Ingresos"
-                amount={formatCurrency(totalIncome)}
-                icon={<IconCoin size={20} stroke={1.75} />}
-                iconBg="var(--color-success-light)"
-                trend={incomeTrendPct !== null ? `${Math.abs(incomeTrendPct)}%` : undefined}
-                trendUp={incomeTrendPct !== null ? incomeTrendPct >= 0 : undefined}
-              />
-              <StatCard
-                label="Gasto real"
-                amount={formatCurrency(consumptionTotal)}
-                icon={<IconReceipt2 size={20} stroke={1.75} />}
-                iconBg="var(--color-danger-light)"
-                trend={expenseTrendPct !== null ? `${Math.abs(expenseTrendPct)}%` : undefined}
-                trendUp={expenseTrendPct !== null ? expenseTrendPct >= 0 : undefined}
-                invertTrendColor
-                badge={totalExpense > totalIncome ? { label: 'Exceso', tone: 'danger' } : undefined}
-              />
-              <StatCard
-                label="Ahorrado"
-                amount={formatCurrency(savingsTotal)}
-                icon={<IconPigMoney size={20} stroke={1.75} />}
-                iconBg="var(--color-primary-alpha)"
-                badge={savingsRate !== null && savingsTotal > 0
-                  ? { label: `${savingsRate}% de ingresos`, tone: 'brand' }
-                  : undefined}
-              />
-              <StatCard
-                label="Presupuestos"
-                amount={budgets.length}
-                icon={<IconClipboardList size={20} stroke={1.75} />}
-                iconBg="var(--color-surface-4)"
-                badge={budgetsAtLimit > 0 ? { label: `${budgetsAtLimit} al límite`, tone: 'plain' } : undefined}
-              />
-            </div>
-          </Card>
-
-          {/* ── Patrimonio: cuentas + préstamos ── */}
-          <div className={styles.mb6}>
-            <PatrimonioCard
-              availableMoney={availableMoney}
-              receivable={receivable}
-              payable={payable}
-              netWorth={netWorth}
-              accountsCount={accountsCount}
-              receivableCount={receivableCount}
-              payableCount={payableCount}
-            />
-          </div>
-
-          {/* ── Gráfico + Transacciones recientes ── */}
+          {/* ── Recientes + objetivos ── */}
           <div className={styles.twoCol}>
-            <Card className={styles.equalCol}>
-              <Card.Header>Evolución mensual</Card.Header>
-              <MonthlyChart data={chartData} />
-            </Card>
-
-            <Card className={styles.equalCol}>
-              <Card.Header>Movimientos recientes</Card.Header>
+            <Card>
+              <Card.Header action={<Anchor component={Link} to="/movimientos" size="sm" fw={600}>Ver todos</Anchor>}>
+                Movimientos recientes
+              </Card.Header>
               <RecentTransactions
                 incomes={incomes}
                 expenses={expenses}
-                limit={6}
                 hasAnyHistory={hasAnyHistory}
                 activeMonthLabel={activeMonthLabel}
               />
             </Card>
+
+            <Card>
+              <Card.Header action={activeGoals.length > 0 && <Anchor component={Link} to="/objetivos" size="sm" fw={600}>Ver todos</Anchor>}>
+                Objetivos
+              </Card.Header>
+              <GoalsPreview goals={activeGoals} />
+            </Card>
           </div>
 
-          {/* ── Progreso de objetivos ── */}
           <Card>
-            <Card.Header>Objetivos en curso</Card.Header>
-            {activeGoals.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                {activeGoals.slice(0, 3).map((g) => {
-                  const amount = g.progressAmount ?? g.current_amount
-                  const pct = Math.min(Math.round((amount / g.target_amount) * 100), 100)
-                  return (
-                    <div key={g.id}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 'var(--text-sm)' }}>
-                        <span style={{ fontWeight: 600 }}>{g.name}</span>
-                        <span style={{ color: 'var(--color-text-muted)' }}>
-                          {formatCurrency(amount)} / {formatCurrency(g.target_amount)}
-                        </span>
-                      </div>
-                      <ProgressBar
-                        percent={pct}
-                        color={g.color}
-                        leftLabel={`${pct}%`}
-                        rightLabel={formatCurrency(g.target_amount - amount) + ' restante'}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <EmptyState
-                icon={<IconTarget size={44} stroke={1.5} />}
-                title="Sin objetivos activos"
-                description="Crea un objetivo para empezar a ahorrar"
-                action={
-                  <Link to="/objetivos">
-                    <Button size="sm">Crear objetivo</Button>
-                  </Link>
-                }
-              />
-            )}
+            <Card.Header>Ingresos vs gastos</Card.Header>
+            <MonthlyChart data={chartData} />
           </Card>
         </>
       )}

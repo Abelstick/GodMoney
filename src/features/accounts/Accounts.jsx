@@ -8,6 +8,7 @@ import { Modal }       from '@/components/common/Modal/Modal'
 import { EmptyState }  from '@/components/common/EmptyState/EmptyState'
 import { Skeleton }    from '@/components/common/Skeleton/Skeleton'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { AccountCard } from './components/AccountCard'
 import { AccountForm } from './components/AccountForm'
 import { TransferForm } from './components/TransferForm'
@@ -67,23 +68,23 @@ export function Accounts() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Cuentas</h1>
-          <p className={styles.subtitle}>Tus cuentas y billeteras — base para préstamos y deudas</p>
-        </div>
-        <div className={styles.headerActions}>
-          <Button
-            variant="secondary"
-            disabled={accounts.filter((a) => !a.is_archived).length < 2}
-            onClick={() => setTransferOpen(true)}
-          >
-            <IconArrowsExchange size={16} stroke={1.75} /> Transferir
-          </Button>
-          <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nueva cuenta</Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Cuentas"
+        subtitle="Tus cuentas y billeteras — base para préstamos y deudas"
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              disabled={accounts.filter((a) => !a.is_archived).length < 2}
+              onClick={() => setTransferOpen(true)}
+            >
+              <IconArrowsExchange size={16} stroke={1.75} /> Transferir
+            </Button>
+            <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nueva cuenta</Button>
+          </>
+        }
+      />
 
       {loading ? (
         <div className={styles.grid}>

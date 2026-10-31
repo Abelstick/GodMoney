@@ -1,46 +1,117 @@
 .card {
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(180%);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-glass);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  position: relative;
-  overflow: hidden;
 }
 
+@media (min-width: 768px) {
+  .card { padding: var(--space-5); }
+}
+
+.inactive .pct,
+.inactive .current {
+  color: var(--color-text-secondary);
+}
+
+/* ── Encabezado: anillo + nombre/estado + menú ── */
 .top {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--space-3);
+}
+
+.pct {
+  display: block;
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
 }
 
 .name {
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
 }
 
-.status {
-  flex-shrink: 0;
-}
-
+/* ── Montos ── */
 .amounts {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.current {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+}
+
+.of {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 
-.current {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
+.remaining {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
 }
 
+/* ── Proyección ── */
+.forecast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.forecast li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.forecast svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+}
+
+.forecast strong {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.forecast .forecastDanger,
+.forecast .forecastDanger svg {
+  color: var(--color-expense);
+}
+
+/* ── Potencial por préstamos ── */
 .potential {
   display: flex;
   flex-direction: column;
@@ -49,18 +120,18 @@
   color: var(--color-text-secondary);
   background: var(--color-primary-alpha);
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
 }
 .potential strong { color: var(--color-primary); }
 .potentialIcon { flex-shrink: 0; color: var(--color-primary); margin-top: 1px; }
 
 .potentialHeader {
   display: flex; align-items: flex-start; gap: var(--space-2);
-  width: 100%; padding: 0; border: none; background: none;
+  width: 100%; min-height: 32px; padding: 0; border: none; background: none;
   font: inherit; color: inherit; text-align: left; cursor: pointer;
 }
 .potentialHeader > span { flex: 1; }
-.chevron { flex-shrink: 0; margin-top: 1px; transition: transform 0.2s ease; }
+.chevron { flex-shrink: 0; margin-top: 1px; transition: transform var(--transition-base); }
 .chevronOpen { transform: rotate(180deg); }
 
 .loanDetail {
@@ -69,27 +140,17 @@
   border-top: 1px solid var(--color-border);
 }
 .loanRow { display: flex; justify-content: space-between; gap: var(--space-2); }
-.loanPlus  { color: var(--color-success); font-weight: var(--weight-semibold); white-space: nowrap; }
-.loanMinus { color: var(--color-danger);  font-weight: var(--weight-semibold); white-space: nowrap; }
+.loanAmount { font-weight: var(--weight-semibold); }
 .loanNote  { color: var(--color-warning); margin-top: 2px; }
 
-.linkedTag {
-  align-self: center;
-  font-size: 10px;
-  color: var(--color-primary);
-  background: var(--color-primary-alpha);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  white-space: nowrap;
-}
-
+/* ── Acciones ── */
 .actions {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
 }
 
-.actions > * { flex: 1; min-width: 80px; }
+.actions > * { flex: 1; min-width: 120px; }
 
 .progressInput {
   display: flex;
@@ -97,27 +158,7 @@
   align-items: center;
   padding: var(--space-3);
   background: var(--color-surface-2);
-  border-radius: var(--radius-md);
-}
-
-.progressInput input {
-  flex: 1;
-  padding: var(--space-2) var(--space-3);
-  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  outline: none;
 }
 
-.progressInput input:focus {
-  border-color: var(--color-primary);
-}
-
-.daysLeft {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
-.completed {
-  opacity: 0.7;
-}
+.progressField { flex: 1; }

@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
+import { Chip } from '@mantine/core'
 import { IconCalendarRepeat } from '@tabler/icons-react'
 import { useRecurringPayments } from '@/hooks/useRecurringPayments'
 import { Button } from '@/components/ui/Button/Button'
 import { Modal } from '@/components/common/Modal/Modal'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { getEffectiveRecurringStatus } from '@/lib/recurringPaymentStatus'
 import { RecurringPaymentAlerts } from './components/RecurringPaymentAlerts'
 import { RecurringPaymentCard } from './components/RecurringPaymentCard'
@@ -60,26 +62,26 @@ export function RecurringPayments() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Pagos recurrentes</h1>
-        <Button onClick={() => setCreateOpen(true)}>+ Nuevo pago recurrente</Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Pagos recurrentes"
+        actions={
+          <>
+            <Button onClick={() => setCreateOpen(true)}>+ Nuevo pago recurrente</Button>
+          </>
+        }
+      />
 
       <RecurringPaymentAlerts />
 
       <div className={styles.toolbar}>
-        <div className={styles.filters}>
-          {FILTERS.map((f) => (
-            <button
-              key={f.value}
-              className={`${styles.filterChip} ${statusFilter === f.value ? styles.filterChipActive : ''}`}
-              onClick={() => setStatusFilter(f.value)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <Chip.Group value={statusFilter} onChange={setStatusFilter}>
+          <div className={styles.filters} role="radiogroup" aria-label="Filtrar por estado">
+            {FILTERS.map((f) => (
+              <Chip key={f.value} value={f.value} size="sm" variant="light" radius="sm">{f.label}</Chip>
+            ))}
+          </div>
+        </Chip.Group>
       </div>
 
       {loading ? (

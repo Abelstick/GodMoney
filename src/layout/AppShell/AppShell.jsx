@@ -1,7 +1,7 @@
-import { Suspense, useEffect } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Suspense, useEffect, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useMantineColorScheme } from '@mantine/core'
-import { IconMoon, IconSun, IconLogout } from '@tabler/icons-react'
+import { IconMoon, IconSun, IconLogout, IconSparkles } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useAuth }   from '@/features/auth/AuthContext'
 import { useHideOnScroll } from '@/hooks/useHideOnScroll'
@@ -9,14 +9,15 @@ import { runRecurringGeneration } from '@/lib/runRecurringGeneration'
 import { OfflineBanner } from '../OfflineBanner/OfflineBanner'
 import { Sidebar }   from '../Sidebar/Sidebar'
 import { BottomNav } from '../BottomNav/BottomNav'
-import { QuickAddFab } from '../QuickAddFab/QuickAddFab'
+import { ToastBridge } from '../ToastBridge/ToastBridge'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner/LoadingSpinner'
 import { InstallPrompt } from '@/components/ui/InstallPrompt/InstallPrompt'
 import { ChatBot }       from '@/features/chat/ChatBot'
+import { QuickAddSheet } from '@/features/quickAdd/QuickAddSheet'
 import { LogoMark } from '@/components/ui/Logo/LogoMark'
 import styles from './AppShell.module.css'
 
-function MobileHeader() {
+function MobileHeader({ onOpenChat }) {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   const { signOut } = useAuth()
   const isDark = colorScheme === 'dark'
@@ -28,6 +29,13 @@ function MobileHeader() {
         <span>GodMoney</span>
       </div>
       <div className={styles.headerActions}>
+        <button
+          className={`${styles.headerBtn} ${styles.headerBtnAi}`}
+          onClick={onOpenChat}
+          aria-label="Abrir asistente IA"
+        >
+          <IconSparkles size={18} stroke={1.75} />
+        </button>
         <button
           className={styles.headerBtn}
           onClick={toggleColorScheme}
@@ -51,10 +59,11 @@ function MobileHeader() {
 }
 
 export function AppShell() {
-  const toast           = useStore((s) => s.toast)
-  const clearToast      = useStore((s) => s.clearToast)
   const collapsed       = useStore((s) => s.sidebarCollapsed)
+  const { pathname }    = useLocation()
   const hideFabs        = useHideOnScroll()
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [chatOpen, setChatOpen]         = useState(false)
 
   // Al abrir la app se crean los gastos/ingresos recurrentes que ya vencieron.
   useEffect(() => { runRecurringGeneration() }, [])
@@ -75,47 +84,30 @@ export function AppShell() {
     }
   }, [syncOfflineQueue, refreshOfflineCount])
 
-  useEffect(() => {
-    if (!toast) return
-    // Con botón de acción (Deshacer) se da más tiempo para alcanzarlo.
-    const t = setTimeout(clearToast, toast.action ? 8000 : 3000)
-    return () => clearTimeout(t)
-  }, [toast])
-
   return (
     <div className={styles.shell}>
-      <Sidebar />
+      <Sidebar onQuickAdd={() => setQuickAddOpen(true)} />
 
       <div className={`${styles.main} ${collapsed ? styles.mainCollapsed : ''}`}>
-        <MobileHeader />
+        <MobileHeader onOpenChat={() => setChatOpen(true)} />
 
         <main className={styles.content}>
           <OfflineBanner />
           <Suspense fallback={<LoadingSpinner />}>
-            <Outlet />
+            {/* key por ruta: cada página entra con un fade corto */}
+            <div key={pathname} className={styles.pageEnter}>
+              <Outlet />
+            </div>
           </Suspense>
         </main>
       </div>
 
-      <BottomNav />
-      <QuickAddFab hidden={hideFabs} />
+      <BottomNav onQuickAdd={() => setQuickAddOpen(true)} />
+      <QuickAddSheet opened={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
       <InstallPrompt />
-      <ChatBot hidden={hideFabs} />
+      <ChatBot hidden={hideFabs} opened={chatOpen} onOpenChange={setChatOpen} />
 
-      {toast && (
-        <div className={`${styles.toast} ${styles[toast.type] ?? ''}`}>
-          <span>{toast.message}</span>
-          {toast.action && (
-            <button
-              type="button"
-              className={styles.toastAction}
-              onClick={() => { clearToast(); toast.action.onClick() }}
-            >
-              {toast.action.label}
-            </button>
-          )}
-        </div>
-      )}
+      <ToastBridge />
     </div>
   )
 }

@@ -75,7 +75,7 @@
 }
 
 .registeredAt {
-  margin-top: 2px; font-size: 10px; color: var(--color-text-muted); opacity: 0.8;
+  margin-top: 2px; font-size: var(--text-xs); color: var(--color-text-muted); opacity: 0.8;
 }
 
 .right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
@@ -138,7 +138,7 @@
   padding: 0 4px;
   background: var(--color-surface-2);
   border-radius: var(--radius-full);
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
   line-height: 1.6;
 }
@@ -266,7 +266,7 @@
   padding: 0 6px;
   background: var(--color-surface-3);
   border-radius: var(--radius-full);
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
   line-height: 1.6;
 }

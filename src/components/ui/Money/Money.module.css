@@ -1,0 +1,23 @@
+.money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.neutral { color: inherit; }
+.income  { color: var(--color-income); }
+.expense { color: var(--color-expense); }
+.savings { color: var(--color-savings); }
+.warning { color: var(--color-warning); }
+
+/* Tamaños para cifras protagonistas (hero, totales) */
+.lg, .xl {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+}
+.lg { font-size: var(--text-2xl); }
+.xl { font-size: var(--text-4xl); line-height: 1.1; }
+
+@media (max-width: 640px) {
+  .xl { font-size: var(--text-3xl); }
+}

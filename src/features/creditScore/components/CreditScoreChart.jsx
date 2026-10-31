@@ -42,13 +42,13 @@ export function CreditScoreChart({ data }) {
           <XAxis
             dataKey="date"
             tickFormatter={(d) => formatDate(d)}
-            tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+            tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             domain={['dataMin - 20', 'dataMax + 20']}
-            tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+            tick={{ fontSize: 12, fill: 'var(--color-text-muted)' }}
             axisLine={false}
             tickLine={false}
             width={38}

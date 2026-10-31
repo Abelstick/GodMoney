@@ -1,50 +1,35 @@
-.block {
-  background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-surface-3) 37%, var(--color-surface-2) 63%);
-  background-size: 400% 100%;
-  border-radius: var(--radius-lg);
-  animation: shimmer 1.4s ease infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .block { animation: pulse 1.8s ease infinite; }
-}
-
-@keyframes shimmer {
-  0%   { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 .hero {
-  height: 108px;
-  margin-bottom: var(--space-6);
+  height: 168px;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
 }
 
-.grid {
+.kpis {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
-@media (min-width: 640px) {
-  .grid { grid-template-columns: repeat(3, 1fr); }
-}
+.kpi { height: 120px; }
+.kpiMain { grid-column: 1 / -1; height: 148px; }
 
-@media (min-width: 1024px) {
-  .grid { grid-template-columns: repeat(4, 1fr); }
+@media (min-width: 900px) {
+  .kpis { grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .kpiMain { grid-column: auto; height: 148px; }
+  .kpi { height: 148px; }
 }
-
-.stat { height: 104px; }
 
 .twoCol {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 @media (min-width: 900px) {
-  .twoCol { grid-template-columns: 1.4fr 1fr; }
+  .twoCol { grid-template-columns: 1.3fr 1fr; }
 }
 
+.list  { height: 300px; }
 .chart { height: 320px; }
-.list  { height: 320px; }

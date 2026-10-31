@@ -1,7 +1,10 @@
 .wrap {
   width: 100%;
-  flex: 1;
-  min-height: 220px;
+  height: 220px;
+}
+
+@media (min-width: 768px) {
+  .wrap { height: 260px; }
 }
 
 .legend {

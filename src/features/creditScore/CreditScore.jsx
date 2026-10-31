@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { Disclaimer } from '@/components/common/Disclaimer/Disclaimer'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
+import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { formatDate } from '@/lib/formatters'
 import { getCreditScoreCategory, CREDIT_SCORE_RANGES } from '@/lib/creditScoreStatus'
 import { CreditScoreChart } from './components/CreditScoreChart'
@@ -53,14 +54,16 @@ export function CreditScore() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Score crediticio</h1>
-          <p className={styles.subtitle}>Registra cada actualización para ver si estás mejorando</p>
-        </div>
-        <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nuevo registro</Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Score crediticio"
+        subtitle="Registra cada actualización para ver si estás mejorando"
+        actions={
+          <>
+            <Button onClick={() => { setEditing(null); setModalOpen(true) }}>+ Nuevo registro</Button>
+          </>
+        }
+      />
 
       {loading ? (
         <div className={styles.skeletonWrap}>

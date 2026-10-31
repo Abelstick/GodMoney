@@ -1,4 +1,5 @@
-import { formatCurrency, formatDate } from '@/lib/formatters'
+import { formatDate } from '@/lib/formatters'
+import { Money } from '@/components/ui/Money/Money'
 import { CATEGORY_ICON_COMPONENTS } from '@/lib/constants'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { IconCoin, IconReceipt2 } from '@tabler/icons-react'
@@ -10,7 +11,7 @@ function iconFor(tx) {
   return tx._type === 'income' ? IconCoin : IconReceipt2
 }
 
-export function RecentTransactions({ incomes = [], expenses = [], limit = 8, hasAnyHistory = true, activeMonthLabel }) {
+export function RecentTransactions({ incomes = [], expenses = [], limit = 5, hasAnyHistory = true, activeMonthLabel }) {
   const all = [
     ...incomes.map((i)  => ({ ...i, _type: 'income' })),
     ...expenses.map((e) => ({ ...e, _type: 'expense' })),
@@ -22,13 +23,14 @@ export function RecentTransactions({ incomes = [], expenses = [], limit = 8, has
     return hasAnyHistory
       ? (
         <EmptyState
-          icon={<IconReceipt2 size={44} stroke={1.5} />}
+          compact
+          icon={<IconReceipt2 size={24} stroke={1.5} />}
           title="Sin movimientos este mes"
           description={activeMonthLabel ? `No registraste ingresos ni gastos en ${activeMonthLabel}` : 'No hay ingresos ni gastos registrados en este mes'}
         />
       )
       : (
-        <EmptyState icon={<IconReceipt2 size={44} stroke={1.5} />} title="Sin movimientos" description="Registra un ingreso o gasto para empezar" />
+        <EmptyState compact icon={<IconReceipt2 size={24} stroke={1.5} />} title="Aún no registras movimientos" description="Toca + para anotar tu primer gasto o ingreso." />
       )
   }
 
@@ -39,6 +41,7 @@ export function RecentTransactions({ incomes = [], expenses = [], limit = 8, has
         return (
         <div key={`${tx._type}-${tx.id}`} className={styles.item}>
           <div
+            aria-hidden="true"
             className={styles.dot}
             style={{
               background: `color-mix(in srgb, ${tx.category?.color ?? 'var(--color-primary)'} 15%, transparent)`,
@@ -54,9 +57,7 @@ export function RecentTransactions({ incomes = [], expenses = [], limit = 8, has
               {tx.category?.name && ` • ${tx.category.name}`}
             </div>
           </div>
-          <div className={`${styles.amount} ${styles[tx._type]}`}>
-            {tx._type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-          </div>
+          <Money value={tx.amount} tone={tx._type} signed className={styles.amount} />
         </div>
         )
       })}

@@ -75,7 +75,7 @@ export function CategoryForm({ initial, onSubmit, onCancel, loading }) {
               { value: 'expense', label: 'Egreso'   },
               { value: 'both',    label: 'Ambos'    },
             ]}
-            color="violet"
+            color="brand"
             radius="md"
           />
         </div>
@@ -84,7 +84,7 @@ export function CategoryForm({ initial, onSubmit, onCancel, loading }) {
           <Switch
             checked={Boolean(form.is_savings)}
             onChange={(e) => setForm((f) => ({ ...f, is_savings: e.currentTarget.checked }))}
-            color="violet"
+            color="brand"
             label="Es una categoría de ahorro"
             description="Cuenta como salida del mes, pero los reportes la separan del consumo y puedes enviar el dinero a una cuenta."
           />
