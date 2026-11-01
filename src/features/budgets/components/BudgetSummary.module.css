@@ -27,8 +27,6 @@
 .statLabel {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   font-weight: var(--weight-medium);
 }
 

@@ -1,8 +1,10 @@
+/* Bloque de carga: barrido de luz suave de izquierda a derecha. Con
+   movimiento reducido, un pulso de opacidad sin desplazamiento. */
 .block {
   background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-surface-3) 37%, var(--color-surface-2) 63%);
   background-size: 400% 100%;
-  border-radius: var(--radius-md);
-  animation: shimmer 1.4s ease infinite;
+  border-radius: var(--radius-control);
+  animation: shimmer 1.4s var(--ease-in-out) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -13,3 +15,14 @@
   0%   { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+
+/* ── PageSkeleton ── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.pageTitle { width: 40%; max-width: 220px; height: 32px; margin-bottom: var(--space-3); }
+.pageHero  { height: 132px; border-radius: var(--radius-card); margin-bottom: var(--space-2); }
+.pageRow   { height: 56px; }

@@ -1,136 +1,62 @@
-import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { m } from 'framer-motion'
 import {
-  IconPlus,
-  IconLayoutDashboard, IconArrowsRightLeft, IconTarget,
-  IconChartBar, IconSettings2, IconChevronRight,
-  IconMoon, IconSun, IconLogout, IconMenu2, IconX,
-  IconCashBanknote, IconShoppingCart, IconFlag,
-  IconClipboard, IconTrendingUp, IconTag, IconKey, IconBulb,
-  IconHandGrab, IconWallet, IconListSearch, IconReportAnalytics, IconBellRinging,
+  IconPlus, IconMoon, IconSun, IconLogout, IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand,
 } from '@tabler/icons-react'
-import { Tooltip, useMantineColorScheme } from '@mantine/core'
+import { Tooltip } from '@mantine/core'
 import { useStore } from '@/store'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useThemeToggle } from '@/hooks/useThemeToggle'
 import { LogoMark } from '@/components/ui/Logo/LogoMark'
+import { NAV_SECTIONS } from '../navigation'
 import styles from './Sidebar.module.css'
 
-const NAV = [
-  {
-    id: 'dashboard',
-    icon: IconLayoutDashboard,
-    label: 'Principal',
-    to: '/',
-  },
-  {
-    id: 'transactions',
-    icon: IconArrowsRightLeft,
-    label: 'Transacciones',
-    items: [
-      { to: '/ingresos',    icon: IconCashBanknote, label: 'Ingresos' },
-      { to: '/gastos',      icon: IconShoppingCart,  label: 'Gastos'   },
-      { to: '/movimientos', icon: IconListSearch,    label: 'Movimientos' },
-    ],
-  },
-  {
-    id: 'planning',
-    icon: IconTarget,
-    label: 'Planificación',
-    items: [
-      { to: '/objetivos',    icon: IconFlag,      label: 'Objetivos'    },
-      { to: '/presupuestos', icon: IconClipboard, label: 'Presupuestos' },
-      { to: '/prestamos',    icon: IconHandGrab,  label: 'Préstamos'    },
-      { to: '/pagos-recurrentes', icon: IconBellRinging, label: 'Pagos recurrentes' },
-    ],
-  },
-  {
-    id: 'analysis',
-    icon: IconChartBar,
-    label: 'Análisis',
-    items: [
-      { to: '/inteligencia',     icon: IconBulb,             label: 'Inteligencia'   },
-      { to: '/predicciones',     icon: IconTrendingUp,       label: 'Predicciones'   },
-      { to: '/score-crediticio', icon: IconReportAnalytics,  label: 'Score crediticio' },
-    ],
-  },
-  {
-    id: 'maintenance',
-    icon: IconSettings2,
-    label: 'Mantenimiento',
-    items: [
-      { to: '/cuentas',       icon: IconWallet, label: 'Cuentas'    },
-      { to: '/categorias',    icon: IconTag, label: 'Categorías'  },
-      { to: '/configuracion', icon: IconKey, label: 'Configuración' },
-    ],
-  },
-]
+const ACTIVE_SPRING = { type: 'spring', stiffness: 520, damping: 42, mass: 0.8 }
 
-function getSectionsWithActive(pathname) {
-  const open = new Set()
-  NAV.forEach((section) => {
-    if (section.items?.some((item) => item.to === pathname)) {
-      open.add(section.id)
-    }
-  })
-  return open
+// Tooltip solo cuando la barra está colapsada (el texto sigue siendo el nombre
+// accesible del enlace en ambos estados).
+function NavTip({ label, collapsed, children }) {
+  return (
+    <Tooltip label={label} position="right" withArrow disabled={!collapsed} events={{ hover: true, focus: true, touch: false }}>
+      {children}
+    </Tooltip>
+  )
+}
+
+function NavItem({ to, icon: Icon, label, collapsed, pathname }) {
+  const isActive = to === '/' ? pathname === '/' : pathname === to
+  return (
+    <NavTip label={label} collapsed={collapsed}>
+      <NavLink to={to} end={to === '/'} className={`${styles.item} ${isActive ? styles.active : ''}`}>
+        {isActive && (
+          <m.span layoutId="sidebar-active" className={styles.activeBg} transition={ACTIVE_SPRING} aria-hidden="true" />
+        )}
+        <Icon size={18} stroke={isActive ? 2 : 1.75} className={styles.itemIcon} aria-hidden="true" />
+        <span className={styles.itemLabel}>{label}</span>
+      </NavLink>
+    </NavTip>
+  )
 }
 
 export function Sidebar({ onQuickAdd }) {
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
-  const { user, signOut }         = useAuth()
-  const collapsed                 = useStore((s) => s.sidebarCollapsed)
-  const toggleCollapsed           = useStore((s) => s.toggleSidebarCollapsed)
-  const location                  = useLocation()
-  const isDark                    = colorScheme === 'dark'
+  const { user, signOut }   = useAuth()
+  const { isDark, toggle }  = useThemeToggle()
+  const collapsed           = useStore((s) => s.sidebarCollapsed)
+  const toggleCollapsed     = useStore((s) => s.toggleSidebarCollapsed)
+  const { pathname }        = useLocation()
 
-  const [openSections, setOpenSections] = useState(
-    () => getSectionsWithActive(location.pathname)
-  )
-
-  // Auto-open section when navigating via bottom nav / direct URL
-  useEffect(() => {
-    setOpenSections((prev) => {
-      const next = new Set(prev)
-      getSectionsWithActive(location.pathname).forEach((id) => next.add(id))
-      return next
-    })
-  }, [location.pathname])
-
-  // Close all submenus when collapsing
-  useEffect(() => {
-    if (collapsed) setOpenSections(new Set())
-  }, [collapsed])
-
-  function toggleSection(id) {
-    if (collapsed) return
-    setOpenSections((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
-
-  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '??'
+  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '··'
 
   return (
-    <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
-
-      {/* Logo */}
-      <div className={styles.logo}>
-        <span className={styles.logoEmoji}><LogoMark size={28} /></span>
-        <span className={styles.logoText}>GodMoney</span>
+    <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`} aria-label="Barra lateral">
+      <div className={styles.brand}>
+        <LogoMark size={28} />
+        <span className={styles.brandText}>GodMoney</span>
       </div>
 
-      {/* Acción principal: zona propia entre el logo y la navegación
-          (en móvil está en el + del bottom nav). */}
+      {/* Acción principal: único relleno sólido de la barra */}
       <div className={styles.quickAddWrap}>
-        <Tooltip
-          label="Registrar movimiento (N)"
-          position="right"
-          withArrow
-          disabled={!collapsed}
-          events={{ hover: true, focus: true, touch: false }}
-        >
+        <NavTip label="Registrar movimiento (N)" collapsed={collapsed}>
           <button
             type="button"
             className={styles.quickAdd}
@@ -142,121 +68,63 @@ export function Sidebar({ onQuickAdd }) {
             <span className={styles.quickAddLabel}>Registrar movimiento</span>
             <kbd className={styles.quickAddKbd} aria-hidden="true">N</kbd>
           </button>
-        </Tooltip>
+        </NavTip>
       </div>
 
-      {/* Nav */}
-      <nav className={styles.nav}>
-        {NAV.map((section) => {
-          const SectionIcon = section.icon
-          const isOpen = openSections.has(section.id)
-
-          // Item directo (dashboard)
-          if (section.to) {
-            return (
-              <NavLink
-                key={section.id}
-                to={section.to}
-                end
-                className={({ isActive }) =>
-                  `${styles.directItem} ${isActive ? styles.activeItem : ''}`
-                }
-                title={collapsed ? section.label : undefined}
-              >
-                <SectionIcon size={18} stroke={1.75} className={styles.itemIcon} />
-                <span className={styles.itemLabel}>{section.label}</span>
-              </NavLink>
-            )
-          }
-
-          // Sección con submenú
-          const hasActiveChild = section.items?.some((i) => i.to === location.pathname)
-
-          return (
-            <div key={section.id} className={styles.section}>
-              <button
-                className={`${styles.sectionBtn} ${hasActiveChild ? styles.sectionActive : ''}`}
-                onClick={() => toggleSection(section.id)}
-                title={collapsed ? section.label : undefined}
-              >
-                <SectionIcon size={18} stroke={1.75} className={styles.itemIcon} />
-                <span className={styles.itemLabel}>{section.label}</span>
-                <IconChevronRight
-                  size={14}
-                  stroke={2}
-                  className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ''}`}
-                />
-              </button>
-
-              <div className={`${styles.submenu} ${isOpen ? styles.submenuOpen : ''}`}>
-                {section.items?.map((item) => {
-                  const ItemIcon = item.icon
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      className={({ isActive }) =>
-                        `${styles.subItem} ${isActive ? styles.activeItem : ''}`
-                      }
-                    >
-                      <ItemIcon size={15} stroke={1.75} className={styles.subItemIcon} />
-                      <span className={styles.itemLabel}>{item.label}</span>
-                    </NavLink>
-                  )
-                })}
-              </div>
+      <nav className={styles.nav} aria-label="Navegación principal">
+        {NAV_SECTIONS.map((section) => (
+          section.to ? (
+            <NavItem key={section.id} {...section} collapsed={collapsed} pathname={pathname} />
+          ) : (
+            <div key={section.id} className={styles.group} role="group" aria-labelledby={`nav-${section.id}`}>
+              <span id={`nav-${section.id}`} className={styles.groupLabel}>{section.label}</span>
+              {section.items.map((item) => (
+                <NavItem key={item.to} {...item} collapsed={collapsed} pathname={pathname} />
+              ))}
             </div>
           )
-        })}
+        ))}
       </nav>
 
-      {/* Collapse toggle */}
-      <button
-        className={styles.collapseBtn}
-        onClick={toggleCollapsed}
-        title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-        aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
-        aria-expanded={!collapsed}
-      >
-        {collapsed
-          ? <IconMenu2 size={16} stroke={1.75} />
-          : <IconX size={16} stroke={1.75} />
-        }
-        <span className={styles.itemLabel}>Colapsar</span>
-      </button>
-
-      {/* Footer */}
       <div className={styles.footer}>
-        {/* Dark mode pill */}
-        <button
-          className={`${styles.themeToggle} ${isDark ? styles.themeDark : ''}`}
-          onClick={toggleColorScheme}
-          title={isDark ? 'Modo claro' : 'Modo oscuro'}
-          aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-        >
-          <div className={styles.toggleTrack}>
-            <div className={styles.toggleThumb}>
-              {isDark
-                ? <IconSun size={11} stroke={2} />
-                : <IconMoon size={11} stroke={2} />
-              }
-            </div>
-          </div>
-          <span className={styles.itemLabel}>
-            {isDark ? 'Modo claro' : 'Modo oscuro'}
-          </span>
-        </button>
-
-        {/* User + logout */}
         {user && (
-          <button className={styles.logoutBtn} onClick={signOut} title="Cerrar sesión">
-            <IconLogout size={16} stroke={1.75} className={styles.logoutIcon} />
-            <span className={styles.logoutLabel}>
-              <span className={styles.logoutEmail}>{user.email}</span>
-              <span className={styles.logoutText}>Cerrar sesión</span>
-            </span>
-          </button>
+          <div className={styles.user}>
+            <span className={styles.avatar} aria-hidden="true">{initials}</span>
+            <span className={styles.email} title={user.email}>{user.email}</span>
+          </div>
         )}
+        <div className={styles.footerActions}>
+          <NavTip label={isDark ? 'Modo claro' : 'Modo oscuro'} collapsed>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={toggle}
+              aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {isDark ? <IconSun size={18} stroke={1.75} /> : <IconMoon size={18} stroke={1.75} />}
+            </button>
+          </NavTip>
+          {user && (
+            <NavTip label="Cerrar sesión" collapsed>
+              <button type="button" className={`${styles.iconBtn} ${styles.logout}`} onClick={signOut} aria-label="Cerrar sesión">
+                <IconLogout size={18} stroke={1.75} />
+              </button>
+            </NavTip>
+          )}
+          <NavTip label={collapsed ? 'Expandir barra' : 'Colapsar barra'} collapsed>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
+              aria-expanded={!collapsed}
+            >
+              {collapsed
+                ? <IconLayoutSidebarLeftExpand size={18} stroke={1.75} />
+                : <IconLayoutSidebarLeftCollapse size={18} stroke={1.75} />}
+            </button>
+          </NavTip>
+        </div>
       </div>
     </aside>
   )

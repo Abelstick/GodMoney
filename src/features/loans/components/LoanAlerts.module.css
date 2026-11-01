@@ -48,7 +48,7 @@
 
 .filterChip {
   padding: 4px var(--space-3);
-  border: 0.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   background: var(--color-surface);
   color: var(--color-text-secondary);
@@ -75,13 +75,13 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  border-left: 3px solid transparent;
+  border: 1px solid transparent;
 }
 
-.warning { background: var(--color-warning-light); border-left-color: var(--color-warning); }
-.danger  { background: var(--color-danger-light);  border-left-color: var(--color-danger); }
-.success { background: var(--color-success-light); border-left-color: var(--color-success); }
-.info    { background: var(--color-info-light);    border-left-color: var(--color-info); }
+.warning { background: var(--color-warning-light); border-color: color-mix(in srgb, var(--color-warning) 30%, transparent); }
+.danger  { background: var(--color-danger-light);  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent); }
+.success { background: var(--color-success-light); border-color: color-mix(in srgb, var(--color-success) 30%, transparent); }
+.info    { background: var(--color-info-light);    border-color: color-mix(in srgb, var(--color-info) 30%, transparent); }
 .read    { opacity: 0.55; }
 
 .alertDot { display: flex; align-items: center; flex-shrink: 0; }

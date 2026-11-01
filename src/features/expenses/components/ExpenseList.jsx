@@ -8,7 +8,7 @@ import { useStore } from '@/store'
 import { useCategories } from '@/hooks/useCategories'
 import { usePersistentState } from '@/hooks/usePersistentState'
 import { useSelection } from '@/hooks/useSelection'
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
+import { formatCurrency, formatSignedCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { exportTransactionsCSV } from '@/lib/exportTransactions'
 import { getSortOptions, sortTransactions } from '@/lib/transactionSort'
 import { Badge }      from '@/components/ui/Badge/Badge'
@@ -67,7 +67,7 @@ function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, select
         )}
       </div>
       <div className={styles.right}>
-        <span className={styles.amount}>-{formatCurrency(expense.amount)}</span>
+        <span className={styles.amount}>{formatSignedCurrency(-expense.amount)}</span>
         <div className={styles.actions}>
           <button className={styles.actionBtn} onClick={() => onDuplicate(expense)} aria-label="Duplicar gasto" title="Duplicar con la fecha de hoy">
             <IconCopy size={15} stroke={1.75} />
@@ -342,7 +342,7 @@ export function ExpenseList({
                 {filtered.length} movimiento{filtered.length !== 1 ? 's' : ''}
                 {hasActiveFilters && ` (de ${expenses.length})`}
               </span>
-              <span className={styles.filterSummaryAmount}>-{formatCurrency(filteredTotal)}</span>
+              <span className={styles.filterSummaryAmount}>{formatSignedCurrency(-filteredTotal)}</span>
             </div>
             <div className={styles.filterSummaryActions}>
               <button
@@ -379,7 +379,7 @@ export function ExpenseList({
                       <span className={styles.groupDot} style={{ background: g.color }} />
                       <span className={styles.groupName}>{g.name}</span>
                       <span className={styles.groupCount}>{g.count}</span>
-                      <span className={styles.groupTotal}>-{formatCurrency(g.total)}</span>
+                      <span className={styles.groupTotal}>{formatSignedCurrency(-g.total)}</span>
                       <IconChevronDown
                         size={15}
                         stroke={1.75}

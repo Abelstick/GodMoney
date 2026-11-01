@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Alert, Anchor, Button, Progress } from '@mantine/core'
-import { IconAlertCircle, IconReceipt2, IconCoin, IconPigMoney } from '@tabler/icons-react'
+import { Alert, Anchor, Button } from '@mantine/core'
+import { IconAlertCircle } from '@tabler/icons-react'
 import { parseISO, subMonths, format as formatDate } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -26,14 +26,13 @@ import { buildChartData } from '@/features/predictions/utils/predictionAlgorithm
 import { incomeService }  from '@/services/incomeService'
 import { expenseService } from '@/services/expenseService'
 import { Card }          from '@/components/ui/Card/Card'
-import { StatCard }      from '@/components/ui/StatCard/StatCard'
-import { Money }         from '@/components/ui/Money/Money'
-import { StatusBadge }   from '@/components/ui/StatusBadge/StatusBadge'
 import { PageHeader }    from '@/components/ui/PageHeader/PageHeader'
 import { MonthPicker }   from '@/components/common/MonthPicker/MonthPicker'
 import { DashboardSkeleton } from './components/DashboardSkeleton'
 import { PriorityAlert } from './components/PriorityAlert'
 import { BalanceHero }   from './components/BalanceHero'
+import { MonthSummary }  from './components/MonthSummary'
+import { SpendingBreakdown } from './components/SpendingBreakdown'
 import { GoalsPreview }  from './components/GoalsPreview'
 import { MonthlyChart }  from './components/MonthlyChart'
 import { RecentTransactions } from './components/RecentTransactions'
@@ -197,82 +196,31 @@ export function Dashboard() {
             onDismiss={priority.top && priority.top.source !== 'budget' ? dismissPriority : undefined}
           />
 
-          <BalanceHero
-            availableMoney={availableMoney}
-            receivable={receivable}
-            payable={payable}
-            netWorth={netWorth}
-            accountsCount={accounts.length}
-          />
-
-          {/* ── Los 3 indicadores del mes ── */}
-          <div className={styles.kpis}>
-            <StatCard
-              className={styles.kpiMain}
-              label="Gastado"
-              amount={<Money value={consumptionTotal} />}
-              icon={<IconReceipt2 size={18} stroke={1.75} />}
-              iconBg="var(--color-expense-light)"
-              iconColor="var(--color-expense)"
-              trend={expenseTrendPct !== null ? `${Math.abs(expenseTrendPct)}%` : undefined}
-              trendUp={expenseTrendPct !== null ? expenseTrendPct >= 0 : undefined}
+          {/* 1 · Lo que tienes hoy · 2 · Cómo va el periodo */}
+          <div className={styles.top}>
+            <BalanceHero
+              availableMoney={availableMoney}
+              receivable={receivable}
+              payable={payable}
+              netWorth={netWorth}
+              accountsCount={accounts.length}
+            />
+            <MonthSummary
+              monthLabel={activeMonthLabel}
               trendLabel={trendLabel}
-              invertTrendColor
-            >
-              {budgetOverview ? (
-                <>
-                  <Progress
-                    value={Math.min(budgetOverview.percent, 100)}
-                    color={budgetOverview.progress}
-                    size="md"
-                    aria-label={`${budgetOverview.percent}% del presupuesto usado`}
-                  />
-                  <div className={styles.budgetRow}>
-                    <span className={styles.budgetText}>
-                      <Money value={budgetOverview.spent} /> de <Money value={budgetOverview.limit} /> presupuestado
-                    </span>
-                    <StatusBadge tone={budgetOverview.tone} size="sm">{budgetOverview.label}</StatusBadge>
-                  </div>
-                </>
-              ) : (
-                <span className={styles.budgetText}>
-                  Sin presupuesto mensual · <Anchor component={Link} to="/presupuestos" size="xs" fw={600}>Crear uno</Anchor>
-                </span>
-              )}
-            </StatCard>
-
-            <StatCard
-              label="Ingresos"
-              amount={<Money value={totalIncome} />}
-              icon={<IconCoin size={18} stroke={1.75} />}
-              iconBg="var(--color-income-light)"
-              iconColor="var(--color-income)"
-              trend={incomeTrendPct !== null ? `${Math.abs(incomeTrendPct)}%` : undefined}
-              trendUp={incomeTrendPct !== null ? incomeTrendPct >= 0 : undefined}
-              trendLabel={trendLabel}
-            >
-              <span className={styles.budgetText}>
-                Resultado del mes: <Money value={profit} tone="auto" signed />
-              </span>
-            </StatCard>
-
-            <StatCard
-              label="Ahorro real"
-              amount={<Money value={savingsTotal} tone={savingsTotal > 0 ? 'savings' : 'neutral'} />}
-              icon={<IconPigMoney size={18} stroke={1.75} />}
-              iconBg="var(--color-savings-light)"
-              iconColor="var(--color-savings)"
-            >
-              <span className={styles.budgetText}>
-                {savingsRate !== null && savingsTotal > 0
-                  ? `${savingsRate}% de tus ingresos`
-                  : 'Registra un gasto con categoría de ahorro para verlo aquí'}
-              </span>
-            </StatCard>
+              consumptionTotal={consumptionTotal}
+              expenseTrendPct={expenseTrendPct}
+              budgetOverview={budgetOverview}
+              totalIncome={totalIncome}
+              incomeTrendPct={incomeTrendPct}
+              savingsTotal={savingsTotal}
+              savingsRate={savingsRate}
+              profit={profit}
+            />
           </div>
 
-          {/* ── Recientes + objetivos ── */}
-          <div className={styles.twoCol}>
+          {/* 3 · Qué se movió y a dónde fue */}
+          <div className={styles.split}>
             <Card>
               <Card.Header action={<Anchor component={Link} to="/movimientos" size="sm" fw={600}>Ver todos</Anchor>}>
                 Movimientos recientes
@@ -286,17 +234,27 @@ export function Dashboard() {
             </Card>
 
             <Card>
+              <Card.Header action={<Anchor component={Link} to="/gastos" size="sm" fw={600}>Ver gastos</Anchor>}>
+                En qué se fue
+              </Card.Header>
+              <SpendingBreakdown expenses={expenses} />
+            </Card>
+          </div>
+
+          {/* 4 · Contexto: evolución y metas */}
+          <div className={styles.splitReverse}>
+            <Card>
+              <Card.Header>Ingresos vs gastos</Card.Header>
+              <MonthlyChart data={chartData} />
+            </Card>
+
+            <Card>
               <Card.Header action={activeGoals.length > 0 && <Anchor component={Link} to="/objetivos" size="sm" fw={600}>Ver todos</Anchor>}>
                 Objetivos
               </Card.Header>
               <GoalsPreview goals={activeGoals} />
             </Card>
           </div>
-
-          <Card>
-            <Card.Header>Ingresos vs gastos</Card.Header>
-            <MonthlyChart data={chartData} />
-          </Card>
         </>
       )}
     </div>

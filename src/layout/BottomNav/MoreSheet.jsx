@@ -1,27 +1,10 @@
 import { Drawer } from '@mantine/core'
 import { NavLink } from 'react-router-dom'
-import {
-  IconBulb, IconTrendingUp, IconTag, IconKey, IconFlag, IconCashBanknote, IconShoppingCart,
-  IconHandGrab, IconWallet, IconReportAnalytics, IconBellRinging,
-} from '@tabler/icons-react'
+import { MORE_SECTIONS } from '../navigation'
 import styles from './MoreSheet.module.css'
 
-const MORE_ITEMS = [
-  { to: '/objetivos',        icon: IconFlag,            label: 'Objetivos'        },
-  { to: '/gastos',           icon: IconShoppingCart,    label: 'Gastos'           },
-  { to: '/ingresos',         icon: IconCashBanknote,    label: 'Ingresos'         },
-  { to: '/prestamos',        icon: IconHandGrab,        label: 'Préstamos'        },
-  { to: '/pagos-recurrentes', icon: IconBellRinging,    label: 'Pagos recurrentes' },
-  { to: '/inteligencia',     icon: IconBulb,            label: 'Inteligencia'     },
-  { to: '/predicciones',     icon: IconTrendingUp,      label: 'Predicciones'     },
-  { to: '/score-crediticio', icon: IconReportAnalytics, label: 'Score crediticio' },
-  { to: '/cuentas',          icon: IconWallet,          label: 'Cuentas'          },
-  { to: '/categorias',       icon: IconTag,             label: 'Categorías'       },
-  { to: '/configuracion',    icon: IconKey,             label: 'Configuración'    },
-]
-
-export const MORE_ROUTES = MORE_ITEMS.map((item) => item.to)
-
+// Hoja "Más": el resto de pantallas agrupadas igual que en la sidebar de
+// escritorio, en cuadrícula de dos columnas para alcanzarlas con el pulgar.
 export function MoreSheet({ opened, onClose }) {
   return (
     <Drawer
@@ -29,30 +12,33 @@ export function MoreSheet({ opened, onClose }) {
       onClose={onClose}
       position="bottom"
       size="auto"
-      title="Más opciones"
+      title="Más secciones"
       classNames={{
         content: styles.drawer,
         header:  styles.header,
-        title:   styles.title,
         body:    styles.body,
-        close:   styles.closeBtn,
       }}
     >
-      <div className={styles.list}>
-        {MORE_ITEMS.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onClose}
-            className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
-          >
-            <span className={styles.iconWrap}>
-              <Icon size={20} stroke={1.75} />
-            </span>
-            <span>{label}</span>
-          </NavLink>
-        ))}
-      </div>
+      {MORE_SECTIONS.map((section) => (
+        <section key={section.id} className={styles.section} aria-labelledby={`more-${section.id}`}>
+          <h2 id={`more-${section.id}`} className={styles.sectionTitle}>{section.label}</h2>
+          <div className={styles.grid}>
+            {section.items.map(({ to, icon: Icon, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={onClose}
+                className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+              >
+                <span className={styles.iconWrap} aria-hidden="true">
+                  <Icon size={20} stroke={1.75} />
+                </span>
+                <span className={styles.itemLabel}>{label}</span>
+              </NavLink>
+            ))}
+          </div>
+        </section>
+      ))}
     </Drawer>
   )
 }

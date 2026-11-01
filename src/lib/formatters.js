@@ -1,4 +1,4 @@
-import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns'
+import { format, parseISO, startOfMonth, endOfMonth, subMonths, differenceInCalendarDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 const MINUS = String.fromCharCode(0x2212) // signo menos tipográfico: mismo ancho que "+" y no se confunde con un guion
@@ -42,6 +42,16 @@ export function formatDate(dateStr) {
   if (!dateStr) return ''
   const date = typeof dateStr === 'string' ? parseISO(dateStr) : dateStr
   return format(date, 'd MMM yyyy', { locale: es })
+}
+
+// Para listas de movimientos: "Hoy", "Ayer", "12 oct" (y el año solo si no es el actual)
+export function formatRelativeDay(dateStr, now = new Date()) {
+  if (!dateStr) return ''
+  const date = typeof dateStr === 'string' ? parseISO(dateStr) : dateStr
+  const diff = differenceInCalendarDays(now, date)
+  if (diff === 0) return 'Hoy'
+  if (diff === 1) return 'Ayer'
+  return format(date, date.getFullYear() === now.getFullYear() ? 'd MMM' : 'd MMM yyyy', { locale: es })
 }
 
 export function formatDateTime(dateStr) {

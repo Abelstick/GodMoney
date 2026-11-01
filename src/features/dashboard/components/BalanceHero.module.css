@@ -1,10 +1,32 @@
+/* Panel de tinta índigo: la única superficie de color pleno del resumen.
+   Los tokens semánticos se redefinen aquí con sus valores claros para que
+   ingresos/gastos mantengan contraste AA sobre el fondo oscuro. */
 .hero {
+  --color-income:  #4ade80;
+  --color-expense: #fda4af;
+  --color-primary-alpha: rgba(255, 255, 255, 0.12);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-card);
-  margin-bottom: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--color-hero-bg);
+  color: var(--color-hero-text);
+  box-shadow: var(--shadow-md);
+}
+
+/* Luz rasante desde la esquina: da volumen al panel sin dibujar nada */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(129, 140, 248, 0.32), transparent 55%),
+    radial-gradient(80% 60% at 0% 100%, rgba(79, 70, 229, 0.22), transparent 60%);
 }
 
 @media (min-width: 768px) {
@@ -16,13 +38,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-2);
 }
 
 .label {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-text-secondary);
+  letter-spacing: 0;
+  color: var(--color-hero-muted);
 }
 
 .link {
@@ -30,33 +53,43 @@
   align-items: center;
   gap: 2px;
   min-height: 32px;
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-3);
   margin-right: calc(var(--space-2) * -1);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.10);
+  font-size: var(--type-meta);
   font-weight: var(--weight-semibold);
-  color: var(--color-primary);
+  color: var(--color-hero-text);
   transition: background var(--transition-fast);
 }
 
-.link:hover { background: var(--color-primary-alpha); }
+.link:hover { background: rgba(255, 255, 255, 0.18); }
+.link:focus-visible { outline-color: var(--color-hero-text); }
 
-.amount {
-  display: block;
+.caption {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  font-size: var(--type-meta);
+  color: var(--color-hero-muted);
 }
 
 .details {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  margin-top: auto;
+  padding-top: var(--space-5);
+}
+
+.detail {
+  min-width: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-hero-line);
 }
 
 .detail dt {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  font-size: var(--type-meta);
+  color: var(--color-hero-muted);
   margin-bottom: 2px;
 }
 

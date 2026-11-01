@@ -16,7 +16,7 @@ export const palettes = {
   warning: ['#fffbeb', '#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f'],
   // Neutros del modo oscuro de Mantine: [7] = superficie (body de modales,
   // Paper), [6] = fondo de inputs, [4] = bordes, [2] = texto atenuado.
-  dark:    ['#e2e8f0', '#cbd5e1', '#8b97ab', '#64748b', '#313a4b', '#2a3242', '#1c2330', '#141a26', '#0f1420', '#0b0f19'],
+  dark:    ['#eceff5', '#c9cfdb', '#8f97aa', '#666f84', '#2e3443', '#242936', '#1b1f2a', '#141720', '#10131a', '#0c0e14'],
 }
 
 // ── Roles semánticos por modo ──
@@ -58,18 +58,26 @@ const light = {
   'credit-score-5':   '#166534',
 
   // Superficies
-  'bg':               '#f6f7fb',
+  // Neutros tintados hacia el índigo de marca (no gris puro): el fondo de
+  // página queda un paso por debajo de las tarjetas para separar superficies.
+  'bg':               '#f3f4f8',
   'surface':          '#ffffff',
-  'surface-2':        '#f1f3f8',
-  'surface-3':        '#e5e8f0',
-  'surface-4':        '#d8dce6',
-  'border':           'rgba(15, 23, 42, 0.08)',
-  'border-strong':    'rgba(15, 23, 42, 0.16)',
+  'surface-2':        '#eff1f6',
+  'surface-3':        '#e3e6ee',
+  'surface-4':        '#d5d9e4',
+  'border':           'rgba(16, 22, 48, 0.08)',
+  'border-strong':    'rgba(16, 22, 48, 0.15)',
+
+  // Panel protagonista (saldo): tinta índigo profunda en ambos modos
+  'hero-bg':          '#1e1b4b',
+  'hero-text':        '#ffffff',
+  'hero-muted':       'rgba(255, 255, 255, 0.72)',
+  'hero-line':        'rgba(255, 255, 255, 0.14)',
 
   // Texto
-  'text-primary':     '#0f172a',
-  'text-secondary':   '#475569',
-  'text-muted':       '#5b6b82',
+  'text-primary':     '#0e1222',
+  'text-secondary':   '#444c60',
+  'text-muted':       '#586278',
   'text-inverse':     '#ffffff',
 }
 
@@ -104,17 +112,24 @@ const dark = {
   'credit-score-4':   '#4ade80',
   'credit-score-5':   '#22c55e',
 
-  'bg':               '#0b0f19',
-  'surface':          '#141a26',
-  'surface-2':        '#1c2330',
-  'surface-3':        '#262e3d',
-  'surface-4':        '#313a4b',
-  'border':           'rgba(255, 255, 255, 0.08)',
-  'border-strong':    'rgba(255, 255, 255, 0.16)',
+  // Grafito con un punto de índigo, sin negro absoluto. Cada capa sube ~6% de
+  // luminosidad: la elevación se lee por tono, no por sombra.
+  'bg':               '#0c0e14',
+  'surface':          '#141720',
+  'surface-2':        '#1b1f2a',
+  'surface-3':        '#242936',
+  'surface-4':        '#2e3443',
+  'border':           'rgba(255, 255, 255, 0.07)',
+  'border-strong':    'rgba(255, 255, 255, 0.14)',
 
-  'text-primary':     '#f1f5f9',
-  'text-secondary':   '#b4bfd0',
-  'text-muted':       '#8b97ab',
+  'hero-bg':          '#1d1f45',
+  'hero-text':        '#ffffff',
+  'hero-muted':       'rgba(255, 255, 255, 0.72)',
+  'hero-line':        'rgba(255, 255, 255, 0.12)',
+
+  'text-primary':     '#eceff5',
+  'text-secondary':   '#adb4c4',
+  'text-muted':       '#8f97aa',
   'text-inverse':     '#0f172a',
 }
 
@@ -124,19 +139,23 @@ const dark = {
 const lightElevation = {
   '--surface-glass':      light.surface, // alias legacy: ahora es sólido
   '--surface-glass-blur': '0px',
-  '--shadow-glass':       '0 1px 2px rgba(15, 23, 42, 0.05)',
-  '--shadow-card':        '0 1px 2px rgba(15, 23, 42, 0.05)',
-  '--surface-overlay':    'rgba(255, 255, 255, 0.86)',
-  '--overlay-blur':       '16px',
-  '--shadow-overlay':     '0 8px 24px -8px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.04)',
-  '--glow-primary':       '0 6px 16px -4px rgba(79, 70, 229, 0.40)',
+  '--shadow-glass':       '0 1px 2px rgba(16, 22, 48, 0.04)',
+  // Tarjeta: borde + sombra casi imperceptible con offset (no halo).
+  '--shadow-card':        '0 1px 2px rgba(16, 22, 48, 0.04), 0 1px 1px rgba(16, 22, 48, 0.02)',
+  // Hover de elementos interactivos: sube un escalón, nunca más.
+  '--shadow-raised':      '0 4px 12px -4px rgba(16, 22, 48, 0.10), 0 1px 2px rgba(16, 22, 48, 0.05)',
+  '--surface-overlay':    'rgba(255, 255, 255, 0.84)',
+  '--overlay-blur':       '18px',
+  '--shadow-overlay':     '0 12px 32px -12px rgba(16, 22, 48, 0.22), 0 0 0 1px rgba(16, 22, 48, 0.05)',
+  '--glow-primary':       '0 6px 16px -6px rgba(79, 70, 229, 0.55)',
   '--glow-success':       'none',
   '--glow-danger':        'none',
-  '--shadow-xs':  '0 1px 2px rgba(15, 23, 42, 0.04)',
-  '--shadow-sm':  '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)',
-  '--shadow-md':  '0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04)',
-  '--shadow-lg':  '0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04)',
-  '--shadow-xl':  '0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.03)',
+  '--scrim':              'rgba(14, 18, 34, 0.42)',
+  '--shadow-xs':  '0 1px 2px rgba(16, 22, 48, 0.04)',
+  '--shadow-sm':  '0 1px 3px rgba(16, 22, 48, 0.07), 0 1px 2px rgba(16, 22, 48, 0.04)',
+  '--shadow-md':  '0 4px 10px -2px rgba(16, 22, 48, 0.08), 0 2px 4px -2px rgba(16, 22, 48, 0.04)',
+  '--shadow-lg':  '0 12px 24px -8px rgba(16, 22, 48, 0.14), 0 4px 8px -4px rgba(16, 22, 48, 0.05)',
+  '--shadow-xl':  '0 24px 48px -12px rgba(16, 22, 48, 0.20), 0 8px 16px -8px rgba(16, 22, 48, 0.06)',
 }
 
 // En oscuro la elevación se expresa con el tono de la superficie, no con sombra.
@@ -145,17 +164,19 @@ const darkElevation = {
   '--surface-glass-blur': '0px',
   '--shadow-glass':       'none',
   '--shadow-card':        'none',
-  '--surface-overlay':    'rgba(20, 26, 38, 0.86)',
-  '--overlay-blur':       '16px',
-  '--shadow-overlay':     '0 12px 32px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-  '--glow-primary':       '0 6px 18px -4px rgba(79, 70, 229, 0.55)',
+  '--shadow-raised':      '0 6px 16px -6px rgba(0, 0, 0, 0.55)',
+  '--surface-overlay':    'rgba(20, 23, 32, 0.82)',
+  '--overlay-blur':       '18px',
+  '--shadow-overlay':     '0 16px 40px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.07)',
+  '--glow-primary':       '0 6px 18px -6px rgba(99, 102, 241, 0.6)',
   '--glow-success':       'none',
   '--glow-danger':        'none',
+  '--scrim':              'rgba(0, 0, 0, 0.6)',
   '--shadow-xs':  '0 1px 2px rgba(0, 0, 0, 0.4)',
   '--shadow-sm':  '0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3)',
-  '--shadow-md':  '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
-  '--shadow-lg':  '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
-  '--shadow-xl':  '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
+  '--shadow-md':  '0 4px 10px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3)',
+  '--shadow-lg':  '0 12px 24px -8px rgba(0, 0, 0, 0.6), 0 4px 8px -4px rgba(0, 0, 0, 0.3)',
+  '--shadow-xl':  '0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 8px 16px -8px rgba(0, 0, 0, 0.3)',
 }
 
 const prefix = (roles) =>

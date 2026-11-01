@@ -1,0 +1,120 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+@media (min-width: 768px) {
+  .panel { padding: var(--space-6); }
+}
+
+.title {
+  font-size: var(--type-section-title);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.month {
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+  text-transform: capitalize;
+}
+
+/* ── Gastado: la lectura principal ── */
+.primary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.primaryHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.primaryAmount {
+  font-size: 2rem;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.1;
+}
+
+.budget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.budgetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.meta {
+  font-size: var(--type-meta);
+  color: var(--color-text-secondary);
+}
+
+/* ── Secundarias: tres columnas separadas por filetes, no tarjetas ── */
+.secondary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.metric {
+  min-width: 0;
+  padding: 0 var(--space-3);
+}
+.metric:first-child { padding-left: 0; }
+.metric:last-child  { padding-right: 0; }
+.metric + .metric { border-left: 1px solid var(--color-border); }
+
+.metric dd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-top: 2px;
+}
+
+.metricLabel {
+  font-size: var(--type-label);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.metricAmount {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .metricAmount { font-size: var(--text-lg); }
+}
+
+/* Móvil: las tres pasan a filas (etiqueta a la izquierda, cifra a la derecha) para que ningún importe se corte */
+@media (max-width: 519px) {
+  .secondary { grid-template-columns: 1fr; gap: var(--space-3); }
+  .metric, .metric:first-child, .metric:last-child { padding: 0; }
+  .metric + .metric { border-left: 0; padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+  .metric { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+  .metric dd { align-items: flex-end; margin-top: 0; text-align: right; }
+}

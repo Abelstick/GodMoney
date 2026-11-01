@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCurrency, formatSignedCurrency, formatCurrencyCompact } from './formatters'
+import { formatCurrency, formatSignedCurrency, formatCurrencyCompact, formatRelativeDay } from './formatters'
 
 // Intl separa "S/" de la cifra con un espacio no separable; los negativos
 // llevan el signo menos tipográfico.
@@ -42,5 +42,20 @@ describe('formatCurrencyCompact', () => {
     expect(formatCurrencyCompact(15000)).toBe(`${S}15k`)
     expect(formatCurrencyCompact(2000)).toBe(`${S}2k`)
     expect(formatCurrencyCompact(-2000)).toBe(`${MINUS}${S}2k`)
+  })
+})
+
+describe('formatRelativeDay', () => {
+  const now = new Date(2026, 9, 31, 10, 0)
+  it('usa Hoy y Ayer para los dos últimos días', () => {
+    expect(formatRelativeDay('2026-10-31', now)).toBe('Hoy')
+    expect(formatRelativeDay('2026-10-30', now)).toBe('Ayer')
+  })
+  it('omite el año actual y lo muestra en años anteriores', () => {
+    expect(formatRelativeDay('2026-10-12', now)).toBe('12 oct')
+    expect(formatRelativeDay('2025-12-24', now)).toBe('24 dic 2025')
+  })
+  it('devuelve vacío sin fecha', () => {
+    expect(formatRelativeDay(null, now)).toBe('')
   })
 })

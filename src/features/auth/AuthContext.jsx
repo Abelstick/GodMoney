@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase }       from '@/lib/supabase'
 import { profileService } from '@/services/profileService'
 import { readCachedUser } from '@/lib/cachedSession'
+import { clearDataCache } from '@/lib/swCache'
 
 const AuthContext = createContext(null)
 
@@ -29,10 +30,12 @@ export function AuthProvider({ children }) {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null
       setUser(u)
       if (!u) ensuredRef.current = false // reset al cerrar sesión
+      // También cubre el cierre desde otra pestaña o la expiración del refresh token.
+      if (event === 'SIGNED_OUT') clearDataCache()
     })
 
     return () => subscription.unsubscribe()
@@ -65,6 +68,7 @@ export function AuthProvider({ children }) {
   async function signOut() {
     ensuredRef.current = false
     await supabase.auth.signOut()
+    await clearDataCache()
   }
 
   return (

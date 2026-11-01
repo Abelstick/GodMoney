@@ -25,7 +25,7 @@
 .tableWrap { overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
 .table { width: 100%; border-collapse: collapse; font-size: var(--text-xs); }
 .table th, .table td { padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
-.table th { color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: var(--weight-medium); }
+.table th { color: var(--color-text-muted); font-weight: var(--weight-medium); }
 .table tr:last-child td { border-bottom: none; }
 .descCell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
 .n { text-align: right !important; font-variant-numeric: tabular-nums; }

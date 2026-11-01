@@ -11,16 +11,16 @@ export function BalanceHero({ availableMoney, receivable, payable, netWorth, acc
   return (
     <section className={styles.hero} aria-labelledby="balance-label">
       <div className={styles.top}>
-        <span id="balance-label" className={styles.label}>Saldo total</span>
+        <h2 id="balance-label" className={styles.label}>Saldo total</h2>
         <Link to="/cuentas" className={styles.link}>
           {accountsCount} {accountsCount === 1 ? 'cuenta' : 'cuentas'}
           <IconChevronRight size={14} stroke={2} aria-hidden="true" />
         </Link>
       </div>
 
-      <Money value={availableMoney} tone={availableMoney < 0 ? 'expense' : 'neutral'} size="xl" className={styles.amount} />
+      <Money value={availableMoney} tone={availableMoney < 0 ? 'expense' : 'neutral'} size="xl" />
 
-      {hasLoans && (
+      {hasLoans ? (
         <dl className={styles.details}>
           <div className={styles.detail}>
             <dt>Te deben</dt>
@@ -35,6 +35,8 @@ export function BalanceHero({ availableMoney, receivable, payable, netWorth, acc
             <dd><Money value={netWorth} tone={netWorth < 0 ? 'expense' : 'neutral'} /></dd>
           </div>
         </dl>
+      ) : (
+        <p className={styles.caption}>Suma de tus cuentas activas</p>
       )}
     </section>
   )

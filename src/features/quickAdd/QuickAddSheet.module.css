@@ -1,6 +1,6 @@
 .drawer {
-  border-top-left-radius: var(--radius-lg);
-  border-top-right-radius: var(--radius-lg);
+  border-top-left-radius: var(--radius-sheet);
+  border-top-right-radius: var(--radius-sheet);
   max-height: 92dvh;
 }
 
@@ -26,8 +26,8 @@
   height: 64px;
   font-family: var(--font-display);
   font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
-  letter-spacing: -0.02em;
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-display);
   font-variant-numeric: tabular-nums;
 }
 

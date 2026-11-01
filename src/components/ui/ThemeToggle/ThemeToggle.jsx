@@ -1,17 +1,16 @@
-import { useMantineColorScheme } from '@mantine/core'
 import { IconSun, IconMoon } from '@tabler/icons-react'
+import { useThemeToggle } from '@/hooks/useThemeToggle'
 import styles from './ThemeToggle.module.css'
 
 export function ThemeToggle() {
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
-  const isDark = colorScheme === 'dark'
+  const { isDark, toggle } = useThemeToggle()
 
   return (
     <button
+      type="button"
       className={styles.toggle}
-      onClick={toggleColorScheme}
-      title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-      aria-label="Cambiar tema"
+      onClick={toggle}
+      aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
     >
       <span className={styles.icon}>
         {isDark ? <IconSun size={16} stroke={1.75} /> : <IconMoon size={16} stroke={1.75} />}

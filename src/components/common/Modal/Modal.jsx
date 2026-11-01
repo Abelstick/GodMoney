@@ -1,29 +1,10 @@
 import { Modal as MModal } from '@mantine/core'
 
+// Diálogo de la app: el aspecto (radio, sombra, transición, bottom sheet en
+// móvil, foco atrapado y cierre con Escape) viene del theme y de global.css.
 export function Modal({ isOpen, onClose, title, size, children }) {
   return (
-    <MModal
-      opened={isOpen}
-      onClose={onClose}
-      title={title}
-      size={size}
-      centered
-      styles={{
-        content: {
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-        },
-        header: {
-          backgroundColor: 'var(--color-surface)',
-          borderBottom: '1px solid var(--color-border)',
-        },
-        title: {
-          color: 'var(--color-text-primary)',
-          fontWeight: 600,
-          fontSize: 'var(--text-lg)',
-        },
-      }}
-    >
+    <MModal opened={isOpen} onClose={onClose} title={title} size={size}>
       {children}
     </MModal>
   )

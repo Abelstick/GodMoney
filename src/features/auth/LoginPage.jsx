@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   TextInput, PasswordInput, Button, Checkbox,
-  Text, Anchor, Alert, Stack, useMantineColorScheme,
+  Text, Anchor, Alert, Stack,
 } from '@mantine/core'
 import {
   IconSun, IconMoon, IconMail, IconLock, IconArrowRight,
@@ -10,12 +10,13 @@ import {
 } from '@tabler/icons-react'
 import { useAuth } from './AuthContext'
 import { LogoMark } from '@/components/ui/Logo/LogoMark'
+import { useThemeToggle } from '@/hooks/useThemeToggle'
 import styles from './LoginPage.module.css'
 import heroImg from '../../assets/login-hero.svg'
 
 export function LoginPage() {
   const { signIn, signUp, signInWithGoogle, user, loading: authLoading } = useAuth()
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
+  const { isDark, toggle: toggleTheme } = useThemeToggle()
   const navigate = useNavigate()
 
   // Redirigir si ya está autenticado
@@ -79,10 +80,9 @@ export function LoginPage() {
         </div>
 
         <div className={styles.brandBottom}>
-          <span className={styles.eyebrowLight}>Finanzas personales</span>
-          <h1 className={styles.heroTitle}>
+          <p className={styles.heroTitle}>
             Tus finanzas personales, bajo control real.
-          </h1>
+          </p>
           <p className={styles.heroDesc}>
             Registra ingresos y gastos, arma presupuestos y metas de ahorro, y
             consulta todo con un asistente de IA.
@@ -93,10 +93,10 @@ export function LoginPage() {
       <section className={styles.formColumn}>
         <button
           className={styles.themeBtn}
-          onClick={toggleColorScheme}
-          aria-label="Cambiar tema"
+          onClick={toggleTheme}
+          aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
-          {colorScheme === 'dark' ? <IconSun size={18} stroke={1.75} /> : <IconMoon size={18} stroke={1.75} />}
+          {isDark ? <IconSun size={18} stroke={1.75} /> : <IconMoon size={18} stroke={1.75} />}
         </button>
 
         <div className={styles.formWrap}>
@@ -105,8 +105,7 @@ export function LoginPage() {
             <span>God<span className={styles.logoAccent}>Money</span></span>
           </span>
 
-          <span className={styles.eyebrow}>Acceso seguro</span>
-          <h2 className={styles.title}>{isLogin ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
+          <h1 className={styles.title}>{isLogin ? 'Iniciar sesión' : 'Crear cuenta'}</h1>
           <p className={styles.subtitle}>
             {isLogin ? 'Ingresa con tu correo y contraseña.' : 'Comienza a gestionar tus finanzas.'}
           </p>

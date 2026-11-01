@@ -1,0 +1,17 @@
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px var(--space-2) 2px 6px;
+  border-radius: var(--radius-full);
+  font-size: var(--type-meta);
+  font-weight: var(--weight-semibold);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.good { background: var(--color-success-light); color: var(--color-success); }
+.bad  { background: var(--color-danger-light);  color: var(--color-danger); }
+.flat { background: var(--color-surface-2);     color: var(--color-text-secondary); }
+
+.label { font-weight: var(--weight-medium); opacity: 0.85; }

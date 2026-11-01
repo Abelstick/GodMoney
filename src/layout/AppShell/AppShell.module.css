@@ -16,22 +16,25 @@
 @media (min-width: 768px) {
   .main {
     margin-left: var(--sidebar-width);
-    transition: margin-left var(--transition-slow);
+    transition: margin-left var(--dur-3) var(--ease-out);
   }
   .mainCollapsed {
-    margin-left: 56px;
+    margin-left: 64px;
   }
 }
 
-/* ── Header (solo mobile) ── */
+/* ── Header (solo móvil): translúcido, el contenido se intuye al pasar por
+   debajo; respeta la barra de estado de la PWA instalada ── */
 .header {
-  height: var(--header-height);
-  background: var(--color-surface);
-  border-bottom: 0.5px solid var(--color-border);
+  height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) var(--space-4) 0;
+  background: var(--surface-overlay);
+  backdrop-filter: blur(var(--overlay-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--overlay-blur)) saturate(180%);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-4);
   position: sticky;
   top: 0;
   z-index: var(--z-header);
@@ -45,73 +48,47 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+}
+
+.headerTitle {
   font-size: var(--text-base);
   font-weight: var(--weight-bold);
-  color: var(--color-primary);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .headerBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  background: var(--color-surface-2);
-  border: 0.5px solid var(--color-border);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
   position: relative;
+  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.headerBtn:hover {
-  background: var(--color-primary-alpha);
-  color: var(--color-primary);
-}
+.headerBtn:hover { background: var(--color-surface-2); color: var(--color-text-primary); }
+.headerBtn:active { transform: scale(0.92); }
 
-.headerBtnAi {
-  color: var(--color-primary);
-  background: var(--color-primary-alpha);
-}
+.headerBtnAi { color: var(--color-primary); }
+.headerBtnAi:hover { background: var(--color-primary-alpha); color: var(--color-primary); }
 
 .headerBtnLogout:hover {
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  background: var(--color-danger-light);
   color: var(--color-danger);
-}
-
-/* ── Contenido de página ── */
-.content {
-  flex: 1;
-  padding: var(--space-5) var(--content-padding);
-  padding-bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom, 0px));
-  max-width: var(--content-max-w);
-  width: 100%;
-  margin: 0 auto;
-}
-
-@media (min-width: 768px) {
-  .content {
-    padding: var(--space-8);
-    padding-bottom: var(--space-8);
-  }
-}
-
-/* ── Entrada de página: 180ms, solo opacidad + 4px (la regla global de
-   prefers-reduced-motion la deja instantánea) ── */
-.pageEnter {
-  animation: pageEnter 180ms var(--ease-out);
-}
-
-@keyframes pageEnter {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: none; }
 }
 
 /* Área táctil mínima de 44px sin alterar el diseño visible */
@@ -119,6 +96,28 @@
   content: '';
   position: absolute;
   top: 50%; left: 50%;
-  width: max(100%, 44px); height: max(100%, 44px);
+  width: 44px; height: 44px;
   transform: translate(-50%, -50%);
+}
+
+/* ── Contenido de página ── */
+.content {
+  flex: 1;
+  padding: var(--space-5) var(--content-padding);
+  padding-bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom, 0px));
+  padding-left: max(var(--content-padding), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--content-padding), env(safe-area-inset-right, 0px));
+  max-width: var(--content-max-w);
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: var(--space-8) var(--space-8) var(--space-10);
+  }
+}
+
+@media (min-width: 1280px) {
+  .content { padding-inline: var(--space-10); }
 }

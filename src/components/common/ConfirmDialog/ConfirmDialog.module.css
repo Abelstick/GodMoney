@@ -2,12 +2,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  padding-top: var(--space-2);
+  padding-top: var(--space-1);
 }
 
 .description {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   line-height: 1.6;
 }
 
@@ -15,4 +15,9 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+/* Móvil (bottom sheet): dos botones del mismo ancho, fáciles de alcanzar */
+@media (max-width: 767px) {
+  .actions { display: grid; grid-template-columns: 1fr 1fr; }
 }

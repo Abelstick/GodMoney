@@ -1,4 +1,5 @@
 import { Paper } from '@mantine/core'
+import { IconArrowUpRight, IconArrowDownRight } from '@tabler/icons-react'
 import styles from './StatCard.module.css'
 
 // `children` va debajo de la cifra (barra de progreso, detalle, enlace).
@@ -35,7 +36,9 @@ export function StatCard({
         <div className={styles.amount} style={valueColor ? { color: valueColor } : undefined}>{amount}</div>
         {trend !== undefined && (
           <div className={`${styles.trend} ${isFavorable ? styles.up : styles.down}`}>
-            <span aria-hidden="true">{trendUp ? '↑' : '↓'}</span>
+            {trendUp
+              ? <IconArrowUpRight size={14} stroke={2.25} aria-hidden="true" />
+              : <IconArrowDownRight size={14} stroke={2.25} aria-hidden="true" />}
             <span>{trendUp ? 'Sube' : 'Baja'} {trend}{trendLabel ? ` ${trendLabel}` : ''}</span>
           </div>
         )}

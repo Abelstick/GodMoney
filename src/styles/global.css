@@ -20,11 +20,42 @@ body {
   line-height: 1.5;
   /* App financiera: todas las cifras con ancho fijo para que alineen en columnas */
   font-variant-numeric: tabular-nums;
+  font-feature-settings: var(--font-numeric);
+  font-optical-sizing: auto;
+  caret-color: var(--color-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   min-height: 100dvh;
-  transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  color: var(--color-text-primary);
+}
+
+/* ── Saltar al contenido (visible solo al enfocarse con teclado) ── */
+.skip-link {
+  position: fixed;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-skip);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--color-primary-dark);
+  color: var(--color-on-primary-dark);
+  font-weight: var(--weight-semibold);
+  transform: translateY(calc(-100% - var(--space-4)));
+  transition: transform var(--transition-base);
+}
+.skip-link:focus-visible { transform: none; }
+
+/* ── Cambio de tema: fundido cruzado con View Transitions (si el navegador
+   no lo soporta, el cambio es instantáneo; ver hooks/useThemeToggle) ── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-4);
+  animation-timing-function: var(--ease-in-out);
 }
 
 #root {
@@ -54,7 +85,8 @@ a {
   text-decoration: none;
 }
 
-/* ── Foco visible (accesibilidad — nunca outline:none) ── */
+/* ── Foco visible (accesibilidad — nunca outline:none). Anillo de 2px del
+   color de marca separado 2px del control: ≥ 3:1 contra ambas superficies. ── */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -63,8 +95,11 @@ textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-  border-radius: var(--radius-xs);
 }
+
+/* El contenedor principal recibe el foco al navegar (para lectores de
+   pantalla) pero no debe pintar un anillo alrededor de toda la página. */
+main:focus { outline: none; }
 
 ul, ol {
   list-style: none;
@@ -74,7 +109,11 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   line-height: 1.2;
   font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
 }
+
+p { text-wrap: pretty; }
 
 /* ── Scrollbar personalizado ── */
 ::-webkit-scrollbar {
@@ -83,6 +122,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: var(--color-border-strong); border-radius: var(--radius-full); }
+html { scrollbar-color: var(--color-border-strong) transparent; scrollbar-width: thin; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
 
 /* ── Utilidades de texto ── */
@@ -133,8 +173,73 @@ h1, h2, h3, h4, h5, h6 {
 .fade-in  { animation: fadeIn 200ms ease forwards; }
 .slide-up { animation: slideUp 250ms ease forwards; }
 
+/* ── Capas de Mantine con el lenguaje de GodMoney ── */
+.mantine-Modal-content,
+.mantine-Drawer-content {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xl);
+}
+.mantine-Modal-header,
+.mantine-Drawer-header {
+  background: var(--color-surface);
+}
+.mantine-Modal-title,
+.mantine-Drawer-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+}
+
+/* Móvil: todo modal se presenta como bottom sheet anclado abajo, con asa
+   visual, esquinas superiores redondeadas y respeto del home indicator.
+   (Los modales fullScreen quedan fuera.) */
+@media (max-width: 767px) {
+  .mantine-Modal-inner:not(:has(.mantine-Modal-content[data-full-screen])) {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .mantine-Modal-content:not([data-full-screen]) {
+    flex: 0 0 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mantine-Modal-content:not([data-full-screen])::before,
+  .mantine-Drawer-content::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: var(--space-2) auto 0;
+    border-radius: var(--radius-full);
+    background: var(--color-border-strong);
+  }
+  .mantine-Modal-header { padding-top: var(--space-3); }
+}
+
+.mantine-Popover-dropdown,
+.mantine-Menu-dropdown,
+.mantine-Combobox-dropdown {
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-lg);
+}
+
+.mantine-Notification-root {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-border);
+}
+
 /* ── Objetivos táctiles: mínimo 44px en pantallas táctiles ── */
 @media (pointer: coarse) {
+  /* 16px en campos: iOS no hace zoom al enfocar */
+  .mantine-Input-input,
+  .mantine-PillsInput-input,
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
+
   .mantine-Button-root,
   .mantine-ActionIcon-root,
   .mantine-CloseButton-root,

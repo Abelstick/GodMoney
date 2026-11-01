@@ -15,7 +15,7 @@
 
 .amounts { display: flex; gap: var(--space-4); flex: 1; flex-wrap: wrap; }
 .amountItem { display: flex; flex-direction: column; gap: 1px; font-size: var(--text-xs); }
-.amountLabel { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.amountLabel { font-size: var(--text-xs); color: var(--color-text-muted); }
 
 @media (max-width: 480px) {
   .wrapper { max-height: 260px; }

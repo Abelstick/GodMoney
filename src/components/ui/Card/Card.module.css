@@ -1,6 +1,6 @@
 .card {
   background: var(--color-surface);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
   overflow: hidden;
@@ -23,12 +23,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  min-height: 28px;
   margin-bottom: var(--space-4);
 }
 
 .title {
-  font-size: var(--text-base);
+  font-size: var(--type-section-title);
   font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text-primary);
 }
 
@@ -40,14 +42,16 @@
 
 .hoverable {
   cursor: pointer;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
 .hoverable:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-raised);
 }
+
+.hoverable:active { transform: translateY(0) scale(0.995); }
 
 @media (prefers-reduced-motion: reduce) {
   .hoverable:hover { transform: none; }

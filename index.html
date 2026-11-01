@@ -2,30 +2,48 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <!-- viewport-fit=cover: sin esto env(safe-area-inset-*) vale 0 en iOS y la
+         navegación inferior queda debajo del home indicator -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- PWA / App meta -->
     <meta name="application-name" content="GodMoney" />
     <meta name="description" content="Gestión de finanzas personales — ingresos, gastos, objetivos y presupuestos" />
-    <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0f19" media="(prefers-color-scheme: dark)" />
+    <!-- Valores iniciales; useThemeColorMeta los ajusta al tema elegido en la app -->
+    <meta name="theme-color" content="#f3f4f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c0e14" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="mobile-web-app-capable" content="yes" />
 
     <!-- iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="GodMoney" />
-    <link rel="apple-touch-icon" href="/icon-512.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
 
-    <!-- Tipografía: Plus Jakarta Sans (display/numérico) + Inter (texto) -->
+    <!-- Tipografía: Inter variable con eje óptico (opsz 14–32) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet" />
 
     <title>GodMoney</title>
+
+    <!-- Fondo correcto antes de que cargue React: evita el destello blanco al
+         abrir la app instalada en modo oscuro. Lee la misma clave que Mantine. -->
+    <script>
+      (function () {
+        try {
+          var dark = localStorage.getItem('mantine-color-scheme-value') === 'dark'
+          document.documentElement.style.background = dark ? '#0c0e14' : '#f3f4f8'
+        } catch (e) {
+          // Sin acceso a localStorage (modo privado): se queda el fondo claro por defecto.
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

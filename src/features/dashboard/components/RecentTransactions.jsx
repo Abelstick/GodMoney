@@ -1,4 +1,4 @@
-import { formatDate } from '@/lib/formatters'
+import { formatRelativeDay } from '@/lib/formatters'
 import { Money } from '@/components/ui/Money/Money'
 import { CATEGORY_ICON_COMPONENTS } from '@/lib/constants'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
@@ -35,11 +35,11 @@ export function RecentTransactions({ incomes = [], expenses = [], limit = 5, has
   }
 
   return (
-    <div className={styles.list}>
+    <ul className={styles.list}>
       {all.map((tx) => {
         const TxIcon = iconFor(tx)
         return (
-        <div key={`${tx._type}-${tx.id}`} className={styles.item}>
+        <li key={`${tx._type}-${tx.id}`} className={styles.item}>
           <div
             aria-hidden="true"
             className={styles.dot}
@@ -53,14 +53,14 @@ export function RecentTransactions({ incomes = [], expenses = [], limit = 5, has
           <div className={styles.info}>
             <div className={styles.name}>{tx.description || tx.category?.name || '—'}</div>
             <div className={styles.cat}>
-              {formatDate(tx.date)}
-              {tx.category?.name && ` • ${tx.category.name}`}
+              {tx.category?.name && `${tx.category.name} · `}
+              {formatRelativeDay(tx.date)}
             </div>
           </div>
           <Money value={tx.amount} tone={tx._type} signed className={styles.amount} />
-        </div>
+        </li>
         )
       })}
-    </div>
+    </ul>
   )
 }

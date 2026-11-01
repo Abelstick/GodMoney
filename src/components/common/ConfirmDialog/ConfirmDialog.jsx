@@ -16,11 +16,12 @@ export function ConfirmDialog({
       <div className={styles.body}>
         <p className={styles.description}>{description}</p>
         <div className={styles.actions}>
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
+          {/* El foco inicial va a Cancelar: un Enter accidental no borra nada */}
+          <Button variant="secondary" onClick={onClose} disabled={loading} data-autofocus>
             Cancelar
           </Button>
-          <Button variant="danger" onClick={onConfirm} disabled={loading}>
-            {loading ? 'Eliminando…' : confirmLabel}
+          <Button variant="danger" onClick={onConfirm} loading={loading}>
+            {confirmLabel}
           </Button>
         </div>
       </div>

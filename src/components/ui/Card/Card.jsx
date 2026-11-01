@@ -21,7 +21,7 @@ Card.Header = function CardHeader({ children, action }) {
     <div className={styles.header}>
       <div>
         {typeof children === 'string'
-          ? <h3 className={styles.title}>{children}</h3>
+          ? <h2 className={styles.title}>{children}</h2>
           : children
         }
       </div>
@@ -33,7 +33,7 @@ Card.Header = function CardHeader({ children, action }) {
 Card.Title = function CardTitle({ children, subtitle }) {
   return (
     <div>
-      <h3 className={styles.title}>{children}</h3>
+      <h2 className={styles.title}>{children}</h2>
       {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
     </div>
   )
