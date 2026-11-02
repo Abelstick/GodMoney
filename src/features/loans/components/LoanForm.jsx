@@ -34,10 +34,7 @@ export function LoanForm({ onSubmit, onCancel, loading, existingLoans = [] }) {
   const { accounts } = useAccounts()
   const [form, setForm] = useState(EMPTY)
   const [errors, setErrors] = useState({})
-  const [duplicateConfirmed, setDuplicateConfirmed] = useState(false)
-
   const set = (field) => (e) => {
-    setDuplicateConfirmed(false)
     setForm((f) => ({ ...f, [field]: e.target.value }))
   }
 
@@ -89,10 +86,6 @@ export function LoanForm({ onSubmit, onCancel, loading, existingLoans = [] }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
-    if (duplicate && !duplicateConfirmed) {
-      setDuplicateConfirmed(true)
-      return
-    }
     onSubmit({
       type: form.type,
       person_name: form.person_name.trim(),
@@ -189,14 +182,14 @@ export function LoanForm({ onSubmit, onCancel, loading, existingLoans = [] }) {
       {duplicate && (
         <div className={styles.duplicateWarning}>
           <IconAlertTriangle size={15} stroke={1.75} />
-          <span>Ya existe un préstamo activo con {duplicate.person_name} por {formatCurrency(duplicate.principal_amount)}. Si continúas, se creará un préstamo adicional.</span>
+          <span>Ya tienes un préstamo activo con {duplicate.person_name} por {formatCurrency(duplicate.principal_amount)}. Si continúas, se registrará como un préstamo adicional e independiente.</span>
         </div>
       )}
 
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>
         <Button type="submit" disabled={loading}>
-          {loading ? 'Guardando…' : duplicate && !duplicateConfirmed ? 'Crear de todas formas' : 'Crear préstamo'}
+          {loading ? 'Guardando…' : duplicate ? 'Crear de todas formas' : 'Crear préstamo'}
         </Button>
       </div>
     </form>
