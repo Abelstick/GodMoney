@@ -9,6 +9,7 @@ const Goals = lazy(() => import('@/features/goals/Goals').then((m) => ({ default
 const Budgets = lazy(() => import('@/features/budgets/Budgets').then((m) => ({ default: m.Budgets })))
 const Loans = lazy(() => import('@/features/loans/Loans').then((m) => ({ default: m.Loans })))
 const RecurringPayments = lazy(() => import('@/features/recurringPayments/RecurringPayments').then((m) => ({ default: m.RecurringPayments })))
+const Gifts = lazy(() => import('@/features/gifts/Gifts').then((m) => ({ default: m.Gifts })))
 const Accounts = lazy(() => import('@/features/accounts/Accounts').then((m) => ({ default: m.Accounts })))
 const Predictions = lazy(() => import('@/features/predictions/Predictions').then((m) => ({ default: m.Predictions })))
 const Insights = lazy(() => import('@/features/insights/Insights').then((m) => ({ default: m.Insights })))
@@ -42,6 +43,7 @@ export function AppRoutes() {
         <Route path="presupuestos"     element={<Budgets />} />
         <Route path="prestamos"        element={<Loans />} />
         <Route path="pagos-recurrentes" element={<RecurringPayments />} />
+        <Route path="regalos"          element={<Gifts />} />
         <Route path="cuentas"          element={<Accounts />} />
         <Route path="predicciones"     element={<Predictions />} />
         <Route path="inteligencia"     element={<Insights />} />

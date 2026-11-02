@@ -1,7 +1,7 @@
 import {
   IconLayoutDashboard, IconArrowsRightLeft, IconTarget, IconChartBar, IconSettings2,
   IconCashBanknote, IconShoppingCart, IconFlag, IconClipboard, IconTrendingUp, IconTag,
-  IconKey, IconBulb, IconHandGrab, IconWallet, IconListSearch, IconReportAnalytics, IconBellRinging,
+  IconKey, IconBulb, IconHandGrab, IconWallet, IconListSearch, IconReportAnalytics, IconBellRinging, IconGift,
 } from '@tabler/icons-react'
 
 // Fuente única de la navegación: la usan la sidebar (escritorio), la bottom
@@ -31,6 +31,7 @@ export const NAV_SECTIONS = [
       { to: '/presupuestos',      icon: IconClipboard,   label: 'Presupuestos'      },
       { to: '/objetivos',         icon: IconFlag,        label: 'Objetivos'         },
       { to: '/pagos-recurrentes', icon: IconBellRinging, label: 'Pagos recurrentes' },
+      { to: '/regalos',           icon: IconGift,        label: 'Regalos'           },
       { to: '/prestamos',         icon: IconHandGrab,    label: 'Préstamos'         },
     ],
   },

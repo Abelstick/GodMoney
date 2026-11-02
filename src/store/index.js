@@ -13,6 +13,7 @@ import { createRecurringPaymentSlice } from './slices/recurringPaymentSlice'
 import { createTransferSlice } from './slices/transferSlice'
 import { createOfflineSlice }  from './slices/offlineSlice'
 import { createSavingsWithdrawalSlice } from './slices/savingsWithdrawalSlice'
+import { createGiftSlice } from './slices/giftSlice'
 
 /*
  * Composición del store con el patrón de slices de Zustand.
@@ -37,6 +38,7 @@ export const useStore = create(
       ...createTransferSlice(set, get),
       ...createOfflineSlice(set, get),
       ...createSavingsWithdrawalSlice(set, get),
+      ...createGiftSlice(set, get),
     }),
     { name: 'GodMoney' }
   )

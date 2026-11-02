@@ -21,6 +21,7 @@ import { formatMonth } from '@/lib/formatters'
 import { splitSavings, isSavingsExpense, getSavingsRate } from '@/lib/savings'
 import { allBudgetCategoryIds, getBudgetStatus, BUDGET_STATUS_TONE } from '@/lib/budgetStatus'
 import { getPriorityAlert } from '@/lib/priorityAlert'
+import { upcomingOccasions } from '@/lib/giftPlanning'
 import { MONTHS_HISTORY } from '@/lib/constants'
 import { buildChartData } from '@/features/predictions/utils/predictionAlgorithms'
 import { incomeService }  from '@/services/incomeService'
@@ -36,6 +37,7 @@ import { SpendingBreakdown } from './components/SpendingBreakdown'
 import { GoalsPreview }  from './components/GoalsPreview'
 import { MonthlyChart }  from './components/MonthlyChart'
 import { RecentTransactions } from './components/RecentTransactions'
+import { UpcomingGifts } from './components/UpcomingGifts'
 import styles from './Dashboard.module.css'
 
 export function Dashboard() {
@@ -54,6 +56,12 @@ export function Dashboard() {
   const { alerts: loanAlerts, markLoanAlertRead } = useLoanAlerts()
   const { alerts: recurringAlerts, markAlertRead: markRecurringAlertRead } = useRecurringPaymentAlerts()
   const budgetsSpent = useStore((s) => s.budgetsSpent)
+
+  // Regalos: carga silenciosa (si la sección no se usa, la tarjeta no aparece).
+  const giftOccasions = useStore((s) => s.giftOccasions)
+  const gifts         = useStore((s) => s.gifts)
+  const fetchGiftData = useStore((s) => s.fetchGiftData)
+  useEffect(() => { fetchGiftData({ silent: true }) }, [])
 
   const totalIncome    = useStore(selectTotalIncome)
   const profit         = useStore(selectProfit)
@@ -90,6 +98,8 @@ export function Dashboard() {
   const hasAnyHistory = !historyLoaded || histIncome.length > 0 || histExpense.length > 0
 
   const activeGoals = goals.filter((g) => g.status === 'active')
+  const goalsById = useMemo(() => Object.fromEntries(goals.map((g) => [g.id, g])), [goals])
+  const upcomingGifts = useMemo(() => upcomingOccasions(giftOccasions), [giftOccasions])
   const activeMonthLabel = formatMonth(parseISO(`${activeMonth}-01`))
   const isCurrentMonth = activeMonth === formatDate(new Date(), 'yyyy-MM')
 
@@ -248,12 +258,23 @@ export function Dashboard() {
               <MonthlyChart data={chartData} />
             </Card>
 
-            <Card>
-              <Card.Header action={activeGoals.length > 0 && <Anchor component={Link} to="/objetivos" size="sm" fw={600}>Ver todos</Anchor>}>
-                Objetivos
-              </Card.Header>
-              <GoalsPreview goals={activeGoals} />
-            </Card>
+            <div className={styles.stack}>
+              <Card>
+                <Card.Header action={activeGoals.length > 0 && <Anchor component={Link} to="/objetivos" size="sm" fw={600}>Ver todos</Anchor>}>
+                  Objetivos
+                </Card.Header>
+                <GoalsPreview goals={activeGoals} />
+              </Card>
+
+              {upcomingGifts.length > 0 && (
+                <Card>
+                  <Card.Header action={<Anchor component={Link} to="/regalos" size="sm" fw={600}>Ver regalos</Anchor>}>
+                    Próximas fechas
+                  </Card.Header>
+                  <UpcomingGifts upcoming={upcomingGifts} gifts={gifts} goalsById={goalsById} />
+                </Card>
+              )}
+            </div>
           </div>
         </>
       )}

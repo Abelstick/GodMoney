@@ -1,0 +1,47 @@
+.tabs { margin-bottom: var(--space-5); max-width: 560px; }
+
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  margin-bottom: var(--space-4); flex-wrap: wrap;
+}
+.toolbar > :only-child { margin-left: auto; }
+.filters { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); align-items: start; }
+@media (min-width: 640px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1200px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+.reminders {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  background: var(--color-warning-light);
+  color: var(--color-text-primary); font-size: var(--text-sm);
+}
+.reminders svg { color: var(--color-warning); flex-shrink: 0; margin-top: 1px; }
+.reminders ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.panel {
+  background: var(--surface-glass);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3) var(--space-5);
+  box-shadow: var(--shadow-glass);
+}
+
+.history { display: flex; flex-direction: column; gap: var(--space-4); }
+.yearHeader {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;
+  padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border);
+}
+.yearHeader h2 { margin: 0; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
+.yearHeader span { font-size: var(--text-sm); color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+
+.cardSkeleton { height: 240px; }
+
+@media (max-width: 640px) {
+  .panel { padding: var(--space-2) var(--space-4); }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar > :only-child { margin-left: 0; }
+}

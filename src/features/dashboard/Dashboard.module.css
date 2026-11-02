@@ -36,3 +36,14 @@
   .split        { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
   .splitReverse { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
 }
+
+/* Columna con varias tarjetas apiladas (Objetivos + Próximas fechas) */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .stack { gap: var(--space-4); }
+}
