@@ -1,10 +1,11 @@
-/* Panel de tinta índigo: la única superficie de color pleno del resumen.
-   Los tokens semánticos se redefinen aquí con sus valores claros para que
-   ingresos/gastos mantengan contraste AA sobre el fondo oscuro. */
+/* Panel protagonista del resumen: índigo pálido en modo claro, tinta índigo
+   profunda en modo oscuro (tokens --color-hero-* en src/theme/tokens.js).
+   Los tokens semánticos se redefinen con los del panel para que ingresos y
+   gastos mantengan contraste AA sobre su fondo en ambos modos. */
 .hero {
-  --color-income:  #4ade80;
-  --color-expense: #fda4af;
-  --color-primary-alpha: rgba(255, 255, 255, 0.12);
+  --color-income:  var(--color-hero-income);
+  --color-expense: var(--color-hero-expense);
+  --color-primary-alpha: var(--color-hero-alpha);
 
   position: relative;
   isolation: isolate;
@@ -14,6 +15,7 @@
   padding: var(--space-5);
   border-radius: var(--radius-card);
   background: var(--color-hero-bg);
+  border: 1px solid var(--color-hero-border);
   color: var(--color-hero-text);
   box-shadow: var(--shadow-md);
 }
@@ -25,8 +27,8 @@
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(120% 90% at 100% 0%, rgba(129, 140, 248, 0.32), transparent 55%),
-    radial-gradient(80% 60% at 0% 100%, rgba(79, 70, 229, 0.22), transparent 60%);
+    radial-gradient(120% 90% at 100% 0%, var(--color-hero-glow-1), transparent 55%),
+    radial-gradient(80% 60% at 0% 100%, var(--color-hero-glow-2), transparent 60%);
 }
 
 @media (min-width: 768px) {
@@ -56,14 +58,14 @@
   padding: 0 var(--space-3);
   margin-right: calc(var(--space-2) * -1);
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.10);
+  background: var(--color-hero-chip);
   font-size: var(--type-meta);
   font-weight: var(--weight-semibold);
   color: var(--color-hero-text);
   transition: background var(--transition-fast);
 }
 
-.link:hover { background: rgba(255, 255, 255, 0.18); }
+.link:hover { background: var(--color-hero-chip-hover); }
 .link:focus-visible { outline-color: var(--color-hero-text); }
 
 .caption {

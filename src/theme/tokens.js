@@ -68,11 +68,21 @@ const light = {
   'border':           'rgba(16, 22, 48, 0.08)',
   'border-strong':    'rgba(16, 22, 48, 0.15)',
 
-  // Panel protagonista (saldo): tinta índigo profunda en ambos modos
-  'hero-bg':          '#1e1b4b',
-  'hero-text':        '#ffffff',
-  'hero-muted':       'rgba(255, 255, 255, 0.72)',
-  'hero-line':        'rgba(255, 255, 255, 0.14)',
+  // Panel protagonista (saldo): en claro, un índigo pálido con tinta oscura;
+  // en oscuro, tinta índigo profunda. Ingreso/gasto propios del panel para
+  // mantener AA sobre su fondo.
+  'hero-bg':          '#eef0ff',
+  'hero-border':      'rgba(79, 70, 229, 0.16)',
+  'hero-text':        '#1e1b4b',
+  'hero-muted':       '#4c4f7d',
+  'hero-line':        'rgba(30, 27, 75, 0.12)',
+  'hero-income':      '#047857',
+  'hero-expense':     '#be123c',
+  'hero-chip':        'rgba(79, 70, 229, 0.10)',
+  'hero-chip-hover':  'rgba(79, 70, 229, 0.18)',
+  'hero-alpha':       'rgba(79, 70, 229, 0.10)',
+  'hero-glow-1':      'rgba(129, 140, 248, 0.30)',
+  'hero-glow-2':      'rgba(165, 180, 252, 0.34)',
 
   // Texto
   'text-primary':     '#0e1222',
@@ -123,9 +133,17 @@ const dark = {
   'border-strong':    'rgba(255, 255, 255, 0.14)',
 
   'hero-bg':          '#1d1f45',
+  'hero-border':      'transparent',
   'hero-text':        '#ffffff',
   'hero-muted':       'rgba(255, 255, 255, 0.72)',
   'hero-line':        'rgba(255, 255, 255, 0.12)',
+  'hero-income':      '#4ade80',
+  'hero-expense':     '#fda4af',
+  'hero-chip':        'rgba(255, 255, 255, 0.10)',
+  'hero-chip-hover':  'rgba(255, 255, 255, 0.18)',
+  'hero-alpha':       'rgba(255, 255, 255, 0.12)',
+  'hero-glow-1':      'rgba(129, 140, 248, 0.32)',
+  'hero-glow-2':      'rgba(79, 70, 229, 0.22)',
 
   'text-primary':     '#eceff5',
   'text-secondary':   '#adb4c4',
