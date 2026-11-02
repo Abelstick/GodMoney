@@ -89,7 +89,7 @@ export function OccasionCard({
             <span>Presupuesto cubierto</span>
           )}
           {!goal && suggestion?.perMonth > 0 && (
-            <Button size="sm" variant="ghost" onClick={() => onCreateGoal(occasion, cycle)}>Crear ahorro</Button>
+            <Button size="sm" variant="ghost" onClick={() => onCreateGoal(occasion, cycle)}>Crear ahorro {cycle.year}</Button>
           )}
         </div>
       )}

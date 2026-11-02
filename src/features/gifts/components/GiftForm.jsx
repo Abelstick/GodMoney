@@ -129,7 +129,7 @@ export function GiftForm({ initial, defaults, people, occasions, onSubmit, onCan
       ) : (
         <Input label="Precio estimado (opcional)" type="number" min="0" step="0.01" prefix="S/"
           value={form.estimated_amount} onChange={set('estimated_amount')} error={errors.estimated_amount}
-          hint={isDone ? `Pagaste ${formatCurrency(initial.amount)}. Para cambiar el monto, edita el gasto en Gastos.` : 'Se descuenta del presupuesto de la ocasión mientras no lo compres'} />
+          hint={isDone ? initial.expense_id ? `Pagaste ${formatCurrency(initial.amount)}. Si editas o borras el gasto en Gastos, este regalo se actualiza solo.` : `Pagaste ${formatCurrency(initial.amount)}.` : 'Se descuenta del presupuesto de la ocasión mientras no lo compres'} />
       )}
 
       <Input label="Enlace (opcional)" type="url" value={form.url} onChange={set('url')} placeholder="https://…" />

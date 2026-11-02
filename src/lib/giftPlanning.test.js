@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   nextAnnualDate, daysUntil, occasionCycle, occasionBudgetSummary,
-  monthlySavingSuggestion, dueReminders, historyByYear, formatDayMonth,
+  monthlySavingSuggestion, dueReminders, historyByYear, formatDayMonth, linkedGoal,
 } from './giftPlanning'
 
 describe('nextAnnualDate', () => {
@@ -107,5 +107,22 @@ describe('historyByYear', () => {
 describe('formatDayMonth', () => {
   it('formatea en español', () => {
     expect(formatDayMonth(12, 25)).toBe('25 de diciembre')
+  })
+})
+
+describe('linkedGoal', () => {
+  const goalsById = { g1: { id: 'g1', target_date: '2026-12-25' } }
+  it('vale solo para su año', () => {
+    const occasion = { goal_id: 'g1', goal_year: 2026 }
+    expect(linkedGoal(occasion, 2026, goalsById)).toBe(goalsById.g1)
+    expect(linkedGoal(occasion, 2027, goalsById)).toBeNull()
+  })
+  it('sin goal_year usa el año de la fecha meta', () => {
+    expect(linkedGoal({ goal_id: 'g1' }, 2026, goalsById)).toBe(goalsById.g1)
+    expect(linkedGoal({ goal_id: 'g1' }, 2027, goalsById)).toBeNull()
+  })
+  it('objetivo borrado o sin vínculo', () => {
+    expect(linkedGoal({ goal_id: 'x', goal_year: 2026 }, 2026, goalsById)).toBeNull()
+    expect(linkedGoal({}, 2026, goalsById)).toBeNull()
   })
 })

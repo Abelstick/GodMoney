@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Money } from '@/components/ui/Money/Money'
 import { formatDate } from '@/lib/formatters'
-import { countdownLabel, occasionBudgetSummary, monthlySavingSuggestion } from '@/lib/giftPlanning'
+import { countdownLabel, occasionBudgetSummary, monthlySavingSuggestion, linkedGoal } from '@/lib/giftPlanning'
 import styles from './UpcomingGifts.module.css'
 
 // Próximas fechas de regalos (Navidad, cumpleaños…) con lo que falta o lo
@@ -12,7 +12,7 @@ export function UpcomingGifts({ upcoming, gifts, goalsById, limit = 3 }) {
       {upcoming.slice(0, limit).map(({ occasion, date, year, days }) => {
         const soon = days <= Number(occasion.reminder_days_before ?? 14)
         const summary = occasionBudgetSummary(occasion, gifts, year)
-        const goal = occasion.goal_id ? goalsById[occasion.goal_id] : null
+        const goal = linkedGoal(occasion, year, goalsById)
         const saved = goal ? Number(goal.progressAmount ?? goal.current_amount ?? 0) : 0
         const suggestion = monthlySavingSuggestion({ budget: summary.budget, alreadyCovered: summary.spent + saved, date })
 

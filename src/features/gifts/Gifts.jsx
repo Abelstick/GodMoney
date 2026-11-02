@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { formatCurrency } from '@/lib/formatters'
-import { upcomingOccasions, historyByYear, countdownLabel, GIFT_STATUS } from '@/lib/giftPlanning'
+import { upcomingOccasions, historyByYear, countdownLabel, linkedGoal, GIFT_STATUS } from '@/lib/giftPlanning'
 import { OccasionCard } from './components/OccasionCard'
 import { PersonCard } from './components/PersonCard'
 import { GiftRow } from './components/GiftRow'
@@ -175,7 +175,7 @@ export function Gifts() {
                       occasion={occasion}
                       cycle={cycle}
                       gifts={gifts}
-                      goal={occasion.goal_id ? goalsById[occasion.goal_id] : null}
+                      goal={linkedGoal(occasion, cycle.year, goalsById)}
                       onAddGift={(o) => setModal({ type: 'gift', defaults: { occasion_id: o.id, person_id: o.person_id ?? '', status: GIFT_STATUS.PLANNED } })}
                       onEdit={(o) => setModal({ type: 'occasion', item: o })}
                       onDelete={(o) => setDeleting({ type: 'occasion', item: o })}

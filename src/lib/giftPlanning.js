@@ -96,6 +96,15 @@ export function monthlySavingSuggestion({ budget, alreadyCovered = 0, date, toda
   return { perMonth: Math.ceil((missing / months) * 100) / 100, months, missing }
 }
 
+// Objetivo de ahorro vinculado, solo si es del ciclo vigente. El de Navidad
+// 2026 deja de contar el 26/12 y la ocasión ofrece crear el de 2027.
+export function linkedGoal(occasion, year, goalsById) {
+  const goal = occasion.goal_id ? goalsById[occasion.goal_id] : null
+  if (!goal) return null
+  const goalYear = occasion.goal_year ?? (goal.target_date ? Number(goal.target_date.slice(0, 4)) : null)
+  return goalYear === year ? goal : null
+}
+
 // Ocasiones activas ordenadas por cercanía, con su ciclo calculado.
 export function upcomingOccasions(occasions, today = new Date()) {
   return occasions

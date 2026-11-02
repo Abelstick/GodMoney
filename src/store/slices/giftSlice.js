@@ -1,8 +1,5 @@
 import { giftService } from '@/services/giftService'
-import { categoryService } from '@/services/categoryService'
 import { categoryCache } from '@/lib/categoryCache'
-
-const GIFT_CATEGORY_NAME = 'Regalos'
 
 function requireOnline() {
   if (globalThis.navigator?.onLine === false) {
@@ -10,15 +7,16 @@ function requireOnline() {
   }
 }
 
-// Categoría "Regalos" del tipo pedido; se crea la primera vez si no existe
-// para que los gastos de regalos se agrupen solos en presupuestos y reportes.
-async function ensureGiftCategory(type) {
-  const list = await categoryService.getAll(type)
-  const found = list.find((c) => c.name.trim().toLowerCase() === GIFT_CATEGORY_NAME.toLowerCase())
-  if (found) return found.id
-  const created = await categoryService.create({ name: GIFT_CATEGORY_NAME, type, color: '#a855f7', icon: 'gift' })
-  categoryCache.set(type, [...list, created])
-  return created.id
+// El gasto/ingreso se creó en el servidor: se recarga el periodo visible si
+// la fecha cae en él, y se olvida la lista de categorías guardada por si la
+// RPC creó "Regalos".
+async function refreshMovements(get, kind, date) {
+  categoryCache.set(kind, null)
+  const s = get()
+  const range = kind === 'expense' ? s.expensesRange : s.incomesRange
+  if (!range || date < range.from || date > range.to) return
+  if (kind === 'expense') await s.fetchExpenses(range.from, range.to)
+  else await s.fetchIncomes(range.from, range.to)
 }
 
 function giftDescription(gift, people) {
@@ -101,7 +99,8 @@ export const createGiftSlice = (set, get) => ({
     get().showToast('Ocasión eliminada', 'info')
   },
 
-  // Crea un objetivo de ahorro por el presupuesto del ciclo y lo vincula.
+  // Crea un objetivo de ahorro por el presupuesto del ciclo y lo vincula a ese
+  // año: al pasar la fecha, la ocasión deja de usarlo y ofrece uno nuevo.
   createOccasionSavingsGoal: async (occasion, { year, date }) => {
     const goal = await get().addGoal({
       name: `Regalos · ${occasion.name} ${year}`,
@@ -109,7 +108,7 @@ export const createGiftSlice = (set, get) => ({
       target_date: date,
       color: '#ec4899',
     })
-    return get().updateGiftOccasion(occasion.id, { goal_id: goal.id }, null)
+    return get().updateGiftOccasion(occasion.id, { goal_id: goal.id, goal_year: year }, null)
   },
 
   // ── Regalos ──
@@ -134,53 +133,40 @@ export const createGiftSlice = (set, get) => ({
     get().showToast('Regalo eliminado', 'info')
   },
 
-  // Marca un regalo como comprado y registra el gasto vinculado.
-  // `gift` puede ser uno existente (con id) o uno nuevo (sin id).
+  // Marca un regalo como comprado y registra el gasto vinculado en una sola
+  // transacción (RPC purchase_gift). `gift` = columnas de gifts, con id si ya existe.
   purchaseGift: async (gift, { amount, date, category_id, createExpense = true }) => {
     requireOnline()
-    let expenseId = null
-    if (createExpense) {
-      const categoryId = category_id || await ensureGiftCategory('expense')
-      const expense = await get().addExpense({
-        amount: Number(amount),
-        date,
-        category_id: categoryId,
-        description: giftDescription(gift, get().giftPeople),
-        tags: ['regalo'],
-      })
-      expenseId = expense?._pending ? null : expense?.id ?? null
-    }
-    // `fields` son columnas de gifts (sin relaciones embebidas).
     const { id, ...fields } = gift
-    const row = {
-      ...fields, status: 'DONE', direction: 'GIVEN', amount: Number(amount), date, expense_id: expenseId,
-    }
-    const data = id ? await giftService.updateGift(id, row) : await giftService.createGift(row)
+    const data = await giftService.purchase({
+      giftId: id,
+      gift: fields,
+      amount,
+      date,
+      categoryId: category_id,
+      createExpense,
+      description: giftDescription(gift, get().giftPeople),
+    })
     set((s) => ({
       gifts: id ? s.gifts.map((g) => (g.id === id ? data : g)) : [data, ...s.gifts],
     }))
-    get().showToast(expenseId ? 'Regalo comprado y gasto registrado' : 'Regalo marcado como comprado', 'success')
+    if (data.expense_id) await refreshMovements(get, 'expense', date)
+    get().showToast(data.expense_id ? 'Regalo comprado y gasto registrado' : 'Regalo marcado como comprado', 'success')
     return data
   },
 
-  // Registra un regalo recibido; si fue dinero, puede crear el ingreso.
+  // Registra un regalo recibido; si fue dinero, puede crear el ingreso (RPC receive_gift).
   receiveGift: async (gift, { createIncome = false, category_id } = {}) => {
     requireOnline()
-    let incomeId = null
-    if (gift.is_money && createIncome && gift.amount) {
-      const categoryId = category_id || await ensureGiftCategory('income')
-      const income = await get().addIncome({
-        amount: Number(gift.amount),
-        date: gift.date,
-        category_id: categoryId,
-        description: giftDescription(gift, get().giftPeople).replace('Regalo para', 'Regalo de'),
-        tags: ['regalo'],
-      })
-      incomeId = income?._pending ? null : income?.id ?? null
-    }
-    const data = await giftService.createGift({ ...gift, direction: 'RECEIVED', status: 'DONE', income_id: incomeId })
+    const data = await giftService.receive({
+      gift,
+      createIncome: gift.is_money && createIncome,
+      categoryId: category_id,
+      description: giftDescription(gift, get().giftPeople).replace('Regalo para', 'Regalo de'),
+    })
     set((s) => ({ gifts: [data, ...s.gifts] }))
-    get().showToast(incomeId ? 'Regalo recibido y ingreso registrado' : 'Regalo recibido guardado', 'success')
+    if (data.income_id) await refreshMovements(get, 'income', gift.date)
+    get().showToast(data.income_id ? 'Regalo recibido y ingreso registrado' : 'Regalo recibido guardado', 'success')
     return data
   },
 })

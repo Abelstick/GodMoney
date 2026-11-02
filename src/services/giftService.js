@@ -93,6 +93,39 @@ export const giftService = {
     return data
   },
 
+  async getGift(id) {
+    const { data, error } = await supabase.from('gifts').select(GIFT_SELECT).eq('id', id).single()
+    if (error) throw error
+    return data
+  },
+
+  // Gasto + regalo en una sola transacción (migración 017).
+  async purchase({ giftId, gift, amount, date, categoryId, createExpense, description }) {
+    const { data, error } = await supabase.rpc('purchase_gift', {
+      p_gift_id: giftId ?? null,
+      p_gift: gift,
+      p_amount: Number(amount),
+      p_date: date,
+      p_category_id: categoryId || null,
+      p_create_expense: !!createExpense,
+      p_description: description,
+    })
+    if (error) throw error
+    return this.getGift(data.id)
+  },
+
+  // Ingreso (si fue dinero) + regalo recibido en una sola transacción.
+  async receive({ gift, createIncome, categoryId, description }) {
+    const { data, error } = await supabase.rpc('receive_gift', {
+      p_gift: gift,
+      p_create_income: !!createIncome,
+      p_category_id: categoryId || null,
+      p_description: description,
+    })
+    if (error) throw error
+    return this.getGift(data.id)
+  },
+
   async removeGift(id) {
     const { error } = await supabase.from('gifts').delete().eq('id', id)
     if (error) throw error
