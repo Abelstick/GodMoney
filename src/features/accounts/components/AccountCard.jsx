@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { IconWallet, IconX } from '@tabler/icons-react'
+import { IconWallet, IconX, IconChevronRight } from '@tabler/icons-react'
 import { formatCurrency } from '@/lib/formatters'
 import { Button } from '@/components/ui/Button/Button'
 import { Badge } from '@/components/ui/Badge/Badge'
 import styles from './AccountCard.module.css'
 
-export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
+export function AccountCard({
+  account, pendingDebt = 0, canMove = true,
+  onOpen, onWithdraw, onRepay, onEdit, onDelete, onAdjustBalance,
+}) {
   const [adjusting, setAdjusting] = useState(false)
   const [amount, setAmount] = useState('')
   const isNegative = Number(account.balance) < 0
@@ -20,17 +23,33 @@ export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
 
   return (
     <div className={styles.card} style={{ '--account-color': account.color }}>
-      <div className={styles.top}>
-        <div className={styles.iconWrap} style={{ background: account.color + '20', color: account.color }}>
-          <IconWallet size={20} stroke={1.75} />
+      <button type="button" className={styles.open} onClick={onOpen} aria-label={`Ver detalle de ${account.name}`}>
+        <div className={styles.top}>
+          <div className={styles.iconWrap} style={{ background: account.color + '20', color: account.color }}>
+            <IconWallet size={20} stroke={1.75} />
+          </div>
+          <div className={styles.name}>{account.name}</div>
+          {account.is_savings && <Badge color="var(--color-success)">Ahorro</Badge>}
+          <IconChevronRight size={18} stroke={1.75} className={styles.chevron} />
         </div>
-        <div className={styles.name}>{account.name}</div>
-        {account.is_savings && <Badge color="var(--color-success)">Ahorro</Badge>}
-      </div>
 
-      <div className={`${styles.balance} ${isNegative ? styles.negative : ''}`}>
-        {formatCurrency(account.balance)}
-      </div>
+        <div className={`${styles.balance} ${isNegative ? styles.negative : ''}`}>
+          {formatCurrency(account.balance)}
+        </div>
+
+        {pendingDebt > 0 && (
+          <div className={styles.debt}>
+            Le debes <strong>{formatCurrency(pendingDebt)}</strong> por reponer
+          </div>
+        )}
+      </button>
+
+      {account.is_savings && canMove && (
+        <div className={styles.savingsActions}>
+          <Button size="sm" variant="secondary" onClick={onWithdraw}>Saqué dinero</Button>
+          <Button size="sm" variant="success" onClick={onRepay}>Reponer</Button>
+        </div>
+      )}
 
       {adjusting ? (
         <div className={styles.adjustRow}>
@@ -52,9 +71,9 @@ export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
         </div>
       ) : (
         <div className={styles.actions}>
-          <Button size="sm" variant="success" onClick={() => setAdjusting(true)}>Ajustar saldo</Button>
-          <Button size="sm" variant="secondary" onClick={() => onEdit(account)}>Editar</Button>
-          <Button size="sm" variant="danger"    onClick={() => onDelete(account.id)}>Eliminar</Button>
+          <Button size="sm" variant="ghost" onClick={() => setAdjusting(true)}>Ajustar saldo</Button>
+          <Button size="sm" variant="ghost" onClick={() => onEdit(account)}>Editar</Button>
+          <Button size="sm" variant="ghost" onClick={() => onDelete(account.id)}>Eliminar</Button>
         </div>
       )}
     </div>

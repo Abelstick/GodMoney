@@ -4,7 +4,7 @@
 const COMMON = ['category_id', 'amount', 'description', 'date', 'tags', 'notes', 'attachments', 'loan_payment_id', 'created_at']
 
 const FIELDS = {
-  expense: [...COMMON, 'is_fixed', 'savings_account_id'],
+  expense: [...COMMON, 'is_fixed', 'savings_account_id', 'paid_from_account_id', 'repay_to_savings'],
   income:  [...COMMON, 'is_recurring'],
 }
 

@@ -1,0 +1,13 @@
+.box { display: flex; flex-direction: column; gap: var(--space-2); }
+.savingsBox {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3); border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+.checkRow {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-sm); color: var(--color-text-primary); font-weight: 500;
+  cursor: pointer; user-select: none;
+}
+.checkRow input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-warning); cursor: pointer; }
+.hint { font-size: var(--text-xs); color: var(--color-text-secondary); margin: 0; }

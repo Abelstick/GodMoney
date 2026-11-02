@@ -78,6 +78,7 @@ export const createOfflineSlice = (set, get) => ({
     if (s.expensesRange) s.fetchExpenses(s.expensesRange.from, s.expensesRange.to)
     if (s.incomesRange)  s.fetchIncomes(s.incomesRange.from, s.incomesRange.to)
     s.fetchAccounts?.()
+    s.fetchSavingsWithdrawals?.()
     if (synced) s.showToast(`${synced} movimiento${synced !== 1 ? 's' : ''} sincronizado${synced !== 1 ? 's' : ''}`, 'success')
     if (failed) s.showToast(`${failed} movimiento${failed !== 1 ? 's' : ''} no se pudo${failed !== 1 ? 'ieron' : ''} sincronizar`, 'error')
   },

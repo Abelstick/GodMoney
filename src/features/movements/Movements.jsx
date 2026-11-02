@@ -21,6 +21,7 @@ import { Modal } from '@/components/common/Modal/Modal'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { ImportModal } from './components/ImportModal'
+import { DeficitCoverageCard } from './components/DeficitCoverageCard'
 import styles from './Movements.module.css'
 
 const ymd = (d) => format(d, 'yyyy-MM-dd')
@@ -137,6 +138,8 @@ export function Movements() {
   useEffect(() => { setVisible(PAGE_SIZE) }, [filtered])
 
   const totals = useMemo(() => summarize(filtered), [filtered])
+  // El déficit se mide sobre el periodo completo: los filtros de la lista no lo alteran.
+  const periodDeficit = useMemo(() => summarize(all).deficit, [all])
 
   const hasFilters = kind !== 'all' || catIds.length || minAmount || maxAmount || query || tag
 
@@ -293,6 +296,8 @@ export function Movements() {
           <strong>{filtered.length}{filtered.length !== all.length ? ` / ${all.length}` : ''}</strong>
         </div>
       </div>
+
+      {!loading && !error && <DeficitCoverageCard deficit={periodDeficit} range={range} movements={all} />}
 
       {/* ── Resultados ── */}
       {error ? (

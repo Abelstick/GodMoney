@@ -1,4 +1,5 @@
 import { BUDGET_STATUS, getBudgetAlertMessage } from './budgetStatus'
+import { formatCurrency, formatDate, toInputDate } from './formatters'
 
 // Elige la alerta más importante para mostrar arriba del dashboard.
 // Orden: pago vencido > presupuesto excedido > pago por vencer > presupuesto
@@ -52,12 +53,33 @@ function fromBudget(budget) {
   }
 }
 
+// Deuda con el ahorro cuya fecha objetivo ya pasó. Es una deuda contigo mismo:
+// avisa, pero por debajo de pagos y presupuestos reales.
+function fromSavingsDebt(debt, today) {
+  if (debt.status !== 'OPEN' || !debt.target_date || debt.target_date >= today) return null
+  const pending = Math.max(0, Number(debt.amount) - Number(debt.repaid_amount))
+  if (pending <= 0) return null
+  return {
+    key:     `savings-${debt.id}`,
+    id:      debt.id,
+    source:  'savings',
+    rank:    RANK.budgetWarning,
+    tone:    'warning',
+    status:  'Sin reponer',
+    title:   `Te propusiste reponer ${formatCurrency(pending)} a tu ahorro antes del ${formatDate(debt.target_date)}`,
+    context: 'Deuda con tu ahorro',
+    to:      '/cuentas',
+    order:   -new Date(debt.target_date).getTime(), // la más antigua primero
+  }
+}
+
 // Devuelve { top, total } — `top` es null si no hay nada que avisar.
-export function getPriorityAlert({ loanAlerts = [], recurringAlerts = [], budgets = [] }) {
+export function getPriorityAlert({ loanAlerts = [], recurringAlerts = [], budgets = [], savingsDebts = [], today = toInputDate(new Date()) }) {
   const candidates = [
     ...loanAlerts.map((a) => fromStoredAlert(a, 'loan')),
     ...recurringAlerts.map((a) => fromStoredAlert(a, 'recurring')),
     ...budgets.map(fromBudget),
+    ...savingsDebts.map((d) => fromSavingsDebt(d, today)),
   ].filter(Boolean)
 
   candidates.sort((a, b) => b.rank - a.rank || b.order - a.order)

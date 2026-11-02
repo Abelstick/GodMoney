@@ -11,19 +11,21 @@ const ORIGINS = [
 
 // Deudas con el ahorro que no nacen de una transferencia registrada en la app
 // (los retiros nuevos se marcan con "Lo voy a reponer" al transferir).
-export function WithdrawalForm({ accounts, onSubmit, onCancel, loading }) {
+// initial: valores de partida (p. ej. desde la tarjeta de déficit de Movimientos).
+export function WithdrawalForm({ accounts, onSubmit, onCancel, loading, initial = {} }) {
   const active  = accounts.filter((a) => !a.is_archived)
   const savings = active.filter((a) => a.is_savings)
   const choices = savings.length ? savings : active
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => ({
     savings_account_id: choices[0]?.id ?? '',
     origin: 'DEFICIT',
     period_label: String(new Date().getFullYear() - 1),
     amount: '',
     reason: '',
     target_date: '',
-  })
+    ...initial,
+  }))
   const [errors, setErrors] = useState({})
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
   const isDeficit = form.origin === 'DEFICIT'

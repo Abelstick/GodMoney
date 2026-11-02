@@ -1,4 +1,5 @@
 import { savingsWithdrawalService } from '@/services/savingsWithdrawalService'
+import { formatCurrency } from '@/lib/formatters'
 
 // Deudas con tu ahorro. repaid_amount/status los calcula la BD a partir de las
 // transferencias de reposición, así que tras reponer se vuelve a pedir la lista.
@@ -22,6 +23,19 @@ export const createSavingsWithdrawalSlice = (set, get) => ({
     set((s) => ({ savingsWithdrawals: [data, ...s.savingsWithdrawals] }))
     get().showToast('Deuda con tu ahorro registrada', 'success')
     return data
+  },
+
+  repaySavings: async (payload) => {
+    const applied = await savingsWithdrawalService.repay(payload)
+    await Promise.all([get().fetchAccounts(), get().fetchSavingsWithdrawals(), get().fetchTransfers()])
+    const extra = Number(payload.amount) - applied
+    get().showToast(
+      extra > 0.004
+        ? `Repusiste ${formatCurrency(applied)} y ${formatCurrency(extra)} quedó como ahorro extra`
+        : `Repusiste ${formatCurrency(applied)} a tu ahorro`,
+      'success',
+    )
+    return applied
   },
 
   forgiveSavingsWithdrawal: async (id) => {

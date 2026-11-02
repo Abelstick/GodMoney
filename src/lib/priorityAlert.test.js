@@ -40,4 +40,37 @@ describe('getPriorityAlert', () => {
     expect(r.top.status).toBe('Cerca del límite')
     expect(r.total).toBe(1)
   })
+
+  describe('deudas con el ahorro', () => {
+    const debt = (id, target_date, extra = {}) =>
+      ({ id, status: 'OPEN', amount: '1000', repaid_amount: '400', target_date, ...extra })
+    const today = '2026-11-02'
+
+    it('avisa solo de las abiertas con fecha vencida y algo pendiente', () => {
+      const r = getPriorityAlert({
+        today,
+        savingsDebts: [
+          debt(1, '2026-10-01'),
+          debt(2, '2026-12-01'),
+          debt(3, null),
+          debt(4, '2026-09-01', { status: 'FORGIVEN' }),
+          debt(5, '2026-09-01', { repaid_amount: '1000' }),
+        ],
+      })
+      expect(r.total).toBe(1)
+      expect(r.top).toMatchObject({ id: 1, source: 'savings', tone: 'warning', to: '/cuentas' })
+      expect(r.top.title).toContain('600')
+    })
+
+    it('queda por debajo de pagos y presupuestos', () => {
+      const r = getPriorityAlert({ today, savingsDebts: [debt(1, '2026-10-01')], loanAlerts: [loan(9, 'warning')] })
+      expect(r.top.source).toBe('loan')
+      expect(r.total).toBe(2)
+    })
+
+    it('entre varias vencidas muestra la más antigua', () => {
+      const r = getPriorityAlert({ today, savingsDebts: [debt(1, '2026-10-20'), debt(2, '2026-06-01')] })
+      expect(r.top.id).toBe(2)
+    })
+  })
 })

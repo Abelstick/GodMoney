@@ -54,6 +54,13 @@ function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, select
               {expense.savings_account ? `Ahorro → ${expense.savings_account.name}` : 'Ahorro'}
             </Badge>
           )}
+          {expense.paid_from_account && (
+            <Badge color={expense.paid_from_account.is_savings ? 'var(--color-warning)' : 'var(--color-text-muted)'}>
+              {expense.paid_from_account.is_savings && expense.repay_to_savings
+                ? `Del ahorro ${expense.paid_from_account.name} · por reponer`
+                : `Desde ${expense.paid_from_account.name}`}
+            </Badge>
+          )}
           {expense._pending && (
             <Badge color={expense._syncError ? 'var(--color-danger)' : 'var(--color-warning)'}>
               {expense._syncError ? 'Error al sincronizar' : 'Sin sincronizar'}

@@ -1,7 +1,11 @@
 import { supabase } from '@/lib/supabase'
 import { toRestorePayload } from '@/lib/restorePayload'
 
-const SELECT = '*, category:categories(id,name,color,icon,is_savings), savings_account:accounts(id,name)'
+// expenses tiene dos FK a accounts (destino del ahorro y cuenta de origen):
+// hay que nombrar la relación para que PostgREST no la considere ambigua.
+const SELECT = '*, category:categories(id,name,color,icon,is_savings)'
+  + ', savings_account:accounts!expenses_savings_account_id_fkey(id,name)'
+  + ', paid_from_account:accounts!expenses_paid_from_account_id_fkey(id,name,is_savings)'
 
 async function getUserId() {
   const { data: { session } } = await supabase.auth.getSession()

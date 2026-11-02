@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/Button/Button'
 import { useCategories } from '@/hooks/useCategories'
 import { useAccounts }   from '@/hooks/useAccounts'
 import { toInputDate, formatCurrency } from '@/lib/formatters'
+import { PaidFromField } from '@/components/common/PaidFromField/PaidFromField'
 import { TransactionExtras, EMPTY_EXTRAS, extrasFrom, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './ExpenseForm.module.css'
 
-const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_fixed: false, savings_account_id: '', ...EMPTY_EXTRAS }
+const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_fixed: false, savings_account_id: '', paid_from_account_id: '', repay_to_savings: true, ...EMPTY_EXTRAS }
 
 export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading }) {
-  const [form, setForm] = useState(initial ?? EMPTY)
+  const [form, setForm] = useState(() => ({ ...EMPTY, ...initial }))
   const [errors, setErrors] = useState({})
   const { categories } = useCategories('expense')
   const { accounts } = useAccounts()
@@ -46,6 +47,8 @@ export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading 
       // otra categoría se limpia para que el trigger revierta el saldo.
       ...extrasPayload(form),
       savings_account_id: isSavings ? (form.savings_account_id || null) : null,
+      paid_from_account_id: form.paid_from_account_id || null,
+      repay_to_savings: form.repay_to_savings !== false,
     })
   }
 
@@ -103,6 +106,14 @@ export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading 
           </p>
         </div>
       )}
+      <PaidFromField
+        accounts={accounts}
+        value={form.paid_from_account_id}
+        onChange={(v) => setForm((f) => ({ ...f, paid_from_account_id: v }))}
+        repay={form.repay_to_savings !== false}
+        onRepayChange={(v) => setForm((f) => ({ ...f, repay_to_savings: v }))}
+        amount={form.amount}
+      />
       <Input
         label="Fecha"
         type="date"

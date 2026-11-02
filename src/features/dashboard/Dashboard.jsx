@@ -27,6 +27,9 @@ import { MONTHS_HISTORY } from '@/lib/constants'
 import { buildChartData } from '@/features/predictions/utils/predictionAlgorithms'
 import { incomeService }  from '@/services/incomeService'
 import { expenseService } from '@/services/expenseService'
+import { transferService } from '@/services/transferService'
+import { savingsFlow } from '@/lib/accountActivity'
+import { getMonthRange } from '@/lib/formatters'
 import { Card }          from '@/components/ui/Card/Card'
 import { PageHeader }    from '@/components/ui/PageHeader/PageHeader'
 import { MonthPicker }   from '@/components/common/MonthPicker/MonthPicker'
@@ -39,6 +42,7 @@ import { GoalsPreview }  from './components/GoalsPreview'
 import { MonthlyChart }  from './components/MonthlyChart'
 import { RecentTransactions } from './components/RecentTransactions'
 import { UpcomingGifts, UpcomingGiftsSkeleton } from './components/UpcomingGifts'
+import { SavingsDebtPreview } from './components/SavingsDebtPreview'
 import styles from './Dashboard.module.css'
 
 export function Dashboard() {
@@ -72,6 +76,28 @@ export function Dashboard() {
     if (giftsLoaded) setHadGiftOccasions(giftOccasions.length > 0)
   }, [giftsLoaded, giftOccasions.length])
   const showGiftsSkeleton = !giftsLoaded && giftsLoading && hadGiftOccasions
+
+  // Deudas con el ahorro: carga silenciosa; la tarjeta solo aparece si hay abiertas.
+  const savingsDebts            = useStore((s) => s.savingsWithdrawals)
+  const fetchSavingsWithdrawals = useStore((s) => s.fetchSavingsWithdrawals)
+  useEffect(() => { fetchSavingsWithdrawals() }, [])
+  const hasOpenSavingsDebt = savingsDebts.some((d) => d.status === 'OPEN')
+
+  // Cuánto salió del ahorro y cuánto se repuso en el mes elegido.
+  const [monthTransfers, setMonthTransfers] = useState([])
+  useEffect(() => {
+    let alive = true
+    const { from, to } = getMonthRange(parseISO(`${activeMonth}-01`))
+    transferService.getRange(from, to)
+      .then((rows) => { if (alive) setMonthTransfers(rows) })
+      .catch(() => { if (alive) setMonthTransfers([]) })
+    return () => { alive = false }
+  }, [activeMonth, savingsDebts]) // se refresca cuando cambian las deudas (retiros/reposiciones)
+  const monthSavingsFlow = useMemo(
+    () => savingsFlow({ transfers: monthTransfers, expenses, accounts }),
+    [monthTransfers, expenses, accounts],
+  )
+  const showSavingsCard = hasOpenSavingsDebt || monthSavingsFlow.withdrawn > 0 || monthSavingsFlow.repaid > 0
 
   const totalIncome    = useStore(selectTotalIncome)
   const profit         = useStore(selectProfit)
@@ -155,7 +181,8 @@ export function Dashboard() {
     loanAlerts,
     recurringAlerts,
     budgets: isCurrentMonth ? budgets : [],
-  }), [loanAlerts, recurringAlerts, budgets, isCurrentMonth])
+    savingsDebts,
+  }), [loanAlerts, recurringAlerts, budgets, isCurrentMonth, savingsDebts])
 
   function dismissPriority() {
     const { top } = priority
@@ -275,6 +302,15 @@ export function Dashboard() {
                 </Card.Header>
                 <GoalsPreview goals={activeGoals} />
               </Card>
+
+              {showSavingsCard && (
+                <Card>
+                  <Card.Header action={<Anchor component={Link} to="/cuentas" size="sm" fw={600}>Reponer</Anchor>}>
+                    Deuda con tu ahorro
+                  </Card.Header>
+                  <SavingsDebtPreview debts={savingsDebts} flow={monthSavingsFlow} monthLabel={activeMonthLabel} />
+                </Card>
+              )}
 
               {(upcomingGifts.length > 0 || showGiftsSkeleton) && (
                 <Card>

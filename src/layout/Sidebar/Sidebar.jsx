@@ -24,7 +24,7 @@ function NavTip({ label, collapsed, children }) {
 }
 
 function NavItem({ to, icon: Icon, label, collapsed, pathname }) {
-  const isActive = to === '/' ? pathname === '/' : pathname === to
+  const isActive = to === '/' ? pathname === '/' : (pathname === to || pathname.startsWith(`${to}/`))
   return (
     <NavTip label={label} collapsed={collapsed}>
       <NavLink to={to} end={to === '/'} className={`${styles.item} ${isActive ? styles.active : ''}`}>

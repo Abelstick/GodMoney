@@ -155,6 +155,8 @@ export function Expenses() {
       date:        editing ? source.date : toInputDate(new Date()),
       is_fixed:    source.is_fixed,
       savings_account_id: source.savings_account_id ?? '',
+      paid_from_account_id: source.paid_from_account_id ?? '',
+      repay_to_savings: source.repay_to_savings !== false,
       ...extrasFrom(source),
       ...(editing ? {} : { attachments: [] }),
     }

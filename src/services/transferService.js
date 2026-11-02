@@ -20,6 +20,18 @@ export const transferService = {
     return data
   },
 
+  /** Todas las transferencias de un rango (para conciliar un periodo). */
+  async getRange(from, to) {
+    const { data, error } = await supabase
+      .from('transfers')
+      .select('id, from_account_id, to_account_id, amount, date, repays_withdrawal_id')
+      .gte('date', from)
+      .lte('date', to)
+      .limit(5000)
+    if (error) throw error
+    return data
+  },
+
   async create(payload) {
     const user_id = await getUserId()
     const { data, error } = await supabase

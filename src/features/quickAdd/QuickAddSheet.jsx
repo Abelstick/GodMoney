@@ -11,6 +11,7 @@ import { useAccounts } from '@/hooks/useAccounts'
 import { usePersistentState } from '@/hooks/usePersistentState'
 import { getRecentCategoryIds, rememberCategory } from '@/lib/recentCategories'
 import { formatCurrency } from '@/lib/formatters'
+import { PaidFromField } from '@/components/common/PaidFromField/PaidFromField'
 import { EMPTY_EXTRAS, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './QuickAddSheet.module.css'
 
@@ -60,6 +61,8 @@ function QuickAddForm({ onDone }) {
   const [description, setDescription] = useState('')
   const [dateMode, setDateMode]       = useState('today')
   const [customDate, setCustomDate]   = useState(today())
+  const [paidFrom, setPaidFrom]       = useState('')
+  const [repay, setRepay]             = useState(true)
   const [error, setError]             = useState(null)
   const [saving, setSaving]           = useState(false)
 
@@ -103,6 +106,8 @@ function QuickAddForm({ onDone }) {
           ...base,
           is_fixed: false,
           savings_account_id: isSavings ? (savingsAccountId || null) : null,
+          paid_from_account_id: paidFrom || null,
+          repay_to_savings: repay,
         })
         setLastExpenseCats((prev) => rememberCategory(prev, categoryId))
       } else {
@@ -211,6 +216,17 @@ function QuickAddForm({ onDone }) {
           description={savingsAccountId
             ? 'Se sumará al saldo de la cuenta y a los objetivos vinculados.'
             : 'Sin cuenta, solo cuenta como salida del mes.'}
+        />
+      )}
+
+      {isExpense && accounts.length > 0 && (
+        <PaidFromField
+          accounts={accounts}
+          value={paidFrom}
+          onChange={setPaidFrom}
+          repay={repay}
+          onRepayChange={setRepay}
+          amount={numericAmount}
         />
       )}
 

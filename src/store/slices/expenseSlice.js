@@ -1,11 +1,31 @@
 import { expenseService } from '@/services/expenseService'
 import { offlineQueue, mergePending, isRetryableError } from '@/lib/offlineQueue'
 
-// Los gastos de ahorro con cuenta destino mueven el saldo de esa cuenta vía
-// trigger en BD; se refrescan las cuentas para que objetivos y patrimonio
-// reflejen el cambio al instante.
+// Los gastos con cuenta (destino del ahorro o "pagado desde") mueven saldos
+// vía trigger en BD; se refrescan las cuentas para que objetivos y patrimonio
+// reflejen el cambio al instante. Pagar desde una cuenta de ahorro además crea
+// o ajusta una deuda con el ahorro, así que también se refrescan las deudas.
 function touchesAccount(...expenses) {
-  return expenses.some((e) => e?.savings_account_id)
+  return expenses.some((e) => e?.savings_account_id || e?.paid_from_account_id)
+}
+
+function touchesSavingsDebt(...expenses) {
+  return expenses.some((e) => e?.paid_from_account_id)
+}
+
+async function refreshAccounts(get, ...expenses) {
+  if (!touchesAccount(...expenses)) return
+  await Promise.all([
+    get().fetchAccounts(),
+    touchesSavingsDebt(...expenses) ? get().fetchSavingsWithdrawals() : null,
+  ])
+}
+
+function addedMessage(e) {
+  if (e.paid_from_account?.is_savings && e.repay_to_savings) return 'Gasto registrado y sumado a tu deuda con el ahorro'
+  if (e.paid_from_account_id) return `Gasto registrado y descontado de ${e.paid_from_account?.name ?? 'la cuenta'}`
+  if (e.savings_account_id) return 'Ahorro registrado y sumado a la cuenta'
+  return 'Gasto registrado'
 }
 
 export const createExpenseSlice = (set, get) => ({
@@ -38,8 +58,8 @@ export const createExpenseSlice = (set, get) => ({
       throw err
     }
     set((s) => ({ expenses: [data, ...s.expenses] }))
-    if (touchesAccount(data)) await get().fetchAccounts()
-    get().showToast(touchesAccount(data) ? 'Ahorro registrado y sumado a la cuenta' : 'Gasto registrado', 'success')
+    await refreshAccounts(get, data)
+    get().showToast(addedMessage(data), 'success')
     return data
   },
 
@@ -49,7 +69,7 @@ export const createExpenseSlice = (set, get) => ({
     set((s) => ({
       expenses: s.expenses.map((e) => (e.id === id ? data : e)),
     }))
-    if (touchesAccount(previous, data)) await get().fetchAccounts()
+    await refreshAccounts(get, previous, data)
     get().showToast('Gasto actualizado', 'success')
     return data
   },
@@ -60,7 +80,7 @@ export const createExpenseSlice = (set, get) => ({
     const rows = await expenseService.updateMany(ids, patch)
     const byId = new Map(rows.map((r) => [r.id, r]))
     set((s) => ({ expenses: s.expenses.map((e) => byId.get(e.id) ?? e) }))
-    if (touchesAccount(...previous, ...rows)) await get().fetchAccounts()
+    await refreshAccounts(get, ...previous, ...rows)
     get().showToast(message ?? `${rows.length} gastos actualizados`, 'success')
   },
 
@@ -81,7 +101,7 @@ export const createExpenseSlice = (set, get) => ({
     if (previous?._pending) return get().discardPending('expense', id)
     await expenseService.remove(id)
     set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) }))
-    if (touchesAccount(previous)) await get().fetchAccounts()
+    await refreshAccounts(get, previous)
     get().showToast('Gasto eliminado', 'info', previous && {
       label: 'Deshacer',
       onClick: () => get().restoreExpenses([previous]),
@@ -92,7 +112,7 @@ export const createExpenseSlice = (set, get) => ({
     const previous = get().expenses.filter((e) => ids.includes(e.id))
     await expenseService.removeMany(ids)
     set((s) => ({ expenses: s.expenses.filter((e) => !ids.includes(e.id)) }))
-    if (touchesAccount(...previous)) await get().fetchAccounts()
+    await refreshAccounts(get, ...previous)
     get().showToast(`${previous.length} gastos eliminados`, 'info', {
       label: 'Deshacer',
       onClick: () => get().restoreExpenses(previous),
@@ -107,7 +127,7 @@ export const createExpenseSlice = (set, get) => ({
       const range = get().expensesRange
       const visible = restored.filter((r) => !range || (r.date >= range.from && r.date <= range.to))
       set((s) => ({ expenses: [...visible, ...s.expenses] }))
-      if (touchesAccount(...restored)) await get().fetchAccounts()
+      await refreshAccounts(get, ...restored)
       get().showToast(restored.length > 1 ? `${restored.length} gastos restaurados` : 'Gasto restaurado', 'success')
     } catch (err) {
       get().showToast(`No se pudo deshacer: ${err.message}`, 'error')
