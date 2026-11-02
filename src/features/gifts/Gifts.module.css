@@ -38,7 +38,6 @@
 .yearHeader h2 { margin: 0; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
 .yearHeader span { font-size: var(--text-sm); color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
 
-.cardSkeleton { height: 240px; }
 
 @media (max-width: 640px) {
   .panel { padding: var(--space-2) var(--space-4); }

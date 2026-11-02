@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Money } from '@/components/ui/Money/Money'
+import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { formatDate } from '@/lib/formatters'
 import { countdownLabel, occasionBudgetSummary, monthlySavingSuggestion, linkedGoal } from '@/lib/giftPlanning'
 import styles from './UpcomingGifts.module.css'
@@ -46,6 +47,24 @@ export function UpcomingGifts({ upcoming, gifts, goalsById, limit = 3 }) {
           </li>
         )
       })}
+    </ul>
+  )
+}
+
+// Misma silueta que la lista: caja de fecha, dos líneas y la píldora.
+export function UpcomingGiftsSkeleton({ rows = 2 }) {
+  return (
+    <ul className={styles.list} role="status" aria-label="Cargando próximas fechas" aria-busy="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <li key={i} className={styles.item} aria-hidden="true">
+          <Skeleton className={styles.dateBoxSkeleton} />
+          <span className={styles.info}>
+            <Skeleton className={styles.lineSkeleton} style={{ width: i % 2 ? '45%' : '60%' }} />
+            <Skeleton className={styles.lineSkeletonSm} />
+          </span>
+          <Skeleton className={styles.pillSkeleton} />
+        </li>
+      ))}
     </ul>
   )
 }

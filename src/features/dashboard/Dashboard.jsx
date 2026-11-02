@@ -17,6 +17,7 @@ import { useLoans }      from '@/hooks/useLoans'
 import { useLoanAlerts } from '@/hooks/useLoanAlerts'
 import { useRecurringPaymentAlerts } from '@/hooks/useRecurringPaymentAlerts'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
+import { usePersistentState } from '@/hooks/usePersistentState'
 import { formatMonth } from '@/lib/formatters'
 import { splitSavings, isSavingsExpense, getSavingsRate } from '@/lib/savings'
 import { allBudgetCategoryIds, getBudgetStatus, BUDGET_STATUS_TONE } from '@/lib/budgetStatus'
@@ -37,7 +38,7 @@ import { SpendingBreakdown } from './components/SpendingBreakdown'
 import { GoalsPreview }  from './components/GoalsPreview'
 import { MonthlyChart }  from './components/MonthlyChart'
 import { RecentTransactions } from './components/RecentTransactions'
-import { UpcomingGifts } from './components/UpcomingGifts'
+import { UpcomingGifts, UpcomingGiftsSkeleton } from './components/UpcomingGifts'
 import styles from './Dashboard.module.css'
 
 export function Dashboard() {
@@ -60,8 +61,17 @@ export function Dashboard() {
   // Regalos: carga silenciosa (si la sección no se usa, la tarjeta no aparece).
   const giftOccasions = useStore((s) => s.giftOccasions)
   const gifts         = useStore((s) => s.gifts)
+  const giftsLoading  = useStore((s) => s.giftsLoading)
+  const giftsLoaded   = useStore((s) => s.giftsLoaded)
   const fetchGiftData = useStore((s) => s.fetchGiftData)
   useEffect(() => { fetchGiftData({ silent: true }) }, [])
+  // Se recuerda si había fechas para mostrar el esqueleto solo a quien usa
+  // Regalos (sin esto la tarjeta aparecería de golpe o parpadearía en vacío).
+  const [hadGiftOccasions, setHadGiftOccasions] = usePersistentState('godmoney:hasGiftOccasions', false)
+  useEffect(() => {
+    if (giftsLoaded) setHadGiftOccasions(giftOccasions.length > 0)
+  }, [giftsLoaded, giftOccasions.length])
+  const showGiftsSkeleton = !giftsLoaded && giftsLoading && hadGiftOccasions
 
   const totalIncome    = useStore(selectTotalIncome)
   const profit         = useStore(selectProfit)
@@ -266,12 +276,14 @@ export function Dashboard() {
                 <GoalsPreview goals={activeGoals} />
               </Card>
 
-              {upcomingGifts.length > 0 && (
+              {(upcomingGifts.length > 0 || showGiftsSkeleton) && (
                 <Card>
                   <Card.Header action={<Anchor component={Link} to="/regalos" size="sm" fw={600}>Ver regalos</Anchor>}>
                     Próximas fechas
                   </Card.Header>
-                  <UpcomingGifts upcoming={upcomingGifts} gifts={gifts} goalsById={goalsById} />
+                  {showGiftsSkeleton
+                    ? <UpcomingGiftsSkeleton />
+                    : <UpcomingGifts upcoming={upcomingGifts} gifts={gifts} goalsById={goalsById} />}
                 </Card>
               )}
             </div>

@@ -1,0 +1,36 @@
+.stack { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.dateBox    { width: 48px; height: 52px; flex-shrink: 0; border-radius: var(--radius-md); }
+.avatar     { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-full); }
+.titleBlock { display: flex; flex-direction: column; gap: 8px; min-width: 0; width: 160px; }
+.title      { height: 16px; width: 100%; border-radius: var(--radius-sm); }
+.pill       { height: 18px; width: 90px; border-radius: var(--radius-full); }
+
+.progress { height: 34px; border-radius: var(--radius-sm); }
+.saving   { height: 38px; border-radius: var(--radius-md); }
+.button   { height: 32px; border-radius: var(--radius-md); }
+
+.row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+.row + .row { border-top: 1px solid var(--color-border); }
+.dot     { width: 8px; height: 8px; flex-shrink: 0; border-radius: var(--radius-full); }
+.rowText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.line    { height: 13px; border-radius: var(--radius-sm); }
+.lineSm  { height: 10px; width: 30%; border-radius: var(--radius-sm); }
+.amount  { width: 72px; height: 14px; flex-shrink: 0; border-radius: var(--radius-sm); }
+
+.yearHeader { height: 22px; width: 40%; margin: var(--space-2) 0 var(--space-3); border-radius: var(--radius-sm); }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.toolbar > :only-child { margin-left: auto; }
+.stack > .toolbar { margin-bottom: 0; }
+.filters { height: 28px; width: 230px; border-radius: var(--radius-sm); }
+.toolbarButton { height: 36px; width: 140px; border-radius: var(--radius-md); }
+
+@media (max-width: 640px) {
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar > :only-child { margin-left: 0; }
+  .toolbarButton, .filters { width: 100%; }
+}

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/Button/Button'
 import { Modal } from '@/components/common/Modal/Modal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
-import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { formatCurrency } from '@/lib/formatters'
 import { upcomingOccasions, historyByYear, countdownLabel, linkedGoal, GIFT_STATUS } from '@/lib/giftPlanning'
@@ -20,6 +19,7 @@ import { OccasionForm } from './components/OccasionForm'
 import { GiftForm } from './components/GiftForm'
 import { PurchaseForm } from './components/PurchaseForm'
 import { ReceivedGiftForm } from './components/ReceivedGiftForm'
+import { GiftsSkeleton } from './components/GiftsSkeleton'
 import rowStyles from './components/GiftRow.module.css'
 import styles from './Gifts.module.css'
 
@@ -148,11 +148,7 @@ export function Gifts() {
       />
 
       {loading ? (
-        <div className={styles.grid}>
-          <Skeleton className={styles.cardSkeleton} />
-          <Skeleton className={styles.cardSkeleton} />
-          <Skeleton className={styles.cardSkeleton} />
-        </div>
+        <GiftsSkeleton tab={tab} gridClassName={styles.grid} panelClassName={styles.panel} />
       ) : (
         <>
           {tab === 'occasions' && (
