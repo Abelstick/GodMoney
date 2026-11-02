@@ -7,7 +7,15 @@ const catName = (m) => m.category?.name ?? 'Sin categoría'
 const isSavings = (m) => m.kind === 'expense' && Boolean(m.category?.is_savings)
 const TOP_EXPENSES = 5
 
-export function summarize(movements) {
+/**
+ * Totales de un conjunto de movimientos.
+ * - net: ingresos − gastos (los aportes a ahorro cuentan como gasto).
+ * - realResult: ingresos − consumo. Lo que de verdad ganaste o perdiste; si es
+ *   negativo, ese déficit se cubrió con ahorro, préstamos o dinero no registrado.
+ * - savingsChange: aportes a ahorro − retiros del ahorro. Los retiros son
+ *   transferencias (no movimientos), por eso llegan como opción.
+ */
+export function summarize(movements, { savingsWithdrawn = 0 } = {}) {
   let income = 0
   let expense = 0
   let savings = 0
@@ -33,6 +41,10 @@ export function summarize(movements) {
     savings,
     consumption: expense - savings,
     savingsRate: income > 0 ? Math.round((savings / income) * 100) : null,
+    realResult: income - (expense - savings),
+    deficit: Math.max(0, (expense - savings) - income),
+    savingsWithdrawn: Number(savingsWithdrawn),
+    savingsChange: savings - Number(savingsWithdrawn),
     expenseByCategory: sorted(byCategory.expense),
     incomeByCategory:  sorted(byCategory.income),
   }

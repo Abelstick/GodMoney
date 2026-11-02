@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { IconWallet, IconX } from '@tabler/icons-react'
 import { formatCurrency } from '@/lib/formatters'
 import { Button } from '@/components/ui/Button/Button'
+import { Badge } from '@/components/ui/Badge/Badge'
 import styles from './AccountCard.module.css'
 
 export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
@@ -24,6 +25,7 @@ export function AccountCard({ account, onEdit, onDelete, onAdjustBalance }) {
           <IconWallet size={20} stroke={1.75} />
         </div>
         <div className={styles.name}>{account.name}</div>
+        {account.is_savings && <Badge color="var(--color-success)">Ahorro</Badge>}
       </div>
 
       <div className={`${styles.balance} ${isNegative ? styles.negative : ''}`}>

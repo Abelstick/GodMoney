@@ -48,7 +48,34 @@ describe('summarize', () => {
   })
 
   it('una lista vacía da ceros', () => {
-    expect(summarize([])).toMatchObject({ income: 0, expense: 0, net: 0, count: 0, savings: 0, consumption: 0 })
+    expect(summarize([])).toMatchObject({
+      income: 0, expense: 0, net: 0, count: 0, savings: 0, consumption: 0,
+      realResult: 0, deficit: 0, savingsWithdrawn: 0, savingsChange: 0,
+    })
+  })
+
+  it('el resultado real no descuenta los aportes a ahorro', () => {
+    expect(s.realResult).toBe(2200) // 3000 − 800 de consumo
+    expect(s.net).toBe(1900)        // el neto sí resta los 300 ahorrados
+    expect(s.deficit).toBe(0)
+  })
+
+  it('un año en negativo muestra el déficit y cuánto ahorro se consumió', () => {
+    const year = [
+      mv('income', '20000', pay),
+      mv('expense', '23000', rent),
+      mv('expense', '2000', save),
+    ]
+    const y = summarize(year, { savingsWithdrawn: 5000 })
+    expect(y.net).toBe(-5000)
+    expect(y.realResult).toBe(-3000)
+    expect(y.deficit).toBe(3000)
+    expect(y.savingsWithdrawn).toBe(5000)
+    expect(y.savingsChange).toBe(-3000) // aportó 2000, sacó 5000
+  })
+
+  it('sin retiros, la variación del ahorro son los aportes', () => {
+    expect(s.savingsChange).toBe(300)
   })
 })
 

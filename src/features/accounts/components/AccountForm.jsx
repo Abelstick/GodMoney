@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button/Button'
 import { CATEGORY_COLORS } from '@/lib/constants'
 import styles from './AccountForm.module.css'
 
-const EMPTY = { name: '', balance: '0', color: '#6366f1', icon: 'wallet' }
+const EMPTY = { name: '', balance: '0', color: '#6366f1', icon: 'wallet', is_savings: false }
 
 export function AccountForm({ initial, isEditing = false, onSubmit, onCancel, loading }) {
   const [form, setForm]     = useState(initial ?? EMPTY)
@@ -23,7 +23,7 @@ export function AccountForm({ initial, isEditing = false, onSubmit, onCancel, lo
   function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
-    const payload = { name: form.name.trim(), color: form.color, icon: form.icon }
+    const payload = { name: form.name.trim(), color: form.color, icon: form.icon, is_savings: Boolean(form.is_savings) }
     if (!isEditing) payload.balance = Number(form.balance)
     onSubmit(payload)
   }
@@ -38,6 +38,11 @@ export function AccountForm({ initial, isEditing = false, onSubmit, onCancel, lo
         disabled={isEditing}
         hint={isEditing ? 'El saldo solo cambia mediante préstamos y pagos registrados' : undefined}
       />
+      <label className={styles.checkRow}>
+        <input type="checkbox" checked={Boolean(form.is_savings)}
+          onChange={(e) => setForm((f) => ({ ...f, is_savings: e.target.checked }))} />
+        Es una cuenta de ahorro
+      </label>
       <div>
         <label className={styles.label}>Color</label>
         <div className={styles.colorRow}>

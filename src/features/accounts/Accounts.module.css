@@ -23,3 +23,14 @@
 @media (max-width: 640px) {
   .headerActions > * { flex: 1; }
 }
+
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.sectionHead .sectionTitle { margin-bottom: 0; }
+.sectionHint { font-size: var(--text-sm); color: var(--color-text-muted); margin: 2px 0 0; }
+.sectionHint strong { color: var(--color-warning); font-variant-numeric: tabular-nums; }
