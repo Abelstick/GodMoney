@@ -1,0 +1,212 @@
+/* ── Configuración ── */
+.configCard { display: block; }
+
+.configGrid { display: grid; gap: var(--space-5); }
+
+.balanceField { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.fieldHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.fieldLabel {
+  font-size: var(--type-label);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.bigInput {
+  height: var(--control-h-lg) !important;
+  font-size: var(--text-xl) !important;
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+}
+
+.inlineFields { display: grid; grid-template-columns: 1fr; gap: var(--space-4); align-items: start; }
+@media (min-width: 480px) { .inlineFields { grid-template-columns: 1fr 1fr; } }
+
+.dateField { display: flex; align-items: flex-end; gap: var(--space-1); }
+.dateField > :first-child { flex: 1; min-width: 0; }
+
+.accountList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-2);
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.accountRow:hover { background: var(--color-surface-3); }
+
+.accountDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.accountName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountAmount { font-size: var(--text-sm); }
+
+.accountTotal {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  margin-top: var(--space-1);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* ── Lista de movimientos ── */
+.listCard { display: block; }
+
+.listHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.listTitle {
+  font-size: var(--type-section-title);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.listSub {
+  margin-top: 2px;
+  font-size: var(--type-meta);
+  color: var(--color-text-muted);
+}
+
+.listActions { display: flex; gap: var(--space-2); }
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.eventList {
+  list-style: none;
+  margin: 0 calc(var(--space-2) * -1);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.eventRow {
+  --tone: var(--color-primary);
+  --tone-bg: var(--color-primary-alpha);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-right: var(--space-1);
+  border-radius: var(--radius-control);
+  transition: background var(--transition-fast), opacity var(--transition-base);
+}
+.eventRow + .eventRow { border-top: 1px solid var(--color-border); }
+.eventRow:hover { background: var(--color-surface-2); }
+.eventRow[data-tone='income']  { --tone: var(--color-income);  --tone-bg: var(--color-income-light); }
+.eventRow[data-tone='expense'] { --tone: var(--color-expense); --tone-bg: var(--color-expense-light); }
+.eventRow[data-tone='warning'] { --tone: var(--color-warning); --tone-bg: var(--color-warning-light); }
+.eventRow[data-tone='savings'] { --tone: var(--color-savings); --tone-bg: var(--color-savings-light); }
+
+.eventMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-2);
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-control);
+}
+.eventMain:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.eventIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--tone-bg);
+  color: var(--tone);
+}
+
+.eventText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.eventTitle {
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--type-meta);
+  color: var(--color-text-muted);
+}
+
+.outBadge {
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-3);
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-semibold);
+}
+
+.eventAmount {
+  font-size: var(--type-amount);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.eventSwitch { flex-shrink: 0; padding: 0 var(--space-1); }
+
+.eventOff .eventIcon,
+.eventOff .eventText,
+.eventOff .eventAmount { opacity: 0.5; }
+.eventOff .eventTitle { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+@media (max-width: 479px) {
+  .listActions { width: 100%; }
+  .listActions > * { flex: 1; }
+  .eventMain { gap: var(--space-2); }
+}

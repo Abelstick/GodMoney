@@ -1,0 +1,90 @@
+.page { min-width: 0; }
+
+/* ── Pestañas (solo móvil/tablet): en escritorio se ve todo a la vez ── */
+.tabs { margin-bottom: var(--space-4); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+
+.builder, .results, .compare { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+
+@media (max-width: 1023px) {
+  .builder:not([data-active]), .results:not([data-active]), .compare:not([data-active]) { display: none; }
+}
+
+@media (min-width: 1024px) {
+  .tabs { display: none; }
+  .layout {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    grid-template-areas: 'builder results' 'compare compare';
+    align-items: start;
+    gap: var(--space-5);
+  }
+  .builder { grid-area: builder; }
+  .results { grid-area: results; position: sticky; top: var(--space-4); }
+  .compare { grid-area: compare; }
+  .peek { display: none !important; }
+}
+
+/* ── Resumen compacto en la pestaña Escenario (móvil) ── */
+.peek {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-hero-border);
+  border-radius: var(--radius-card);
+  background: var(--color-hero-bg);
+  color: var(--color-hero-text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+.peek:active { transform: scale(0.99); }
+.peek:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.peekItem { display: flex; flex-direction: column; min-width: 0; }
+.peekLabel { font-size: var(--type-meta); color: var(--color-hero-muted); white-space: nowrap; }
+.peekValue { font-size: var(--text-base); font-weight: var(--weight-semibold); }
+.peekGo {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--type-meta);
+  font-weight: var(--weight-semibold);
+  color: var(--color-hero-text);
+}
+
+/* ── Bloques de resultados ── */
+.block { display: flex; flex-direction: column; gap: var(--space-3); }
+.blockTitle { font-size: var(--type-section-title); font-weight: var(--weight-semibold); color: var(--color-text-primary); }
+.blockSub { margin-top: 2px; font-size: var(--type-meta); color: var(--color-text-muted); }
+
+.chartHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+/* ── Horizonte ── */
+.horizon { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); }
+.horizonChips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.horizonDate { width: 170px; }
+
+@media (max-width: 639px) {
+  .horizon { align-items: stretch; width: 100%; }
+  .horizonChips { justify-content: flex-start; }
+  .horizonDate { width: 100%; }
+}
+
+.footNote {
+  margin-top: var(--space-6);
+  font-size: var(--type-meta);
+  color: var(--color-text-muted);
+  max-width: 72ch;
+}
