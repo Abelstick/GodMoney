@@ -75,49 +75,73 @@
   color: var(--color-hero-muted);
 }
 
-.details {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-  margin-top: auto;
-  padding-top: var(--space-5);
+.sub {
+  margin-top: 2px;
+  font-size: var(--type-meta);
+  color: var(--color-hero-muted);
 }
 
-.detail {
-  min-width: 0;
-  padding-top: var(--space-3);
+/* ── Desglose: cada total se lee como resultado de las filas de arriba ── */
+.ledger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-4);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
   border-top: 1px solid var(--color-hero-line);
 }
 
-.detail dt {
-  font-size: var(--type-meta);
-  color: var(--color-hero-muted);
-  margin-bottom: 2px;
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
 }
 
-.detail dd {
+.row dt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-hero-muted);
+}
+
+.row dd {
+  margin: 0;
+  flex-shrink: 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Lo que falta reponer a tus cuentas: chip bajo el saldo */
-.repay {
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 32px;
-  margin-top: var(--space-3);
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-full);
-  background: var(--color-hero-chip);
-  font-size: var(--type-meta);
-  color: var(--color-hero-text);
-  transition: background var(--transition-fast);
+/* Resultado: separado con una línea, como el "=" de una suma */
+.total {
+  border-top: 1px dashed var(--color-hero-line);
 }
-.repay:hover { background: var(--color-hero-chip-hover); }
-.repay:focus-visible { outline-color: var(--color-hero-text); }
-.repay span { color: var(--color-hero-muted); }
-.repay strong { font-weight: var(--weight-semibold); }
+.total dt {
+  color: var(--color-hero-text);
+  font-weight: var(--weight-semibold);
+}
+.total dd { font-size: var(--text-base); font-weight: var(--weight-bold); }
+
+.hint {
+  font-size: var(--type-meta);
+  font-weight: var(--weight-regular, 400);
+  color: var(--color-hero-muted);
+}
+
+.rowLink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--color-hero-line);
+  text-underline-offset: 3px;
+}
+.rowLink:hover { color: var(--color-hero-text); }
+.rowLink:focus-visible { outline-color: var(--color-hero-text); }
