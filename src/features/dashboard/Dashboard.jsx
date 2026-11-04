@@ -6,7 +6,7 @@ import { parseISO, subMonths, format as formatDate } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   useStore, selectTotalIncome, selectProfit,
-  selectAvailableMoney, selectReceivable, selectPayable, selectNetWorth,
+  selectAvailableMoney, selectReceivable, selectPayable,
 } from '@/store'
 import { useIncome }     from '@/hooks/useIncome'
 import { useExpenses }   from '@/hooks/useExpenses'
@@ -106,7 +106,6 @@ export function Dashboard() {
   const availableMoney = useStore(selectAvailableMoney)
   const receivable     = useStore(selectReceivable)
   const payable        = useStore(selectPayable)
-  const netWorth       = useStore(selectNetWorth)
 
   // Datos históricos para el gráfico de barras del dashboard
   const [histIncome,  setHistIncome]  = useState([])
@@ -251,7 +250,6 @@ export function Dashboard() {
               availableMoney={availableMoney}
               receivable={receivable}
               payable={payable}
-              netWorth={netWorth}
               accountsCount={accounts.length}
               pendingRepay={pendingRepay}
             />

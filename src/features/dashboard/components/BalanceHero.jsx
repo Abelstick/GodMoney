@@ -4,16 +4,17 @@ import { Money } from '@/components/ui/Money/Money'
 import styles from './BalanceHero.module.css'
 
 // La cifra protagonista: cuánto dinero tienes hoy en tus cuentas. Debajo, el
-// desglose paso a paso de lo que cambia ese número:
-//   saldo + te deben           = si te pagaran todo
-//   (si te pagaran todo) − debes = patrimonio neto (todo saldado)
-// pendingRepay: lo que falta reponer a tus cuentas. Ya está descontado del
-// saldo y reponerlo solo mueve dinero entre tus cuentas, así que no cambia los
-// totales: se muestra aparte, con lo que te queda libre sin tocarlo.
-export function BalanceHero({ availableMoney, receivable, payable, netWorth, accountsCount, pendingRepay = 0 }) {
-  const ifPaid = availableMoney + receivable
-  const hasLoans = receivable > 0 || payable > 0
-  const free = availableMoney - pendingRepay
+// desglose paso a paso de lo que falta que vuelva a ellas:
+//   te deben + por reponer            = por recuperar
+//   saldo + por recuperar             = si te pagaran y repusieras todo
+//   (lo anterior) − debes             = patrimonio neto
+// receivable/payable: préstamos. pendingRepay: lo que falta reponer a tus
+// cuentas (gastos y retiros marcados «Lo voy a reponer»).
+export function BalanceHero({ availableMoney, receivable, payable, accountsCount, pendingRepay = 0 }) {
+  const toRecover = receivable + pendingRepay
+  const ifSettled = availableMoney + toRecover
+  const netWorth = ifSettled - payable
+  const hasDetail = toRecover > 0 || payable > 0
 
   return (
     <section className={styles.hero} aria-labelledby="balance-label">
@@ -28,61 +29,65 @@ export function BalanceHero({ availableMoney, receivable, payable, netWorth, acc
       <Money value={availableMoney} tone={availableMoney < 0 ? 'expense' : 'neutral'} size="xl" />
       <p className={styles.sub}>Lo que hay hoy en tus cuentas</p>
 
-      {(hasLoans || pendingRepay > 0) ? (
+      {hasDetail ? (
         <div className={styles.ledger}>
-          {hasLoans && (
+          {toRecover > 0 && (
             <dl className={styles.group}>
-              <div className={styles.row}>
-                <dt>
-                  <Link to="/prestamos" className={styles.rowLink}>Te deben</Link>
-                </dt>
-                <dd><Money value={receivable} tone={receivable > 0 ? 'income' : 'neutral'} signed={receivable > 0} /></dd>
-              </div>
-              <div className={`${styles.row} ${styles.total}`}>
-                <dt>
-                  Si te pagaran todo
-                  <span className={styles.hint}>Saldo + lo que te deben</span>
-                </dt>
-                <dd><Money value={ifPaid} tone={ifPaid < 0 ? 'expense' : 'neutral'} /></dd>
-              </div>
-              {payable > 0 && (
-                <>
-                  <div className={styles.row}>
-                    <dt>
-                      <Link to="/prestamos" className={styles.rowLink}>Debes</Link>
-                    </dt>
-                    <dd><Money value={payable} tone="expense" signed /></dd>
-                  </div>
-                  <div className={`${styles.row} ${styles.total}`}>
-                    <dt>
-                      Patrimonio neto
-                      <span className={styles.hint}>Si cobraras y pagaras todo</span>
-                    </dt>
-                    <dd><Money value={netWorth} tone={netWorth < 0 ? 'expense' : 'neutral'} /></dd>
-                  </div>
-                </>
+              {receivable > 0 && (
+                <div className={styles.row}>
+                  <dt><Link to="/prestamos" className={styles.rowLink}>Te deben</Link></dt>
+                  <dd><Money value={receivable} tone="income" signed /></dd>
+                </div>
+              )}
+              {pendingRepay > 0 && (
+                <div className={styles.row}>
+                  <dt><Link to="/cuentas" className={styles.rowLink}>Por reponer a tus cuentas</Link></dt>
+                  <dd><Money value={pendingRepay} tone="income" signed /></dd>
+                </div>
+              )}
+              {receivable > 0 && pendingRepay > 0 && (
+                <div className={`${styles.row} ${styles.total}`}>
+                  <dt>
+                    Por recuperar
+                    <span className={styles.hint}>Te deben + por reponer</span>
+                  </dt>
+                  <dd><Money value={toRecover} /></dd>
+                </div>
               )}
             </dl>
           )}
 
-          {pendingRepay > 0 && (
-            <dl className={styles.group}>
-              <div className={styles.row}>
-                <dt>
-                  <Link to="/cuentas" className={styles.rowLink}>Por reponer a tus cuentas</Link>
-                  <span className={styles.hint}>Ya salió del saldo; reponerlo no cambia el total</span>
-                </dt>
-                <dd><Money value={pendingRepay} tone="warning" /></dd>
-              </div>
+          <dl className={styles.group}>
+            {toRecover > 0 && (
               <div className={`${styles.row} ${styles.total}`}>
                 <dt>
-                  Libre sin tocar lo por reponer
-                  <span className={styles.hint}>Saldo − por reponer</span>
+                  {pendingRepay > 0 && receivable > 0 ? 'Si te pagaran y repusieras todo'
+                    : pendingRepay > 0 ? 'Si repusieras todo' : 'Si te pagaran todo'}
+                  <span className={styles.hint}>
+                    Saldo{receivable > 0 ? ' + te deben' : ''}{pendingRepay > 0 ? ' + por reponer' : ''}
+                  </span>
                 </dt>
-                <dd><Money value={free} tone={free < 0 ? 'expense' : 'neutral'} /></dd>
+                <dd><Money value={ifSettled} tone={ifSettled < 0 ? 'expense' : 'neutral'} /></dd>
               </div>
-            </dl>
-          )}
+            )}
+            {payable > 0 && (
+              <>
+                <div className={styles.row}>
+                  <dt><Link to="/prestamos" className={styles.rowLink}>Debes</Link></dt>
+                  <dd><Money value={payable} tone="expense" signed /></dd>
+                </div>
+                <div className={`${styles.row} ${styles.total}`}>
+                  <dt>
+                    Patrimonio neto
+                    <span className={styles.hint}>
+                      {toRecover > 0 ? 'Si además pagaras lo que debes' : 'Saldo − lo que debes'}
+                    </span>
+                  </dt>
+                  <dd><Money value={netWorth} tone={netWorth < 0 ? 'expense' : 'neutral'} /></dd>
+                </div>
+              </>
+            )}
+          </dl>
         </div>
       ) : (
         <p className={styles.caption}>Sin préstamos ni montos por reponer</p>
