@@ -16,6 +16,7 @@ function title(w) {
   if (w.reason) return w.reason
   if (w.origin === 'DEFICIT') return `Déficit ${w.period_label ?? ''}`.trim()
   if (w.origin === 'MANUAL') return 'Retiro anterior'
+  if (w.origin === 'EXPENSE') return 'Gasto por reponer'
   return 'Retiro del ahorro'
 }
 

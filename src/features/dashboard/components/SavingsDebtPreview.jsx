@@ -4,7 +4,7 @@ import { formatDate, toInputDate } from '@/lib/formatters'
 import { pendingAmount } from '@/services/savingsWithdrawalService'
 import styles from './SavingsDebtPreview.module.css'
 
-// Lo que le debes a tu ahorro + cuánto sacaste y repusiste en el mes elegido.
+// Lo que falta reponer a tus cuentas + cuánto sacaste y repusiste en el mes elegido.
 // flow: savingsFlow() del mes → { withdrawn, repaid }
 export function SavingsDebtPreview({ debts, flow = { withdrawn: 0, repaid: 0 }, monthLabel }) {
   const open = debts.filter((d) => d.status === 'OPEN')
@@ -33,7 +33,7 @@ export function SavingsDebtPreview({ debts, flow = { withdrawn: 0, repaid: 0 }, 
           />
         </>
       ) : (
-        <p className={styles.caption}>No le debes nada a tu ahorro.</p>
+        <p className={styles.caption}>No tienes nada por reponer.</p>
       )}
 
       {(flow.withdrawn > 0 || flow.repaid > 0) && (

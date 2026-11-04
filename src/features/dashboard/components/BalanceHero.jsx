@@ -5,7 +5,8 @@ import styles from './BalanceHero.module.css'
 
 // La cifra protagonista: cuánto dinero tienes hoy en tus cuentas. Debajo, lo
 // que cambia ese número (lo que te deben y lo que debes) y el patrimonio neto.
-export function BalanceHero({ availableMoney, receivable, payable, netWorth, accountsCount }) {
+// pendingRepay: lo que falta reponer a tus cuentas (gastos y retiros marcados «Lo voy a reponer»).
+export function BalanceHero({ availableMoney, receivable, payable, netWorth, accountsCount, pendingRepay = 0 }) {
   const hasLoans = receivable > 0 || payable > 0
 
   return (
@@ -19,6 +20,14 @@ export function BalanceHero({ availableMoney, receivable, payable, netWorth, acc
       </div>
 
       <Money value={availableMoney} tone={availableMoney < 0 ? 'expense' : 'neutral'} size="xl" />
+
+      {pendingRepay > 0 && (
+        <Link to="/cuentas" className={styles.repay}>
+          <span>Por reponer</span>
+          <strong><Money value={pendingRepay} /></strong>
+          <IconChevronRight size={14} stroke={2} aria-hidden="true" />
+        </Link>
+      )}
 
       {hasLoans ? (
         <dl className={styles.details}>

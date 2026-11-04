@@ -6,6 +6,7 @@ import {
   getBudgetAlertMessage,
   getBudgetBadgeLabel,
 } from '@/lib/budgetStatus'
+import { CollapseToggle, useCollapsed } from '@/components/common/CollapseToggle/CollapseToggle'
 import styles from './BudgetAlerts.module.css'
 
 const FILTERS = [
@@ -17,6 +18,7 @@ const FILTERS = [
 
 export function BudgetAlerts({ budgets }) {
   const [filter, setFilter] = useState('all')
+  const [collapsed, setCollapsed] = useCollapsed('alerts:budgets')
 
   const alerts = useMemo(() => (
     budgets
@@ -35,43 +37,48 @@ export function BudgetAlerts({ budgets }) {
   const visible = filter === 'all' ? alerts : alerts.filter((b) => b.status === filter)
 
   return (
-    <div className={styles.wrapper}>
+    <div className={`${styles.wrapper} ${collapsed ? styles.collapsed : ''}`}>
       <div className={styles.header}>
         <IconBellRinging size={16} stroke={1.75} className={styles.icon} />
         <span className={styles.title}>Alertas de gasto</span>
         <span className={styles.count}>{alerts.length}</span>
+        <CollapseToggle collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} controls="budget-alerts-body" />
       </div>
 
-      <div className={styles.filters}>
-        {FILTERS.map((f) => {
-          const count = f.value === 'all' ? alerts.length : counts[f.value]
-          return (
-            <button
-              key={f.value}
-              className={`${styles.filterChip} ${filter === f.value ? styles.filterChipActive : ''}`}
-              onClick={() => setFilter(f.value)}
-            >
-              {f.label}
-              <span className={styles.filterCount}>{count}</span>
-            </button>
-          )
-        })}
-      </div>
+      {!collapsed && (
+        <div id="budget-alerts-body">
+          <div className={styles.filters}>
+            {FILTERS.map((f) => {
+              const count = f.value === 'all' ? alerts.length : counts[f.value]
+              return (
+                <button
+                  key={f.value}
+                  className={`${styles.filterChip} ${filter === f.value ? styles.filterChipActive : ''}`}
+                  onClick={() => setFilter(f.value)}
+                >
+                  {f.label}
+                  <span className={styles.filterCount}>{count}</span>
+                </button>
+              )
+            })}
+          </div>
 
-      {visible.length === 0 ? (
-        <div className={styles.empty}>Sin alertas en esta categoría</div>
-      ) : (
-        <div className={styles.list}>
-          {visible.map((b) => (
-            <div key={b.id} className={`${styles.alert} ${styles[b.status]}`}>
-              <div className={styles.alertDot} />
-              <div className={styles.alertBody}>
-                <span className={styles.alertName}>{b.name}</span>
-                <span className={styles.alertMsg}>{getBudgetAlertMessage(b)}</span>
-              </div>
-              <span className={styles.badge}>{getBudgetBadgeLabel(b)}</span>
+          {visible.length === 0 ? (
+            <div className={styles.empty}>Sin alertas en esta categoría</div>
+          ) : (
+            <div className={styles.list}>
+              {visible.map((b) => (
+                <div key={b.id} className={`${styles.alert} ${styles[b.status]}`}>
+                  <div className={styles.alertDot} />
+                  <div className={styles.alertBody}>
+                    <span className={styles.alertName}>{b.name}</span>
+                    <span className={styles.alertMsg}>{getBudgetAlertMessage(b)}</span>
+                  </div>
+                  <span className={styles.badge}>{getBudgetBadgeLabel(b)}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

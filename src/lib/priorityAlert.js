@@ -53,7 +53,7 @@ function fromBudget(budget) {
   }
 }
 
-// Deuda con el ahorro cuya fecha objetivo ya pasó. Es una deuda contigo mismo:
+// Monto por reponer cuya fecha objetivo ya pasó. Es una deuda contigo mismo:
 // avisa, pero por debajo de pagos y presupuestos reales.
 function fromSavingsDebt(debt, today) {
   if (debt.status !== 'OPEN' || !debt.target_date || debt.target_date >= today) return null
@@ -66,8 +66,8 @@ function fromSavingsDebt(debt, today) {
     rank:    RANK.budgetWarning,
     tone:    'warning',
     status:  'Sin reponer',
-    title:   `Te propusiste reponer ${formatCurrency(pending)} a tu ahorro antes del ${formatDate(debt.target_date)}`,
-    context: 'Deuda con tu ahorro',
+    title:   `Te propusiste reponer ${formatCurrency(pending)} a ${debt.savings_account?.name ?? 'tu cuenta'} antes del ${formatDate(debt.target_date)}`,
+    context: 'Por reponer',
     to:      '/cuentas',
     order:   -new Date(debt.target_date).getTime(), // la más antigua primero
   }

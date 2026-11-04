@@ -15,6 +15,7 @@ import { AccountForm } from './components/AccountForm'
 import { TransferList } from './components/TransferList'
 import { SavingsDebtsSection } from './components/SavingsDebtsSection'
 import { useMoneyActions, pendingFor } from './useMoneyActions'
+import { formatCurrency } from '@/lib/formatters'
 import styles from './Accounts.module.css'
 
 export function Accounts() {
@@ -40,6 +41,12 @@ export function Accounts() {
   const hasSavingsAccount = accounts.some((a) => a.is_savings)
 
   const deletingAccount = accounts.find((a) => a.id === deletingId)
+
+  // Total por reponer, y cuánto a cada cuenta (solo las que tienen algo pendiente).
+  const owedByAccount = accounts
+    .map((a) => ({ account: a, pending: pendingFor(a.id, withdrawals) }))
+    .filter((r) => r.pending > 0)
+  const totalPending = owedByAccount.reduce((acc, r) => acc + r.pending, 0)
 
   async function handleSubmit(payload) {
     setSaving(true)
@@ -79,6 +86,25 @@ export function Accounts() {
         }
       />
 
+      {!loading && totalPending > 0 && (
+        <div className={styles.pendingBanner} role="status">
+          <div className={styles.pendingMain}>
+            <span className={styles.pendingLabel}>Total por reponer</span>
+            <strong className={styles.pendingTotal}>{formatCurrency(totalPending)}</strong>
+          </div>
+          {owedByAccount.length > 1 && (
+            <ul className={styles.pendingList}>
+              {owedByAccount.map(({ account, pending }) => (
+                <li key={account.id}>
+                  <span>{account.name}</span>
+                  <strong>{formatCurrency(pending)}</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div className={styles.grid}>
           <Skeleton className={styles.cardSkeleton} />
@@ -98,7 +124,7 @@ export function Accounts() {
             <AccountCard
               key={account.id}
               account={account}
-              pendingDebt={account.is_savings ? pendingFor(account.id, withdrawals) : 0}
+              pendingDebt={pendingFor(account.id, withdrawals)}
               canMove={activeCount >= 2}
               onOpen={() => navigate(`/cuentas/${account.id}`)}
               onWithdraw={() => openWithdraw(account)}
@@ -113,7 +139,7 @@ export function Accounts() {
 
       {accounts.length > 0 && (hasSavingsAccount || withdrawals.length > 0) && (
         <div className={styles.transfers}>
-          <SavingsDebtsSection accounts={accounts} withdrawals={withdrawals} onRepay={openRepay} />
+          <SavingsDebtsSection accounts={accounts} withdrawals={withdrawals} onRepay={openRepay} title="Por reponer" />
         </div>
       )}
 

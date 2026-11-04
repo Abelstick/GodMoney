@@ -3,8 +3,8 @@ import { offlineQueue, mergePending, isRetryableError } from '@/lib/offlineQueue
 
 // Los gastos con cuenta (destino del ahorro o "pagado desde") mueven saldos
 // vía trigger en BD; se refrescan las cuentas para que objetivos y patrimonio
-// reflejen el cambio al instante. Pagar desde una cuenta de ahorro además crea
-// o ajusta una deuda con el ahorro, así que también se refrescan las deudas.
+// reflejen el cambio al instante. Pagar desde una cuenta marcando "Lo voy a
+// reponer" además crea o ajusta una deuda con esa cuenta, así que también se refrescan las deudas.
 function touchesAccount(...expenses) {
   return expenses.some((e) => e?.savings_account_id || e?.paid_from_account_id)
 }
@@ -22,7 +22,7 @@ async function refreshAccounts(get, ...expenses) {
 }
 
 function addedMessage(e) {
-  if (e.paid_from_account?.is_savings && e.repay_to_savings) return 'Gasto registrado y sumado a tu deuda con el ahorro'
+  if (e.paid_from_account_id && e.repay_to_savings) return `Gasto registrado y sumado a lo que falta reponer a ${e.paid_from_account?.name ?? 'la cuenta'}`
   if (e.paid_from_account_id) return `Gasto registrado y descontado de ${e.paid_from_account?.name ?? 'la cuenta'}`
   if (e.savings_account_id) return 'Ahorro registrado y sumado a la cuenta'
   return 'Gasto registrado'

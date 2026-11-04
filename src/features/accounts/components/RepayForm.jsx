@@ -41,10 +41,10 @@ export function RepayForm({ savingsAccount, accounts, pending, onSubmit, onCance
     })
   }
 
-  let hint = `Le debes ${formatCurrency(pending)} a ${savingsAccount.name}. Puedes reponer solo una parte.`
+  let hint = `Falta reponer ${formatCurrency(pending)} a ${savingsAccount.name}. Puedes reponer solo una parte.`
   if (amount > 0 && amount < pending) hint = `Quedarán ${formatCurrency(pending - amount)} por reponer.`
   if (amount > 0 && amount >= pending && pending > 0) hint = amount > pending
-    ? `Cubre toda la deuda y ${formatCurrency(amount - pending)} queda como ahorro extra.`
+    ? `Cubre toda la deuda y ${formatCurrency(amount - pending)} queda como aporte extra.`
     : 'Con esto repones todo lo que debías.'
 
   if (!sources.length) {
@@ -64,7 +64,7 @@ export function RepayForm({ savingsAccount, accounts, pending, onSubmit, onCance
       <Input label="Fecha" type="date" value={form.date} onChange={set('date')} error={errors.date} required />
       <Input label="Nota (opcional)" value={form.note} onChange={set('note')} placeholder="Ej: Repongo con el sueldo" />
       <p className={styles.hint}>
-        Pasa dinero a tu ahorro y descuenta de tus deudas, empezando por la más antigua. No cuenta como gasto.
+        Pasa dinero a {savingsAccount.name} y descuenta de lo pendiente, empezando por lo más antiguo. No cuenta como gasto.
       </p>
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>

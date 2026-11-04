@@ -74,7 +74,7 @@ export function WithdrawalForm({ accounts, onSubmit, onCancel, loading, initial 
       <Input label="Reponer antes de (opcional)" type="date"
         value={form.target_date} onChange={set('target_date')} />
       <p className={styles.hint}>
-        Esto no mueve saldo: solo registra lo que le debes a tu ahorro. El saldo vuelve a subir cuando registras reposiciones.
+        Esto no mueve saldo: solo registra lo que falta reponer a esa cuenta. El saldo vuelve a subir cuando registras reposiciones.
       </p>
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>

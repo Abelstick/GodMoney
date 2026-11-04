@@ -74,13 +74,21 @@
 .chevron { margin-left: auto; color: var(--color-text-muted); flex-shrink: 0; transition: transform var(--transition-fast); }
 
 .debt {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
 }
-.debt strong { color: var(--color-warning); font-variant-numeric: tabular-nums; }
+.debt strong {
+  color: var(--color-warning);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
 
 .savingsActions { display: flex; gap: var(--space-2); }
 .savingsActions > * { flex: 1; }

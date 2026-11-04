@@ -39,14 +39,15 @@ export function AccountCard({
 
         {pendingDebt > 0 && (
           <div className={styles.debt}>
-            Le debes <strong>{formatCurrency(pendingDebt)}</strong> por reponer
+            <span>Por reponer</span>
+            <strong>{formatCurrency(pendingDebt)}</strong>
           </div>
         )}
       </button>
 
-      {account.is_savings && canMove && (
+      {(account.is_savings || pendingDebt > 0) && canMove && (
         <div className={styles.savingsActions}>
-          <Button size="sm" variant="secondary" onClick={onWithdraw}>Saqué dinero</Button>
+          {account.is_savings && <Button size="sm" variant="secondary" onClick={onWithdraw}>Saqué dinero</Button>}
           <Button size="sm" variant="success" onClick={onRepay}>Reponer</Button>
         </div>
       )}

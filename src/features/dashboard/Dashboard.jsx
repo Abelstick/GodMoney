@@ -29,6 +29,7 @@ import { incomeService }  from '@/services/incomeService'
 import { expenseService } from '@/services/expenseService'
 import { transferService } from '@/services/transferService'
 import { savingsFlow } from '@/lib/accountActivity'
+import { pendingAmount } from '@/services/savingsWithdrawalService'
 import { getMonthRange } from '@/lib/formatters'
 import { Card }          from '@/components/ui/Card/Card'
 import { PageHeader }    from '@/components/ui/PageHeader/PageHeader'
@@ -82,6 +83,7 @@ export function Dashboard() {
   const fetchSavingsWithdrawals = useStore((s) => s.fetchSavingsWithdrawals)
   useEffect(() => { fetchSavingsWithdrawals() }, [])
   const hasOpenSavingsDebt = savingsDebts.some((d) => d.status === 'OPEN')
+  const pendingRepay = savingsDebts.reduce((acc, d) => acc + pendingAmount(d), 0)
 
   // Cuánto salió del ahorro y cuánto se repuso en el mes elegido.
   const [monthTransfers, setMonthTransfers] = useState([])
@@ -251,6 +253,7 @@ export function Dashboard() {
               payable={payable}
               netWorth={netWorth}
               accountsCount={accounts.length}
+              pendingRepay={pendingRepay}
             />
             <MonthSummary
               monthLabel={activeMonthLabel}
@@ -306,7 +309,7 @@ export function Dashboard() {
               {showSavingsCard && (
                 <Card>
                   <Card.Header action={<Anchor component={Link} to="/cuentas" size="sm" fw={600}>Reponer</Anchor>}>
-                    Deuda con tu ahorro
+                    Por reponer
                   </Card.Header>
                   <SavingsDebtPreview debts={savingsDebts} flow={monthSavingsFlow} monthLabel={activeMonthLabel} />
                 </Card>

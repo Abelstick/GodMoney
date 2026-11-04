@@ -18,7 +18,7 @@ import styles from './SavingsDebtsSection.module.css'
  * - onRepay(account): abre el formulario de reposición de esa cuenta de ahorro
  * - savingsAccountId: si se indica, el formulario de registro arranca con esa cuenta
  */
-export function SavingsDebtsSection({ accounts, withdrawals, onRepay, savingsAccountId = null, title = 'Deudas con tu ahorro' }) {
+export function SavingsDebtsSection({ accounts, withdrawals, onRepay, savingsAccountId = null, title = 'Por reponer' }) {
   const addSavingsWithdrawal     = useStore((s) => s.addSavingsWithdrawal)
   const forgiveSavingsWithdrawal = useStore((s) => s.forgiveSavingsWithdrawal)
   const reopenSavingsWithdrawal  = useStore((s) => s.reopenSavingsWithdrawal)
@@ -56,8 +56,8 @@ export function SavingsDebtsSection({ accounts, withdrawals, onRepay, savingsAcc
           <h2 className={styles.title}>{title}</h2>
           <p className={styles.hint}>
             {totalPending > 0
-              ? <>Le debes <strong>{formatCurrency(totalPending)}</strong> a tu ahorro</>
-              : 'Dinero que sacaste del ahorro y quieres reponer'}
+              ? <>Falta reponer <strong>{formatCurrency(totalPending)}</strong> en total</>
+              : 'Dinero que sacaste de una cuenta y quieres devolverle'}
           </p>
         </div>
         <Button size="sm" variant="secondary" onClick={() => setRegisterOpen(true)}>
@@ -78,8 +78,8 @@ export function SavingsDebtsSection({ accounts, withdrawals, onRepay, savingsAcc
       ) : (
         <EmptyState
           icon={<IconPigMoney size={40} stroke={1.5} />}
-          title="Sin deudas con tu ahorro"
-          description="Cuando pagues un gasto «desde» tu cuenta de ahorro o uses «Saqué dinero», aparecerá aquí para que lo repongas por partes."
+          title="Nada por reponer"
+          description="Cuando pagues un gasto «desde» una cuenta marcando «Lo voy a reponer», o uses «Saqué dinero» en tu ahorro, aparecerá aquí para que lo repongas por partes."
         />
       )}
 

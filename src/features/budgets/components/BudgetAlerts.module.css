@@ -145,3 +145,6 @@
   .alert { flex-wrap: wrap; }
   .badge { margin-left: calc(8px + var(--space-3)); }
 }
+
+/* Plegado: solo queda la cabecera con el contador */
+.collapsed .header { margin-bottom: 0; }

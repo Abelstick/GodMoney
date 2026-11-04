@@ -55,9 +55,9 @@ function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, select
             </Badge>
           )}
           {expense.paid_from_account && (
-            <Badge color={expense.paid_from_account.is_savings ? 'var(--color-warning)' : 'var(--color-text-muted)'}>
-              {expense.paid_from_account.is_savings && expense.repay_to_savings
-                ? `Del ahorro ${expense.paid_from_account.name} · por reponer`
+            <Badge color={expense.repay_to_savings ? 'var(--color-warning)' : 'var(--color-text-muted)'}>
+              {expense.repay_to_savings
+                ? `Desde ${expense.paid_from_account.name} · por reponer`
                 : `Desde ${expense.paid_from_account.name}`}
             </Badge>
           )}

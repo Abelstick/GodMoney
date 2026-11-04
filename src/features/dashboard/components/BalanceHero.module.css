@@ -101,3 +101,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Lo que falta reponer a tus cuentas: chip bajo el saldo */
+.repay {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  margin-top: var(--space-3);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-hero-chip);
+  font-size: var(--type-meta);
+  color: var(--color-hero-text);
+  transition: background var(--transition-fast);
+}
+.repay:hover { background: var(--color-hero-chip-hover); }
+.repay:focus-visible { outline-color: var(--color-hero-text); }
+.repay span { color: var(--color-hero-muted); }
+.repay strong { font-weight: var(--weight-semibold); }

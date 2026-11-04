@@ -107,3 +107,6 @@
 @media (max-width: 480px) {
   .alert { flex-wrap: wrap; }
 }
+
+/* Plegado: solo queda la cabecera con el contador */
+.collapsed .header { margin-bottom: 0; }

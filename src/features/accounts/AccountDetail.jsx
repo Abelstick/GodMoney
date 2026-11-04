@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/Badge/Badge'
 import { ProgressBar } from '@/components/ui/ProgressBar/ProgressBar'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
+import { pendingAmount } from '@/services/savingsWithdrawalService'
 import { SavingsDebtsSection } from './components/SavingsDebtsSection'
 import { useMoneyActions } from './useMoneyActions'
 import styles from './AccountDetail.module.css'
@@ -63,6 +64,9 @@ export function AccountDetail() {
   const owed    = openDebts.reduce((acc, d) => acc + Number(d.amount), 0)
   const repaid  = openDebts.reduce((acc, d) => acc + Math.min(Number(d.repaid_amount), Number(d.amount)), 0)
   const pending = owed - repaid
+  const fromExpenses = openDebts
+    .filter((d) => d.origin === 'EXPENSE')
+    .reduce((acc, d) => acc + pendingAmount(d), 0)
 
   const thisMonth = format(today, 'yyyy-MM')
   const monthTotals = useMemo(() => activityTotals(activity ?? [], thisMonth), [activity, thisMonth])
@@ -94,14 +98,20 @@ export function AccountDetail() {
           {formatCurrency(account.balance)}
         </div>
 
-        {account.is_savings && (
+        {(account.is_savings || openDebts.length > 0) && (
           <div className={styles.debtBox}>
             {pending > 0 ? (
               <>
                 <div className={styles.debtLine}>
-                  <span>Le debes a esta cuenta</span>
+                  <span>Por reponer a esta cuenta</span>
                   <strong>{formatCurrency(pending)}</strong>
                 </div>
+                {(fromExpenses > 0 && pending - fromExpenses > 0.004) && (
+                  <p className={styles.debtHint}>
+                    {formatCurrency(fromExpenses)} de gastos pagados desde aquí
+                    · {formatCurrency(pending - fromExpenses)} de retiros y otros registros
+                  </p>
+                )}
                 <ProgressBar
                   percent={owed > 0 ? (repaid / owed) * 100 : 0}
                   size="sm"
@@ -113,7 +123,7 @@ export function AccountDetail() {
                 </p>
               </>
             ) : (
-              <p className={styles.debtHint}>No le debes nada a esta cuenta. 🎉</p>
+              <p className={styles.debtHint}>No tienes nada por reponer a esta cuenta. 🎉</p>
             )}
           </div>
         )}
@@ -125,9 +135,14 @@ export function AccountDetail() {
               <Button variant="success" disabled={!canMove} onClick={() => openRepay(account)}>Reponer</Button>
             </>
           ) : (
-            <Button variant="secondary" disabled={!canMove} onClick={openTransfer}>
-              <IconArrowsExchange size={16} stroke={1.75} /> Transferir
-            </Button>
+            <>
+              <Button variant="secondary" disabled={!canMove} onClick={openTransfer}>
+                <IconArrowsExchange size={16} stroke={1.75} /> Transferir
+              </Button>
+              {pending > 0 && (
+                <Button variant="success" disabled={!canMove} onClick={() => openRepay(account)}>Reponer</Button>
+              )}
+            </>
           )}
         </div>
       </Card>
@@ -150,7 +165,7 @@ export function AccountDetail() {
           withdrawals={debts}
           onRepay={openRepay}
           savingsAccountId={account.id}
-          title="Deudas con esta cuenta"
+          title="Por reponer a esta cuenta"
         />
       )}
 

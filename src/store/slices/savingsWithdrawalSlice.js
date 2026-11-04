@@ -21,7 +21,7 @@ export const createSavingsWithdrawalSlice = (set, get) => ({
   addSavingsWithdrawal: async (payload) => {
     const data = await savingsWithdrawalService.create(payload)
     set((s) => ({ savingsWithdrawals: [data, ...s.savingsWithdrawals] }))
-    get().showToast('Deuda con tu ahorro registrada', 'success')
+    get().showToast('Monto por reponer registrado', 'success')
     return data
   },
 
@@ -31,8 +31,8 @@ export const createSavingsWithdrawalSlice = (set, get) => ({
     const extra = Number(payload.amount) - applied
     get().showToast(
       extra > 0.004
-        ? `Repusiste ${formatCurrency(applied)} y ${formatCurrency(extra)} quedó como ahorro extra`
-        : `Repusiste ${formatCurrency(applied)} a tu ahorro`,
+        ? `Repusiste ${formatCurrency(applied)} y ${formatCurrency(extra)} quedó como aporte extra`
+        : `Repusiste ${formatCurrency(applied)}`,
       'success',
     )
     return applied
