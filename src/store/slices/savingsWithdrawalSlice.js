@@ -1,4 +1,5 @@
 import { savingsWithdrawalService } from '@/services/savingsWithdrawalService'
+import { accountService } from '@/services/accountService'
 import { formatCurrency } from '@/lib/formatters'
 
 // Deudas con tu ahorro. repaid_amount/status los calcula la BD a partir de las
@@ -18,10 +19,23 @@ export const createSavingsWithdrawalSlice = (set, get) => ({
     }
   },
 
-  addSavingsWithdrawal: async (payload) => {
+  // deduct_from_balance: además resta el monto del saldo de la cuenta (para
+  // retiros anteriores que el saldo de la app todavía no reflejaba).
+  addSavingsWithdrawal: async ({ deduct_from_balance = false, ...payload }) => {
     const data = await savingsWithdrawalService.create(payload)
     set((s) => ({ savingsWithdrawals: [data, ...s.savingsWithdrawals] }))
-    get().showToast('Monto por reponer registrado', 'success')
+    if (!deduct_from_balance) {
+      get().showToast('Monto por reponer registrado', 'success')
+      return data
+    }
+    try {
+      const account = await accountService.adjustBalance(data.savings_account_id, -Number(data.amount))
+      get().patchAccountBalance(data.savings_account_id, account)
+      get().showToast('Monto por reponer registrado y descontado del saldo', 'success')
+    } catch (err) {
+      // La deuda ya quedó guardada: solo falta el ajuste de saldo.
+      get().showToast(`Se registró lo que falta reponer, pero no se pudo descontar del saldo: ${err.message}`, 'error')
+    }
     return data
   },
 

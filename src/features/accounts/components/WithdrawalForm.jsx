@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Input }  from '@/components/ui/Input/Input'
 import { Select } from '@/components/ui/Select/Select'
 import { Button } from '@/components/ui/Button/Button'
+import { formatCurrency } from '@/lib/formatters'
 import styles from './AccountForm.module.css'
 
 const ORIGINS = [
@@ -24,6 +25,7 @@ export function WithdrawalForm({ accounts, onSubmit, onCancel, loading, initial 
     amount: '',
     reason: '',
     target_date: '',
+    deduct: false,
     ...initial,
   }))
   const [errors, setErrors] = useState({})
@@ -50,6 +52,7 @@ export function WithdrawalForm({ accounts, onSubmit, onCancel, loading, initial 
       period_label: period,
       reason: form.reason.trim() || (period ? `Déficit ${period}` : null),
       target_date: form.target_date || null,
+      deduct_from_balance: Boolean(form.deduct),
     })
   }
 
@@ -73,8 +76,15 @@ export function WithdrawalForm({ accounts, onSubmit, onCancel, loading, initial 
         placeholder={isDeficit ? `Déficit ${form.period_label || ''}`.trim() : 'Ej: Reparación del auto'} />
       <Input label="Reponer antes de (opcional)" type="date"
         value={form.target_date} onChange={set('target_date')} />
+      <label className={styles.checkRow}>
+        <input type="checkbox" checked={form.deduct}
+          onChange={(e) => setForm((f) => ({ ...f, deduct: e.target.checked }))} />
+        Descontar también del saldo de la cuenta
+      </label>
       <p className={styles.hint}>
-        Esto no mueve saldo: solo registra lo que falta reponer a esa cuenta. El saldo vuelve a subir cuando registras reposiciones.
+        {form.deduct
+          ? `Se restará ${Number(form.amount) > 0 ? formatCurrency(Number(form.amount)) : 'el monto'} del saldo de ${choices.find((a) => a.id === form.savings_account_id)?.name ?? 'la cuenta'}. Márcalo solo si el saldo que ves en la app aún no refleja ese dinero que salió.`
+          : 'Solo registra lo que falta reponer; el saldo no cambia (úsalo si el saldo ya refleja ese dinero que salió). El saldo vuelve a subir cuando registras reposiciones.'}
       </p>
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>
