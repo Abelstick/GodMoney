@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   BUDGET_STATUS, getBudgetStatus, budgetStatusSeverity, allBudgetCategoryIds,
-  getBudgetAlertMessage, getSuggestionRange, suggestBudgetAmount, getOverlappingBudgetNames,
+  getBudgetAlertMessage, getSuggestionRange, suggestBudgetAmount, getOverlappingBudgetNames, getUnbudgetedSpending,
   getBudgetPeriodRange, getBudgetReferenceDate, getBudgetsRange, getBudgetPeriodText,
   spentInRange, withBudgetStatus, summarizeBudgets,
   getBudgetPace, sortBudgetsByUrgency, getBudgetMovementsUrl,
@@ -111,6 +111,45 @@ describe('monto sugerido', () => {
     expect(suggestBudgetAmount(rows, [], 'monthly')).toBeNull()
     expect(suggestBudgetAmount(rows, ['z'], 'monthly')).toBeNull()
     expect(suggestBudgetAmount([], ['a'], 'monthly')).toBeNull()
+  })
+})
+
+describe('getUnbudgetedSpending', () => {
+  const range = { from: '2026-11-01', to: '2026-11-30' }
+  const budgets = [{ category_ids: ['comida'] }, { period: 'yearly', category_ids: ['viajes'] }]
+  const exp = (category_id, amount, name, extra = {}) => ({
+    category_id, amount, date: '2026-11-10', category: category_id ? { name, color: '#111' } : null, ...extra,
+  })
+
+  it('suma lo no cubierto por categoría, de mayor a menor', () => {
+    const out = getUnbudgetedSpending(
+      [exp('ocio', 30, 'Ocio'), exp('taxi', 100.1, 'Taxi'), exp('ocio', 20.2, 'Ocio')], budgets, range,
+    )
+    expect(out.total).toBe(150.3)
+    expect(out.categories.map((c) => [c.id, c.total])).toEqual([['taxi', 100.1], ['ocio', 50.2]])
+  })
+
+  it('una categoría de un presupuesto de cualquier período se considera cubierta', () => {
+    expect(getUnbudgetedSpending([exp('comida', 50, 'Comida'), exp('viajes', 90, 'Viajes')], budgets, range)).toBeNull()
+  })
+
+  it('agrupa los gastos sin categoría', () => {
+    const out = getUnbudgetedSpending([exp(null, 10), exp(null, 5)], budgets, range)
+    expect(out.categories).toEqual([{ id: null, name: 'Sin categoría', color: null, total: 15 }])
+  })
+
+  it('excluye el ahorro y lo que queda fuera del rango', () => {
+    const rows = [
+      exp('ahorro', 500, 'Ahorro', { category: { name: 'Ahorro', is_savings: true } }),
+      exp('ocio', 40, 'Ocio', { date: '2026-10-31' }),
+      exp('ocio', 40, 'Ocio', { date: '2026-12-01' }),
+    ]
+    expect(getUnbudgetedSpending(rows, budgets, range)).toBeNull()
+  })
+
+  it('incluye los extremos del rango', () => {
+    const rows = [exp('ocio', 1, 'Ocio', { date: '2026-11-01' }), exp('ocio', 2, 'Ocio', { date: '2026-11-30' })]
+    expect(getUnbudgetedSpending(rows, budgets, range).total).toBe(3)
   })
 })
 

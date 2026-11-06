@@ -12,7 +12,7 @@ import styles from './BudgetForm.module.css'
 const EMPTY = { name: '', amount: '', category_ids: [], period: 'monthly', color: '#6366f1' }
 const PER_PERIOD = { weekly: 'a la semana', monthly: 'al mes', yearly: 'al año' }
 
-export function BudgetForm({ initial, otherBudgets = [], onSubmit, onCancel, loading }) {
+export function BudgetForm({ initial, isEditing = false, otherBudgets = [], onSubmit, onCancel, loading }) {
   const [form, setForm] = useState(initial ?? EMPTY)
   const [errors, setErrors] = useState({})
   const [history, setHistory] = useState([])
@@ -143,7 +143,7 @@ export function BudgetForm({ initial, otherBudgets = [], onSubmit, onCancel, loa
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>
         <Button type="submit" disabled={loading}>
-          {loading ? 'Guardando…' : initial ? 'Actualizar' : 'Crear presupuesto'}
+          {loading ? 'Guardando…' : isEditing ? 'Actualizar' : 'Crear presupuesto'}
         </Button>
       </div>
     </form>

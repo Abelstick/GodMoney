@@ -4,7 +4,7 @@ import { summarize, checkpoints, balanceOn, nextIncomeAfter } from './metrics'
 import { runProjection } from './projection'
 import { compareScenarios } from './comparison'
 import { buildInsights, biggestPurchase } from './insights'
-import { createEvent, createScenario, horizonEnd, normalizeScenario, scenarioReducer } from './scenarioModel'
+import { createEvent, createScenario, horizonEnd, normalizeScenario, parseQuickEntries, scenarioReducer } from './scenarioModel'
 
 const NOW = new Date(2026, 10, 2) // 2 nov 2026
 const WINDOW = { from: '2026-11-02', to: '2026-12-02' }
@@ -238,5 +238,73 @@ describe('scenarioReducer', () => {
     expect(s.config).toMatchObject({ horizon: '1m', startDate: '2026-11-02' })
     expect(s.events).toHaveLength(1)
     expect(s.events[0].repeat).toBe('once')
+  })
+})
+
+describe('horizonte "Fin de mes"', () => {
+  it('termina el último día del mes de inicio', () => {
+    expect(horizonEnd('2026-11-06', 'eom')).toBe('2026-11-30')
+    expect(horizonEnd('2027-02-10', 'eom')).toBe('2027-02-28')
+    expect(horizonEnd('2028-02-10', 'eom')).toBe('2028-02-29')
+    expect(horizonEnd('2026-11-30', 'eom')).toBe('2026-11-30')
+  })
+
+  it('es el horizonte de un escenario nuevo y sobrevive a la normalización', () => {
+    expect(createScenario({}, NOW).config.horizon).toBe('eom')
+    expect(normalizeScenario({ config: { horizon: 'eom' } }, NOW).config.horizon).toBe('eom')
+  })
+
+  it('proyecta el saldo final de esa fecha, también iniciando el último día', () => {
+    const scenario = createScenario({
+      config: { ...createScenario({}, NOW).config, initialBalance: '1000', startDate: '2026-11-30' },
+      events: [createEvent({ type: 'expense', amount: '300', date: '2026-11-30' }, NOW)],
+    }, NOW)
+    const { window, summary } = runProjection(scenario)
+    expect(window.to).toBe('2026-11-30')
+    expect(summary.final).toBe(70000)
+  })
+})
+
+describe('parseQuickEntries', () => {
+  const entry = (description, amount, type = 'expense') => ({ description, amount, type })
+
+  it('lee concepto y monto en una línea', () => {
+    expect(parseQuickEntries('Alquiler 800').entries).toEqual([entry('Alquiler', '800')])
+    expect(parseQuickEntries('Luz: S/ 120.50').entries).toEqual([entry('Luz', '120.50')])
+    expect(parseQuickEntries('Pago 2 cuotas 300').entries).toEqual([entry('Pago 2 cuotas', '300')])
+  })
+
+  it('un + delante del monto es ingreso; un - sigue siendo gasto', () => {
+    expect(parseQuickEntries('Sueldo +3000').entries).toEqual([entry('Sueldo', '3000', 'income')])
+    expect(parseQuickEntries('Luz -50').entries).toEqual([entry('Luz', '50')])
+    expect(parseQuickEntries('Luz - 50').entries).toEqual([entry('Luz', '50')])
+  })
+
+  it('lee columnas pegadas de Excel e ignora el encabezado', () => {
+    const { entries, skipped } = parseQuickEntries('Concepto\tPrecio\r\nAlquiler\t800\r\nInternet\t99.90\r\n')
+    expect(entries).toEqual([entry('Alquiler', '800'), entry('Internet', '99.90')])
+    expect(skipped).toEqual(['Concepto\tPrecio'])
+  })
+
+  it('lee el precio en la línea debajo del concepto', () => {
+    expect(parseQuickEntries('Alquiler\n800\nLuz\n120').entries).toEqual([entry('Alquiler', '800'), entry('Luz', '120')])
+  })
+
+  it('entiende miles y decimales con coma', () => {
+    const amounts = (t) => parseQuickEntries(t).entries[0].amount
+    expect(amounts('Moto 1,200')).toBe('1200')
+    expect(amounts('Moto 1,200.50')).toBe('1200.50')
+    expect(amounts('Moto 800,50')).toBe('800.50')
+  })
+
+  it('un monto solo no necesita concepto', () => {
+    expect(parseQuickEntries('800').entries).toEqual([entry('', '800')])
+  })
+
+  it('informa lo que no pudo leer y no inventa movimientos', () => {
+    expect(parseQuickEntries('Solo texto')).toEqual({ entries: [], skipped: ['Solo texto'] })
+    expect(parseQuickEntries('Gratis 0')).toEqual({ entries: [], skipped: ['Gratis 0'] })
+    expect(parseQuickEntries('')).toEqual({ entries: [], skipped: [] })
+    expect(parseQuickEntries('Sin precio\nAlquiler 800').skipped).toEqual(['Sin precio'])
   })
 })

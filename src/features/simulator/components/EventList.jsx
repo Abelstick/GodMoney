@@ -9,6 +9,8 @@ import { EVENT_TYPES, sortEvents } from '@/lib/simulation/scenarioModel'
 import { repeatLabel } from '@/lib/simulation/recurrence'
 import { formatRelativeDay } from '@/lib/formatters'
 import { EVENT_META } from './eventMeta'
+import { QuickEntry } from './QuickEntry'
+import { ListTotals } from './ListTotals'
 import styles from './Builder.module.css'
 
 // Un evento que no tiene ninguna ocurrencia dentro del periodo proyectado.
@@ -82,7 +84,10 @@ function EventRow({ event, accountsById, outOfRange, onEdit, onDuplicate, onRemo
   )
 }
 
-export function EventList({ events, window, accounts, onAdd, onImport, onEdit, onDuplicate, onRemove, onToggle }) {
+export function EventList({
+  events, window, accounts, summary, defaultDate,
+  onAdd, onQuickAdd, onPasted, onImport, onEdit, onDuplicate, onRemove, onToggle,
+}) {
   const accountsById = Object.fromEntries(accounts.map((a) => [a.id, a]))
   const sorted = sortEvents(events)
   const active = events.filter((e) => e.enabled).length
@@ -102,8 +107,8 @@ export function EventList({ events, window, accounts, onAdd, onImport, onEdit, o
           <Button variant="secondary" size="sm" leftSection={<IconDownload size={16} />} onClick={onImport}>
             Importar
           </Button>
-          <Button size="sm" leftSection={<IconPlus size={16} />} onClick={onAdd}>
-            Agregar
+          <Button size="sm" variant="secondary" leftSection={<IconPlus size={16} />} onClick={onAdd}>
+            Con detalles
           </Button>
         </div>
       </div>
@@ -113,13 +118,8 @@ export function EventList({ events, window, accounts, onAdd, onImport, onEdit, o
           compact
           icon={<IconFlask size={32} stroke={1.5} />}
           title="Arma tu escenario"
-          description="Agrega un sueldo, una compra o un pago y mira al instante cuánto te quedaría. Nada de esto toca tus cuentas reales."
-          action={(
-            <div className={styles.emptyActions}>
-              <Button onClick={onAdd} leftSection={<IconPlus size={16} />}>Agregar movimiento</Button>
-              <Button variant="secondary" onClick={onImport}>Importar mis pagos y sueldos</Button>
-            </div>
-          )}
+          description="Escribe abajo un concepto y su precio, o pega tu lista de Excel, y mira al instante cuánto te quedaría. Nada de esto toca tus cuentas reales."
+          action={<Button variant="secondary" onClick={onImport}>Importar mis pagos y sueldos</Button>}
         />
       ) : (
         <ul className={styles.eventList}>
@@ -139,6 +139,9 @@ export function EventList({ events, window, accounts, onAdd, onImport, onEdit, o
           </AnimatePresence>
         </ul>
       )}
+
+      <QuickEntry defaultDate={defaultDate} onAdd={onQuickAdd} onPasted={onPasted} />
+      {events.length > 0 && <ListTotals summary={summary} windowEnd={window.to} />}
     </Card>
   )
 }

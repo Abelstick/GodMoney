@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
+import { format, parseISO } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { IconClipboardList } from '@tabler/icons-react'
 import { useBudgets }      from '@/hooks/useBudgets'
+import { useExpenses }     from '@/hooks/useExpenses'
 import { useMonthFilter }  from '@/hooks/useMonthFilter'
 import { Button }          from '@/components/ui/Button/Button'
 import { PageHeader }      from '@/components/ui/PageHeader/PageHeader'
@@ -9,33 +12,59 @@ import { EmptyState }      from '@/components/common/EmptyState/EmptyState'
 import { MonthPicker }     from '@/components/common/MonthPicker/MonthPicker'
 import { Skeleton }        from '@/components/common/Skeleton/Skeleton'
 import { exportBudgetCSV, printBudgets } from '@/lib/exportBudgets'
-import { sortBudgetsByUrgency } from '@/lib/budgetStatus'
+import { getUnbudgetedSpending, sortBudgetsByUrgency } from '@/lib/budgetStatus'
 import { BudgetCard }      from './components/BudgetCard'
 import { BudgetForm }      from './components/BudgetForm'
 import { BudgetSummary }   from './components/BudgetSummary'
 import { BudgetAlerts }    from './components/BudgetAlerts'
+import { UnbudgetedSpending } from './components/UnbudgetedSpending'
 import { ConfirmDialog }   from '@/components/common/ConfirmDialog/ConfirmDialog'
 import styles from './Budgets.module.css'
 
 export function Budgets() {
   const { budgets, summary, loading, addBudget, updateBudget, removeBudget } = useBudgets()
   const { activeMonth, setActiveMonth, months } = useMonthFilter()
+  const { expenses, from, to } = useExpenses()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editing,     setEditing]     = useState(null)
   const [saving,      setSaving]      = useState(false)
   const [deletingId,  setDeletingId]  = useState(null)
   const [deleting,    setDeleting]    = useState(false)
 
+  const [prefill,     setPrefill]     = useState(null)
+
   const sortedBudgets = useMemo(() => sortBudgetsByUrgency(budgets), [budgets])
   const deletingBudget = budgets.find((b) => b.id === deletingId)
+  const unbudgeted = useMemo(
+    () => getUnbudgetedSpending(expenses, budgets, { from, to }),
+    [expenses, budgets, from, to],
+  )
+  const monthLabel = format(parseISO(`${activeMonth}-01`), 'MMMM', { locale: es })
+
+  function closeForm() {
+    setModalOpen(false)
+    setEditing(null)
+    setPrefill(null)
+  }
+
+  function createForCategory(category) {
+    setEditing(null)
+    setPrefill({
+      name: category.name,
+      amount: '',
+      category_ids: [category.id],
+      period: 'monthly',
+      color: category.color ?? '#6366f1',
+    })
+    setModalOpen(true)
+  }
 
   async function handleSubmit(payload) {
     setSaving(true)
     try {
       if (editing) await updateBudget(editing.id, payload)
       else         await addBudget(payload)
-      setModalOpen(false)
-      setEditing(null)
+      closeForm()
     } finally {
       setSaving(false)
     }
@@ -69,7 +98,7 @@ export function Budgets() {
                 </Button>
               </>
             )}
-            <Button onClick={() => { setEditing(null); setModalOpen(true) }}>
+            <Button onClick={() => { setEditing(null); setPrefill(null); setModalOpen(true) }}>
               + Nuevo presupuesto
             </Button>
           </>
@@ -114,6 +143,8 @@ export function Budgets() {
               />
             ))}
           </div>
+
+          <UnbudgetedSpending data={unbudgeted} monthLabel={monthLabel} onCreate={createForCategory} />
         </>
       )}
 
@@ -132,7 +163,7 @@ export function Budgets() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setEditing(null) }}
+        onClose={closeForm}
         title={editing ? 'Editar presupuesto' : 'Nuevo presupuesto'}
       >
         <BudgetForm
@@ -142,10 +173,11 @@ export function Budgets() {
             category_ids: editing.category_ids ?? [],
             period:      editing.period,
             color:       editing.color,
-          } : undefined}
+          } : prefill ?? undefined}
+          isEditing={Boolean(editing)}
           otherBudgets={budgets.filter((b) => b.id !== editing?.id)}
           onSubmit={handleSubmit}
-          onCancel={() => { setModalOpen(false); setEditing(null) }}
+          onCancel={closeForm}
           loading={saving}
         />
       </Modal>

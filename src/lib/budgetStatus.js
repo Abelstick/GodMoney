@@ -241,6 +241,29 @@ export function suggestBudgetAmount(rows, categoryIds, period) {
   return Math.ceil((cents / 100 / months) * (MONTHS_PER_PERIOD[period] ?? 1))
 }
 
+// Gasto del rango que no cuenta para ningún presupuesto, por categoría y de mayor
+// a menor (null si no hay). El ahorro no es un gasto que limitar: queda fuera.
+export function getUnbudgetedSpending(expenses, budgets, { from, to }) {
+  const covered = new Set(allBudgetCategoryIds(budgets))
+  const byCategory = new Map()
+  let totalCents = 0
+  for (const e of expenses) {
+    if (e.date < from || e.date > to || e.category?.is_savings || covered.has(e.category_id)) continue
+    const key = e.category_id ?? null
+    const entry = byCategory.get(key) ?? { id: key, name: e.category?.name ?? 'Sin categoría', color: e.category?.color ?? null, cents: 0 }
+    entry.cents += toCents(e.amount)
+    byCategory.set(key, entry)
+    totalCents += toCents(e.amount)
+  }
+  if (!totalCents) return null
+  return {
+    total: totalCents / 100,
+    categories: [...byCategory.values()]
+      .sort((a, b) => b.cents - a.cents)
+      .map(({ cents, ...category }) => ({ ...category, total: cents / 100 })),
+  }
+}
+
 // Nombres de los presupuestos que ya cubren alguna de estas categorías.
 export function getOverlappingBudgetNames(categoryIds, budgets) {
   const ids = new Set(categoryIds)

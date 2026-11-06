@@ -1,4 +1,4 @@
-import { addDays, addMonths, differenceInCalendarDays, format, isValid, parseISO } from 'date-fns'
+import { addDays, addMonths, differenceInCalendarDays, endOfMonth, format, isValid, parseISO } from 'date-fns'
 import { REPEAT_VALUES } from './recurrence'
 import { isPositiveAmount, toCents } from './money'
 
@@ -20,6 +20,7 @@ export const EVENT_TYPES = {
 export const EVENT_TYPE_KEYS = Object.keys(EVENT_TYPES)
 
 export const HORIZONS = [
+  { value: 'eom',    label: 'Fin de mes', short: 'Fin de mes' },
   { value: '7d',     label: '7 días',  short: '7d'  },
   { value: '15d',    label: '15 días', short: '15d' },
   { value: '1m',     label: '1 mes',   short: '1m'  },
@@ -36,6 +37,7 @@ export const MAX_RANGE_DAYS = 730
 export function horizonEnd(startDate, horizon, customEnd) {
   const start = parseISO(startDate)
   switch (horizon) {
+    case 'eom': return format(endOfMonth(start), ISO)
     case '7d':  return format(addDays(start, 7), ISO)
     case '15d': return format(addDays(start, 15), ISO)
     case '1m':  return format(addMonths(start, 1), ISO)
@@ -87,13 +89,58 @@ export function createScenario(partial = {}, now = new Date()) {
       initialBalance: '',
       accountBalances: [],
       startDate: todayISO(now),
-      horizon: '1m',
+      horizon: 'eom',
       customEnd: null,
       threshold: '',
     },
     events: [],
     ...partial,
   }
+}
+
+const AMOUNT_AT_END = /^(.*?)[\s;:=]*([+-]?)\s*(?:S\/\.?\s*)?(\d[\d.,]*)\s*$/i
+
+// "800,50" es decimal (Excel en español); "1,200" y "1,200.50" llevan miles.
+function normalizeAmount(text) {
+  const clean = text.replace(/[.,]$/, '')
+  return /^\d+,\d{1,2}$/.test(clean) ? clean.replace(',', '.') : clean.replace(/,/g, '')
+}
+
+// Convierte texto escrito o pegado de Excel en movimientos: "Alquiler 800",
+// columnas separadas por tab o el precio en la línea debajo del concepto. Por
+// defecto es gasto; un "+" delante del monto lo hace ingreso. Las líneas sin
+// monto que no se pueden emparejar se devuelven en `skipped`.
+export function parseQuickEntries(text) {
+  const entries = []
+  const skipped = []
+  let pendingConcept = null
+
+  const flushPending = () => {
+    if (pendingConcept !== null) skipped.push(pendingConcept)
+    pendingConcept = null
+  }
+
+  for (const raw of String(text ?? '').split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line) continue
+    const match = line.match(AMOUNT_AT_END)
+    const amount = match ? normalizeAmount(match[3]) : ''
+    if (!match || !isPositiveAmount(amount)) {
+      flushPending()
+      pendingConcept = line
+      continue
+    }
+    const concept = match[1].replace(/[\s\t\-–—]+$/, '').trim()
+    if (concept) flushPending()
+    entries.push({
+      description: (concept || pendingConcept || '').slice(0, 80),
+      amount,
+      type: match[2] === '+' ? 'income' : 'expense',
+    })
+    pendingConcept = null
+  }
+  flushPending()
+  return { entries, skipped }
 }
 
 // Saldo inicial total del escenario, en céntimos.

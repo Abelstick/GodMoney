@@ -169,6 +169,15 @@ export function Simulator() {
     showToast(`${events.length} ${events.length === 1 ? 'movimiento importado' : 'movimientos importados'}`, 'success')
   }
 
+  function showPasteResult(added, skipped) {
+    if (!added) {
+      showToast('No encontré montos en lo que pegaste. Usa una línea por concepto, con su precio.', 'error')
+      return
+    }
+    const ignored = skipped ? ` (${skipped} ${skipped === 1 ? 'línea ignorada' : 'líneas ignoradas'}, sin monto)` : ''
+    showToast(`${added} ${added === 1 ? 'movimiento agregado' : 'movimientos agregados'}${ignored}`, 'success')
+  }
+
   const setConfig = (patch) => dispatch({ type: 'set_config', patch })
 
   // ── Opciones de comparación ──
@@ -244,7 +253,11 @@ export function Simulator() {
               events={draft.events}
               window={window}
               accounts={accounts}
+              summary={summary}
+              defaultDate={draft.config.startDate}
               onAdd={() => setEventModal({})}
+              onQuickAdd={(events) => dispatch({ type: 'import_events', events })}
+              onPasted={showPasteResult}
               onImport={() => setImportOpen(true)}
               onEdit={(event) => setEventModal({ event })}
               onDuplicate={(id) => dispatch({ type: 'duplicate_event', id })}

@@ -76,8 +76,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        // Sin recharts a propósito: como chunk manual, el principal le tomaba
+        // prestados dos helpers y descargaba los 429 KB en todas las pantallas.
         manualChunks: {
-          recharts: ['recharts'],
           mantine: ['@mantine/core', '@mantine/hooks'],
           motion: ['framer-motion'],
           supabase: ['@supabase/supabase-js'],
