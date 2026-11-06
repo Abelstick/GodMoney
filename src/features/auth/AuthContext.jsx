@@ -3,6 +3,8 @@ import { supabase }       from '@/lib/supabase'
 import { profileService } from '@/services/profileService'
 import { readCachedUser } from '@/lib/cachedSession'
 import { clearDataCache } from '@/lib/swCache'
+import { accountDataService } from '@/services/accountDataService'
+import { clearLocalUserData } from '@/lib/accountData'
 
 const AuthContext = createContext(null)
 
@@ -71,8 +73,24 @@ export function AuthProvider({ children }) {
     await clearDataCache()
   }
 
+  // Si la RPC falla se lanza el error y la sesión sigue intacta. Si funciona, la
+  // cuenta ya no existe: se limpia el dispositivo y se recarga, para que no quede
+  // en memoria nada del usuario. signOut es local porque ya no hay sesión en el servidor.
+  async function deleteAccount() {
+    await accountDataService.deleteAccount()
+    ensuredRef.current = false
+    try {
+      await supabase.auth.signOut({ scope: 'local' })
+    } catch {
+      localStorage.clear() // sin esto el token seguiría en el dispositivo
+    }
+    clearLocalUserData()
+    await clearDataCache()
+    window.location.assign('/login?cuenta=eliminada')
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   )

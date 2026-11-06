@@ -6,6 +6,7 @@ import { telegramLinkService } from '@/services/telegramLinkService'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { Card } from '@/components/ui/Card/Card'
 import { Button } from '@/components/ui/Button/Button'
+import { AccountDataSection } from './components/AccountDataSection'
 import styles from './Settings.module.css'
 
 function NotificationsSection() {
@@ -284,6 +285,7 @@ export function Settings() {
 
       <NotificationsSection />
       <TelegramSection />
+      <AccountDataSection />
     </div>
   )
 }

@@ -28,7 +28,11 @@ export function LoginPage() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
-  const [info, setInfo]         = useState('')
+  const [info, setInfo]         = useState(() => (
+    new URLSearchParams(window.location.search).get('cuenta') === 'eliminada'
+      ? 'Tu cuenta y tus datos se eliminaron.'
+      : ''
+  ))
   const [loading, setLoading]   = useState(false)
   const [accepted, setAccepted] = useState(false)
 

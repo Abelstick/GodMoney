@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   IconMessageCircle, IconX, IconSend, IconTrash, IconRobot,
 } from '@tabler/icons-react'
 import { useAuth } from '@/features/auth/AuthContext'
 import { profileService } from '@/services/profileService'
-import { askGemini, invalidateFinancialContext } from '@/services/geminiService'
+import { askGemini, invalidateFinancialContext, preloadGemini } from '@/services/geminiService'
 import { useStore } from '@/store'
 import styles from './ChatBot.module.css'
 
@@ -75,6 +76,8 @@ function useVisualViewport(ref, active, onResize) {
 // móvil); sin ellos maneja su propio estado.
 export function ChatBot({ hidden = false, opened, onOpenChange }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const showToast = useStore((s) => s.showToast)
   const [innerOpen, setInnerOpen] = useState(false)
   const open = opened ?? innerOpen
   const setOpen = (value) => {
@@ -94,9 +97,9 @@ export function ChatBot({ hidden = false, opened, onOpenChange }) {
   useVisualViewport(panelRef, open, scrollToBottom)
 
   // Bloquea el scroll de la página detrás del panel (en móvil ocupa toda la
-  // pantalla) y permite cerrar con Escape.
+  // pantalla) y permite cerrar con Escape. Sin clave no hay panel que mostrar.
   useEffect(() => {
-    if (!open) return
+    if (!open || !apiKey) return
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const onKey = (e) => e.key === 'Escape' && setOpen(false)
@@ -105,7 +108,25 @@ export function ChatBot({ hidden = false, opened, onOpenChange }) {
       document.body.style.overflow = prevOverflow
       window.removeEventListener('keydown', onKey)
     }
-  }, [open])
+  }, [open, apiKey])
+
+  // Abierto desde el encabezado móvil sin clave cargada. Se vuelve a consultar el
+  // perfil porque la clave pudo guardarse en Ajustes después de abrir la app.
+  useEffect(() => {
+    if (!open || apiKey || !user) return undefined
+    let cancelled = false
+    profileService.getProfile(user.id).then((profile) => {
+      if (cancelled) return
+      if (profile?.gemini_api_key) {
+        setApiKey(profile.gemini_api_key)
+        return
+      }
+      setOpen(false)
+      showToast('Agrega tu clave de Gemini para usar el asistente', 'info')
+      navigate('/configuracion')
+    })
+    return () => { cancelled = true }
+  }, [open, apiKey, user])
 
   // Textarea que crece con el texto hasta ~5 líneas.
   useLayoutEffect(() => {
@@ -123,6 +144,10 @@ export function ChatBot({ hidden = false, opened, onOpenChange }) {
     }
     loadKey()
   }, [user])
+
+  useEffect(() => {
+    if (open && apiKey) preloadGemini()
+  }, [open, apiKey])
 
   useEffect(() => useStore.subscribe((state, prev) => {
     if (CONTEXT_KEYS.some((k) => state[k] !== prev[k])) invalidateFinancialContext()

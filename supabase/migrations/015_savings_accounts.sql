@@ -6,4 +6,4 @@
 -- y listar solo cuentas de ahorro al registrar una deuda con tu ahorro.
 -- ============================================================
 
-ALTER TABLE accounts ADD COLUMN is_savings BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS is_savings BOOLEAN NOT NULL DEFAULT FALSE;

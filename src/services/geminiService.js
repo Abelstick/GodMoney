@@ -1,4 +1,3 @@
-import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 import { supabase } from '@/lib/supabase'
 import { format, getDate, getDaysInMonth, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { getGoalDerivedAmount } from '@/lib/goalProgress'
@@ -28,7 +27,7 @@ export function invalidateFinancialContext() {
   ctxCache.clear()
 }
 
-function getClient(apiKey) {
+function getClient(apiKey, GoogleGenAI) {
   if (!clientCache.has(apiKey)) clientCache.set(apiKey, new GoogleGenAI({ apiKey }))
   return clientCache.get(apiKey)
 }
@@ -208,10 +207,21 @@ function friendlyError(err) {
   return msg
 }
 
+// La librería pesa mucho y la mayoría de las visitas no usan el chat: no se
+// descarga al abrir la app.
+const loadGenAI = () => import('@google/genai')
+
+// Al abrir el panel, antes de escribir: si el archivo ya no existe (hay versión
+// nueva), main.jsx recarga la página y así no se pierde un mensaje a medio enviar.
+export function preloadGemini() {
+  loadGenAI().catch(() => {}) // askGemini vuelve a intentarlo y muestra el error
+}
+
 export async function askGemini(apiKey, chatHistory, userId) {
   try {
+    const { GoogleGenAI, ThinkingLevel } = await loadGenAI()
     const context = await getFinancialContext(userId)
-    const ai = getClient(apiKey)
+    const ai = getClient(apiKey, GoogleGenAI)
 
     const request = {
       model: MODEL,
