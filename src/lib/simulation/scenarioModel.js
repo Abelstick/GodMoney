@@ -106,6 +106,14 @@ function normalizeAmount(text) {
   return /^\d+,\d{1,2}$/.test(clean) ? clean.replace(',', '.') : clean.replace(/,/g, '')
 }
 
+// Lo que se escribe en un campo de monto: "+3,000.50" → signo y monto limpio.
+// El teclado numérico del móvil puede poner coma decimal ("800,50").
+export function readAmountInput(text) {
+  const value = String(text ?? '').trim()
+  const sign = value.startsWith('+') ? '+' : value.startsWith('-') ? '-' : null
+  return { sign, amount: normalizeAmount(value.replace(/^[+-]\s*/, '')) }
+}
+
 // Convierte texto escrito o pegado de Excel en movimientos: "Alquiler 800",
 // columnas separadas por tab o el precio en la línea debajo del concepto. Por
 // defecto es gasto; un "+" delante del monto lo hace ingreso. Las líneas sin

@@ -1,15 +1,18 @@
+import { useState } from 'react'
 import { AnimatePresence, m } from 'framer-motion'
 import { ActionIcon, Menu, Switch } from '@mantine/core'
-import { IconDots, IconPencil, IconCopy, IconTrash, IconPlus, IconDownload, IconFlask } from '@tabler/icons-react'
+import { IconDots, IconPencil, IconCopy, IconTrash, IconPlus, IconDownload, IconFlask, IconEye, IconEyeOff } from '@tabler/icons-react'
 import { Card } from '@/components/ui/Card/Card'
 import { Button } from '@/components/ui/Button/Button'
 import { Money } from '@/components/ui/Money/Money'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { EVENT_TYPES, sortEvents } from '@/lib/simulation/scenarioModel'
 import { repeatLabel } from '@/lib/simulation/recurrence'
-import { formatRelativeDay } from '@/lib/formatters'
+import { formatDate, formatRelativeDay } from '@/lib/formatters'
+import { fromCents } from '@/lib/simulation/money'
 import { EVENT_META } from './eventMeta'
 import { QuickEntry } from './QuickEntry'
+import { EventInlineEdit } from './EventInlineEdit'
 import { ListTotals } from './ListTotals'
 import styles from './Builder.module.css'
 
@@ -22,7 +25,7 @@ function isOutOfRange(event, window) {
 
 const TONE_SIGN = { income: 'income', expense: 'expense', debt: 'expense', saving: 'expense', transfer: 'neutral' }
 
-function EventRow({ event, accountsById, outOfRange, onEdit, onDuplicate, onRemove, onToggle }) {
+function EventRow({ event, accountsById, outOfRange, editing, onStartEdit, onStopEdit, onSave, onEdit, onDuplicate, onRemove, onToggle }) {
   const meta = EVENT_META[event.type]
   const Icon = meta.icon
   const details = [
@@ -43,7 +46,25 @@ function EventRow({ event, accountsById, outOfRange, onEdit, onDuplicate, onRemo
       className={`${styles.eventRow} ${event.enabled ? '' : styles.eventOff}`}
       data-tone={meta.tone}
     >
-      <button type="button" className={styles.eventMain} onClick={() => onEdit(event)}>
+      {editing ? (
+        <EventInlineEdit
+          event={event}
+          focusField={editing}
+          onSave={(next) => { onSave(next); onStopEdit() }}
+          onCancel={onStopEdit}
+          onMore={(next) => { onStopEdit(); onEdit(next) }}
+        />
+      ) : (
+      <>
+      <button
+        type="button"
+        className={styles.eventMain}
+        onClick={(e) => {
+          // Una transferencia necesita sus cuentas: va directo al formulario.
+          if (event.type === 'transfer') onEdit(event)
+          else onStartEdit(event.id, e.target.closest('[data-amount]') ? 'amount' : 'description')
+        }}
+      >
         <span className={styles.eventIcon} aria-hidden="true"><Icon size={18} stroke={1.9} /></span>
         <span className={styles.eventText}>
           <span className={styles.eventTitle}>
@@ -54,12 +75,14 @@ function EventRow({ event, accountsById, outOfRange, onEdit, onDuplicate, onRemo
             {outOfRange && <span className={styles.outBadge}>Fuera del periodo</span>}
           </span>
         </span>
-        <Money
-          value={event.amount}
-          tone={TONE_SIGN[event.type]}
-          signed={event.type !== 'transfer'}
-          className={styles.eventAmount}
-        />
+        <span data-amount>
+          <Money
+            value={event.amount}
+            tone={TONE_SIGN[event.type]}
+            signed={event.type !== 'transfer'}
+            className={styles.eventAmount}
+          />
+        </span>
       </button>
       <Switch
         size="sm"
@@ -75,25 +98,35 @@ function EventRow({ event, accountsById, outOfRange, onEdit, onDuplicate, onRemo
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item leftSection={<IconPencil size={16} />} onClick={() => onEdit(event)}>Editar</Menu.Item>
+          <Menu.Item leftSection={<IconPencil size={16} />} onClick={() => onEdit(event)}>Más detalles</Menu.Item>
+          <Menu.Item
+            leftSection={event.enabled ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+            onClick={() => onToggle(event.id)}
+          >
+            {event.enabled ? 'Excluir de la simulación' : 'Incluir en la simulación'}
+          </Menu.Item>
           <Menu.Item leftSection={<IconCopy size={16} />} onClick={() => onDuplicate(event.id)}>Duplicar</Menu.Item>
           <Menu.Item leftSection={<IconTrash size={16} />} color="red" onClick={() => onRemove(event)}>Eliminar</Menu.Item>
         </Menu.Dropdown>
       </Menu>
+      </>
+      )}
     </m.li>
   )
 }
 
 export function EventList({
   events, window, accounts, summary, defaultDate,
-  onAdd, onQuickAdd, onPasted, onImport, onEdit, onDuplicate, onRemove, onToggle,
+  onAdd, onQuickAdd, onPasted, onImport, onUpdate, onEdit, onDuplicate, onRemove, onToggle,
 }) {
+  const [editing, setEditing] = useState(null) // { id, field }
   const accountsById = Object.fromEntries(accounts.map((a) => [a.id, a]))
   const sorted = sortEvents(events)
   const active = events.filter((e) => e.enabled).length
 
   return (
     <Card className={styles.listCard}>
+      <div className={styles.listBody}>
       <div className={styles.listHead}>
         <div>
           <h2 className={styles.listTitle}>Movimientos hipotéticos</h2>
@@ -130,6 +163,10 @@ export function EventList({
                 event={event}
                 accountsById={accountsById}
                 outOfRange={isOutOfRange(event, window)}
+                editing={editing?.id === event.id ? editing.field : null}
+                onStartEdit={(id, field) => setEditing({ id, field })}
+                onStopEdit={() => setEditing((cur) => (cur?.id === event.id ? null : cur))}
+                onSave={onUpdate}
                 onEdit={onEdit}
                 onDuplicate={onDuplicate}
                 onRemove={onRemove}
@@ -140,8 +177,19 @@ export function EventList({
         </ul>
       )}
 
-      <QuickEntry defaultDate={defaultDate} onAdd={onQuickAdd} onPasted={onPasted} />
+      <QuickEntry
+        defaultDate={defaultDate}
+        onAdd={onQuickAdd}
+        onPasted={onPasted}
+        result={events.length > 0 && (
+          <p className={styles.quickResult}>
+            <span>Te quedaría al {formatDate(window.to)}</span>
+            <Money value={fromCents(summary.final)} tone={summary.final < 0 ? 'expense' : 'neutral'} className={styles.quickResultValue} />
+          </p>
+        )}
+      />
       {events.length > 0 && <ListTotals summary={summary} windowEnd={window.to} />}
+      </div>
     </Card>
   )
 }

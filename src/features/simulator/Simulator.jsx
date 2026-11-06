@@ -1,11 +1,9 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { SegmentedControl } from '@mantine/core'
-import { IconArrowRight } from '@tabler/icons-react'
 import { useStore } from '@/store'
 import { useAccounts } from '@/hooks/useAccounts'
 import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
 import { Card } from '@/components/ui/Card/Card'
-import { Money } from '@/components/ui/Money/Money'
 import { Modal } from '@/components/common/Modal/Modal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { Disclaimer } from '@/components/common/Disclaimer/Disclaimer'
@@ -14,7 +12,6 @@ import { humanizeError } from '@/lib/errorMessages'
 import { createScenario, normalizeScenario } from '@/lib/simulation/scenarioModel'
 import { runProjection } from '@/lib/simulation/projection'
 import { buildInsights } from '@/lib/simulation/insights'
-import { fromCents } from '@/lib/simulation/money'
 import { useScenarioDraft, fingerprint } from './hooks/useScenarioDraft'
 import { ScenarioBar } from './components/ScenarioBar'
 import { ScenarioConfig } from './components/ScenarioConfig'
@@ -204,7 +201,7 @@ export function Simulator() {
     <div className={styles.page}>
       <PageHeader
         title="¿Qué pasaría si…?"
-        subtitle="Prueba decisiones antes de tomarlas. Nada de lo que hagas aquí cambia tus cuentas, movimientos ni presupuestos."
+        subtitle="Prueba decisiones sin tocar tus cuentas ni movimientos reales."
       />
 
       <ScenarioBar
@@ -233,20 +230,6 @@ export function Simulator() {
       <div className={styles.layout}>
         <div className={styles.workspace}>
           <div className={styles.builder} data-active={tab === 'build' || undefined}>
-            {hasEvents && (
-              <button type="button" className={styles.peek} onClick={() => setTab('results')}>
-                <span className={styles.peekItem}>
-                  <span className={styles.peekLabel}>Al {formatDate(window.to)}</span>
-                  <Money value={fromCents(summary.final)} tone={summary.final < 0 ? 'expense' : 'neutral'} className={styles.peekValue} />
-                </span>
-                <span className={styles.peekItem}>
-                  <span className={styles.peekLabel}>Mínimo</span>
-                  <Money value={fromCents(summary.min.balance)} tone={summary.min.balance < 0 ? 'expense' : 'neutral'} className={styles.peekValue} />
-                </span>
-                <span className={styles.peekGo}>Ver <IconArrowRight size={16} aria-hidden="true" /></span>
-              </button>
-            )}
-
             <ScenarioConfig config={draft.config} accounts={accounts} loading={accountsLoading} onChange={setConfig} />
 
             <EventList
@@ -258,6 +241,7 @@ export function Simulator() {
               onAdd={() => setEventModal({})}
               onQuickAdd={(events) => dispatch({ type: 'import_events', events })}
               onPasted={showPasteResult}
+              onUpdate={(event) => dispatch({ type: 'update_event', event })}
               onImport={() => setImportOpen(true)}
               onEdit={(event) => setEventModal({ event })}
               onDuplicate={(id) => dispatch({ type: 'duplicate_event', id })}

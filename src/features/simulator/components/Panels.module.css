@@ -158,3 +158,10 @@
 .importText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .importTitle { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .importMeta { font-size: var(--type-meta); color: var(--color-text-muted); }
+
+/* "Crear variante": botón en pantallas amplias, opción del menú en el teléfono. */
+.variantItem { display: none; }
+@media (max-width: 640px) {
+  .variantButton { display: none; }
+  .variantItem { display: flex; }
+}

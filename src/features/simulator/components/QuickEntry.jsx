@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { ActionIcon, SegmentedControl, TextInput } from '@mantine/core'
 import { IconPlus } from '@tabler/icons-react'
-import { createEvent, parseQuickEntries } from '@/lib/simulation/scenarioModel'
+import { createEvent, parseQuickEntries, readAmountInput } from '@/lib/simulation/scenarioModel'
 import { isPositiveAmount } from '@/lib/simulation/money'
 import styles from './Builder.module.css'
 
@@ -14,7 +14,7 @@ const looksLikeTable = (text) => /[\r\n\t]/.test(text.trim())
 
 // Agregar como en una hoja de cálculo: concepto, monto, Enter y al siguiente.
 // Fecha y categoría se ajustan después, abriendo el movimiento.
-export function QuickEntry({ defaultDate, onAdd, onPasted }) {
+export function QuickEntry({ defaultDate, result = null, onAdd, onPasted }) {
   const [concept, setConcept] = useState('')
   const [amount, setAmount] = useState('')
   const [type, setType] = useState('expense')
@@ -46,14 +46,13 @@ export function QuickEntry({ defaultDate, onAdd, onPasted }) {
       amountRef.current?.focus()
       return
     }
-    const value = amount.trim()
-    const normalized = /^\d+,\d{1,2}$/.test(value) ? value.replace(',', '.') : value
-    if (!isPositiveAmount(normalized)) {
+    const { amount: clean } = readAmountInput(amount)
+    if (!isPositiveAmount(clean)) {
       setError('Escribe un monto mayor a 0')
       amountRef.current?.focus()
       return
     }
-    onAdd(toEvents([{ description, amount: normalized.replace(/,/g, ''), type }]))
+    onAdd(toEvents([{ description, amount: clean, type }]))
     setConcept('')
     setAmount('')
     setError(null)
@@ -81,14 +80,21 @@ export function QuickEntry({ defaultDate, onAdd, onPasted }) {
 
   return (
     <div className={styles.quick}>
+      {result}
+      <div className={styles.quickFoot}>
+        <SegmentedControl size="xs" value={type} onChange={setType} data={TYPES} aria-label="Tipo de movimiento" />
+        <span className={styles.quickHint}>Enter para agregar. También puedes pegar tu lista de Excel.</span>
+      </div>
       <div className={styles.quickRow}>
         <TextInput
           ref={conceptRef}
           className={styles.quickConcept}
+          classNames={{ input: styles.touchInput }}
           aria-label="Concepto"
           placeholder="Concepto"
           value={concept}
           maxLength={80}
+          enterKeyHint="next"
           onChange={(e) => setConcept(e.target.value)}
           onKeyDown={onKeyDown}
           onPaste={onPaste}
@@ -97,27 +103,24 @@ export function QuickEntry({ defaultDate, onAdd, onPasted }) {
         <TextInput
           ref={amountRef}
           className={styles.quickAmount}
+          classNames={{ input: styles.touchInput }}
           aria-label="Monto"
           placeholder="0.00"
           leftSection={<span className={styles.quickCurrency}>S/</span>}
           value={amount}
           inputMode="decimal"
+          enterKeyHint="done"
           error={Boolean(error)}
           onChange={(e) => changeAmount(e.target.value)}
           onKeyDown={onKeyDown}
           onPaste={onPaste}
           autoComplete="off"
         />
-        <ActionIcon size={36} aria-label="Agregar a la lista" onClick={submit}>
+        <ActionIcon className={styles.touchIcon} size={36} variant="filled" aria-label="Agregar a la lista" onClick={submit}>
           <IconPlus size={18} />
         </ActionIcon>
       </div>
-      <div className={styles.quickFoot}>
-        <SegmentedControl size="xs" value={type} onChange={setType} data={TYPES} aria-label="Tipo de movimiento" />
-        {error
-          ? <span className={styles.quickError} role="alert">{error}</span>
-          : <span className={styles.quickHint}>Enter para agregar. También puedes pegar tu lista de Excel.</span>}
-      </div>
+      {error && <p className={styles.quickError} role="alert">{error}</p>}
     </div>
   )
 }

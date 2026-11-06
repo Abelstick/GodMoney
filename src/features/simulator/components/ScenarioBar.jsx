@@ -42,7 +42,7 @@ export function ScenarioBar({
         >
           Guardar
         </Button>
-        <Button size="sm" variant="secondary" leftSection={<IconGitBranch size={16} />} onClick={onVariant}>
+        <Button className={styles.variantButton} size="sm" variant="secondary" leftSection={<IconGitBranch size={16} />} onClick={onVariant}>
           Crear variante
         </Button>
         <Menu position="bottom-end" withinPortal shadow="md" width={280}>
@@ -53,6 +53,7 @@ export function ScenarioBar({
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item leftSection={<IconFilePlus size={16} />} onClick={onNew}>Nuevo escenario</Menu.Item>
+            <Menu.Item className={styles.variantItem} leftSection={<IconGitBranch size={16} />} onClick={onVariant}>Crear variante</Menu.Item>
             {saved && (
               <Menu.Item leftSection={<IconTrash size={16} />} color="red" onClick={onDelete}>
                 Eliminar «{draft.name}»

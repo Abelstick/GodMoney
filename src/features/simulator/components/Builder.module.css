@@ -255,3 +255,97 @@
 }
 .totalsFinal dt { color: var(--color-text-primary); font-weight: var(--weight-semibold); }
 .totalsFinal dd { font-weight: var(--weight-bold); }
+
+/* ── Lista: en escritorio la entrada va al pie, como una hoja de cálculo ── */
+.listBody { display: flex; flex-direction: column; }
+.quickResult { display: none; }
+
+/* ── Edición en la fila ── */
+.inlineEdit {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+.inlineFoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
+.inlineMore {
+  min-height: 32px;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.inlineMore:hover { text-decoration: underline; }
+.inlineMore:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+/* En escritorio siempre visibles: el botón solo existe para el móvil. */
+.moreToggle { display: none; }
+
+/* ── Móvil y tablet (mismo corte que las pestañas del simulador) ── */
+@media (max-width: 1023px) {
+  /* Arriba de la lista: no se mueve al agregar filas y sigue a la vista con el
+     teclado abierto, junto con el resultado. */
+  .quick {
+    order: -2;
+    margin: 0 0 var(--space-3);
+    padding: var(--space-3);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--color-surface-2);
+  }
+  .listHead { order: -1; }
+
+  .quickResult {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+  .quickResultValue { font-size: var(--text-lg); font-weight: var(--weight-bold); white-space: nowrap; }
+  .quickHint { display: none; }
+
+  .moreToggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 44px;
+    margin: calc(var(--space-3) * -1) 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--type-label);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  .moreToggle:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+  .moreToggle svg { transition: transform var(--transition-fast); }
+  .moreToggle svg[data-open] { transform: rotate(180deg); }
+  .inlineFields:not([data-open]) { display: none; }
+}
+
+/* ── Teléfono: el concepto ocupa toda la línea y el interruptor pasa al menú ── */
+@media (max-width: 640px) {
+  .quickRow { flex-wrap: wrap; }
+  .quickConcept { flex-basis: 100%; }
+  .quickAmount { flex: 1; width: auto; }
+  .eventSwitch { display: none; }
+}
+
+/* ── Táctil: objetivos de al menos 44 px ── */
+@media (pointer: coarse) {
+  .touchInput { height: 44px !important; min-height: 44px !important; }
+  .touchIcon { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+}

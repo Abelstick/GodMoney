@@ -27,39 +27,6 @@
     gap: var(--space-5);
   }
   .results { position: sticky; top: var(--space-4); }
-  .peek { display: none !important; }
-}
-
-/* ── Resumen compacto en la pestaña Escenario (móvil) ── */
-.peek {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  width: 100%;
-  min-height: 56px;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-hero-border);
-  border-radius: var(--radius-card);
-  background: var(--color-hero-bg);
-  color: var(--color-hero-text);
-  text-align: left;
-  cursor: pointer;
-  transition: transform var(--transition-fast);
-}
-.peek:active { transform: scale(0.99); }
-.peek:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-
-.peekItem { display: flex; flex-direction: column; min-width: 0; }
-.peekLabel { font-size: var(--type-meta); color: var(--color-hero-muted); white-space: nowrap; }
-.peekValue { font-size: var(--text-base); font-weight: var(--weight-semibold); }
-.peekGo {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: var(--type-meta);
-  font-weight: var(--weight-semibold);
-  color: var(--color-hero-text);
 }
 
 /* ── Bloques de resultados ── */

@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Checkbox, SegmentedControl } from '@mantine/core'
+import { IconChevronDown } from '@tabler/icons-react'
 import { Card } from '@/components/ui/Card/Card'
 import { Input } from '@/components/ui/Input/Input'
 import { Button } from '@/components/ui/Button/Button'
@@ -42,6 +44,8 @@ export function ScenarioConfig({ config, accounts, loading = false, onChange }) 
   }
 
   const isAccounts = config.balanceMode === 'accounts'
+  // En móvil se pliegan para que la lista quede cerca, salvo que ya tengan algo propio.
+  const [moreOpen, setMoreOpen] = useState(Boolean(config.threshold) || config.startDate !== today)
 
   return (
     <Card className={styles.configCard}>
@@ -102,7 +106,18 @@ export function ScenarioConfig({ config, accounts, loading = false, onChange }) 
           )}
         </div>
 
-        <div className={styles.inlineFields}>
+        <button
+          type="button"
+          className={styles.moreToggle}
+          aria-expanded={moreOpen}
+          aria-controls="sim-config-more"
+          onClick={() => setMoreOpen((open) => !open)}
+        >
+          Fecha de inicio y saldo mínimo
+          <IconChevronDown size={16} aria-hidden="true" data-open={moreOpen || undefined} />
+        </button>
+
+        <div id="sim-config-more" className={styles.inlineFields} data-open={moreOpen || undefined}>
           <div className={styles.dateField}>
             <Input
               label="Inicio de la simulación"

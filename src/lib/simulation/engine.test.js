@@ -4,7 +4,7 @@ import { summarize, checkpoints, balanceOn, nextIncomeAfter } from './metrics'
 import { runProjection } from './projection'
 import { compareScenarios } from './comparison'
 import { buildInsights, biggestPurchase } from './insights'
-import { createEvent, createScenario, horizonEnd, normalizeScenario, parseQuickEntries, scenarioReducer } from './scenarioModel'
+import { createEvent, createScenario, horizonEnd, normalizeScenario, parseQuickEntries, readAmountInput, scenarioReducer } from './scenarioModel'
 
 const NOW = new Date(2026, 10, 2) // 2 nov 2026
 const WINDOW = { from: '2026-11-02', to: '2026-12-02' }
@@ -306,5 +306,24 @@ describe('parseQuickEntries', () => {
     expect(parseQuickEntries('Gratis 0')).toEqual({ entries: [], skipped: ['Gratis 0'] })
     expect(parseQuickEntries('')).toEqual({ entries: [], skipped: [] })
     expect(parseQuickEntries('Sin precio\nAlquiler 800').skipped).toEqual(['Sin precio'])
+  })
+})
+
+describe('readAmountInput', () => {
+  it('separa el signo del monto', () => {
+    expect(readAmountInput('+3000')).toEqual({ sign: '+', amount: '3000' })
+    expect(readAmountInput('- 50')).toEqual({ sign: '-', amount: '50' })
+    expect(readAmountInput(' 120.50 ')).toEqual({ sign: null, amount: '120.50' })
+  })
+
+  it('acepta la coma decimal del teclado del móvil y los miles', () => {
+    expect(readAmountInput('800,50').amount).toBe('800.50')
+    expect(readAmountInput('1,200').amount).toBe('1200')
+    expect(readAmountInput('1,200.50').amount).toBe('1200.50')
+  })
+
+  it('tolera vacío', () => {
+    expect(readAmountInput('')).toEqual({ sign: null, amount: '' })
+    expect(readAmountInput(null)).toEqual({ sign: null, amount: '' })
   })
 })
