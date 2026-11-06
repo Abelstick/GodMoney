@@ -101,7 +101,7 @@ export function Budgets() {
         />
       ) : (
         <>
-          <BudgetSummary budgets={budgets} summary={summary} />
+          <BudgetSummary summary={summary} />
           <BudgetAlerts  budgets={budgets} />
 
           <div className={styles.grid}>
@@ -125,8 +125,8 @@ export function Budgets() {
         title="Eliminar presupuesto"
         description={
           deletingBudget
-            ? `¿Eliminar el presupuesto "${deletingBudget.name}"? Esta acción no se puede deshacer.`
-            : '¿Eliminar este presupuesto? Esta acción no se puede deshacer.'
+            ? `¿Eliminar el presupuesto "${deletingBudget.name}"?`
+            : '¿Eliminar este presupuesto?'
         }
       />
 
@@ -143,6 +143,7 @@ export function Budgets() {
             period:      editing.period,
             color:       editing.color,
           } : undefined}
+          otherBudgets={budgets.filter((b) => b.id !== editing?.id)}
           onSubmit={handleSubmit}
           onCancel={() => { setModalOpen(false); setEditing(null) }}
           loading={saving}

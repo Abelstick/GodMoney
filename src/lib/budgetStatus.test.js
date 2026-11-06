@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   BUDGET_STATUS, getBudgetStatus, budgetStatusSeverity, allBudgetCategoryIds,
-  getBudgetBadgeLabel, getBudgetAlertMessage,
+  getBudgetAlertMessage, getSuggestionRange, suggestBudgetAmount, getOverlappingBudgetNames,
   getBudgetPeriodRange, getBudgetReferenceDate, getBudgetsRange, getBudgetPeriodText,
   spentInRange, withBudgetStatus, summarizeBudgets,
   getBudgetPace, sortBudgetsByUrgency, getBudgetMovementsUrl,
@@ -77,6 +77,55 @@ describe('sortBudgetsByUrgency', () => {
     const list = [{ name: 'b', status: BUDGET_STATUS.NORMAL, percent: 0, pace: null }, { name: 'a', status: BUDGET_STATUS.NORMAL, percent: 0, pace: null }]
     expect(sortBudgetsByUrgency(list).map((x) => x.name)).toEqual(['a', 'b'])
     expect(list[0].name).toBe('b')
+  })
+})
+
+describe('monto sugerido', () => {
+  const row = (category_id, amount, date) => ({ category_id, amount, date })
+  const rows = [
+    row('a', 70, '2026-08-10'), row('a', 110, '2026-09-10'), row('a', 120, '2026-10-10'),
+    row('b', 40, '2026-10-20'),
+  ]
+
+  it('usa los 3 últimos meses completos, sin el mes en curso', () => {
+    expect(getSuggestionRange(new Date(2026, 10, 6))).toEqual({ from: '2026-08-01', to: '2026-10-31' })
+    expect(getSuggestionRange(new Date(2026, 0, 31))).toEqual({ from: '2025-10-01', to: '2025-12-31' })
+  })
+
+  it('promedia por mes y convierte al período, redondeando hacia arriba', () => {
+    expect(suggestBudgetAmount(rows, ['a'], 'monthly')).toBe(100)
+    expect(suggestBudgetAmount(rows, ['a'], 'yearly')).toBe(1200)
+    expect(suggestBudgetAmount(rows, ['a'], 'weekly')).toBe(24) // 23.08
+    expect(suggestBudgetAmount(rows, ['a', 'b'], 'monthly')).toBe(114) // 113.33
+  })
+
+  it('cuenta los meses de uso de la app, no solo los de la categoría', () => {
+    expect(suggestBudgetAmount(rows, ['b'], 'monthly')).toBe(14) // 40 entre 3 meses
+  })
+
+  it('con un solo mes de historial no divide entre tres', () => {
+    expect(suggestBudgetAmount([row('a', 90, '2026-10-10')], ['a'], 'monthly')).toBe(90)
+  })
+
+  it('es null sin selección o sin gasto', () => {
+    expect(suggestBudgetAmount(rows, [], 'monthly')).toBeNull()
+    expect(suggestBudgetAmount(rows, ['z'], 'monthly')).toBeNull()
+    expect(suggestBudgetAmount([], ['a'], 'monthly')).toBeNull()
+  })
+})
+
+describe('getOverlappingBudgetNames', () => {
+  const budgets = [
+    { name: 'Comida', category_ids: ['a'] },
+    { name: 'Hogar', category_ids: ['a', 'b'] },
+    { name: 'Ocio', category_ids: ['c'] },
+    { name: 'Vacío' },
+  ]
+
+  it('devuelve los presupuestos que comparten alguna categoría', () => {
+    expect(getOverlappingBudgetNames(['a'], budgets)).toEqual(['Comida', 'Hogar'])
+    expect(getOverlappingBudgetNames(['c', 'z'], budgets)).toEqual(['Ocio'])
+    expect(getOverlappingBudgetNames([], budgets)).toEqual([])
   })
 })
 
@@ -229,7 +278,7 @@ describe('summarizeBudgets', () => {
       [{ amount: 100, period: 'monthly', category_ids: ['a'] }, { amount: 100, period: 'monthly', category_ids: ['b'] }],
       [row('a', 150), row('b', 50)],
     )
-    expect(s).toMatchObject({ limit: 200, spent: 200, net: 0, percent: 100, exceededCount: 1 })
+    expect(s).toMatchObject({ limit: 200, spent: 200, net: 0, percent: 100 })
   })
 
   it('el neto es negativo si en total te pasaste, y el % no se recorta', () => {
@@ -256,7 +305,7 @@ describe('summarizeBudgets', () => {
       ],
       [row('a', 10), row('b', 500), row('c', 1)],
     )
-    expect(s).toMatchObject({ limit: 100, spent: 10, monthlyCount: 1, otherPeriodCount: 2, exceededCount: 0, hasSharedCategories: false })
+    expect(s).toMatchObject({ limit: 100, spent: 10, monthlyCount: 1, otherPeriodCount: 2, hasSharedCategories: false })
   })
 
   it('es null si no hay presupuestos mensuales', () => {
@@ -265,12 +314,6 @@ describe('summarizeBudgets', () => {
 })
 
 describe('textos de alerta', () => {
-  it('etiqueta de la insignia', () => {
-    expect(getBudgetBadgeLabel({ status: BUDGET_STATUS.EXCEEDED, percent: 120 })).toBe('Excedido')
-    expect(getBudgetBadgeLabel({ status: BUDGET_STATUS.REACHED, percent: 100 })).toBe('Alcanzado')
-    expect(getBudgetBadgeLabel({ status: BUDGET_STATUS.WARNING, percent: 85 })).toBe('85%')
-  })
-
   it('el mensaje incluye siempre el límite', () => {
     const base = { amount: 100, remaining: 0, overBy: 0, percent: 100 }
     expect(getBudgetAlertMessage({ ...base, status: BUDGET_STATUS.EXCEEDED, overBy: 20 })).toMatch(/Excediste.*100.*20/)

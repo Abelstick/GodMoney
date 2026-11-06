@@ -46,8 +46,23 @@ export const createBudgetSlice = (set, get) => ({
   },
 
   removeBudget: async (id) => {
+    const previous = get().budgets.find((b) => b.id === id)
     await budgetService.remove(id)
     set((s) => ({ budgets: s.budgets.filter((b) => b.id !== id) }))
-    get().showToast('Presupuesto eliminado', 'info')
+    get().showToast('Presupuesto eliminado', 'info', previous && {
+      label: 'Deshacer',
+      onClick: () => get().restoreBudget(previous),
+    })
+  },
+
+  // "Deshacer": se crea de nuevo (con otro id) con los mismos datos y categorías.
+  restoreBudget: async ({ name, amount, period, color, category_ids }) => {
+    try {
+      const data = await budgetService.create({ name, amount, period, color, category_ids })
+      set((s) => ({ budgets: [data, ...s.budgets] }))
+      get().showToast('Presupuesto restaurado', 'success')
+    } catch (err) {
+      get().showToast(`No se pudo deshacer: ${err.message}`, 'error')
+    }
   },
 })

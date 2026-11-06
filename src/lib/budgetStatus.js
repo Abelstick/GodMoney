@@ -1,6 +1,6 @@
 import {
   differenceInCalendarDays, endOfMonth, endOfWeek, endOfYear, format, parseISO,
-  startOfMonth, startOfWeek, startOfYear,
+  startOfMonth, startOfWeek, startOfYear, subMonths,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { BUDGET_PERIODS } from './constants'
@@ -158,7 +158,6 @@ export function summarizeBudgets(budgets, rows) {
     percent: limit > 0 ? Math.round((spent / limit) * 100) : 0,
     monthlyCount: monthly.length,
     otherPeriodCount: budgets.length - monthly.length,
-    exceededCount: monthly.filter((b) => b.status === BUDGET_STATUS.EXCEEDED).length,
     hasSharedCategories: linkCount > categoryIds.length,
   }
 }
@@ -221,8 +220,29 @@ export function getBudgetAlertMessage(budget) {
   }
 }
 
-export function getBudgetBadgeLabel(budget) {
-  if (budget.status === BUDGET_STATUS.EXCEEDED) return 'Excedido'
-  if (budget.status === BUDGET_STATUS.REACHED)  return 'Alcanzado'
-  return `${budget.percent}%`
+// Últimos 3 meses completos: el mes en curso aún no dice cuánto se suele gastar.
+export function getSuggestionRange(now = new Date()) {
+  return {
+    from: format(startOfMonth(subMonths(now, 3)), ISO),
+    to:   format(endOfMonth(subMonths(now, 1)), ISO),
+  }
+}
+
+const MONTHS_PER_PERIOD = { weekly: 12 / 52, monthly: 1, yearly: 12 }
+
+// Monto sugerido según lo gastado, en soles enteros hacia arriba (null sin historial).
+// rows: gastos de TODAS las categorías, para promediar solo los meses en que se usó
+// la app; quien lleva un mes no debe ver su gasto dividido entre tres.
+export function suggestBudgetAmount(rows, categoryIds, period) {
+  const ids = new Set(categoryIds)
+  const months = new Set(rows.map((r) => r.date.slice(0, 7))).size
+  const cents = rows.reduce((acc, r) => (ids.has(r.category_id) ? acc + toCents(r.amount) : acc), 0)
+  if (!months || !cents) return null
+  return Math.ceil((cents / 100 / months) * (MONTHS_PER_PERIOD[period] ?? 1))
+}
+
+// Nombres de los presupuestos que ya cubren alguna de estas categorías.
+export function getOverlappingBudgetNames(categoryIds, budgets) {
+  const ids = new Set(categoryIds)
+  return budgets.filter((b) => (b.category_ids ?? []).some((id) => ids.has(id))).map((b) => b.name)
 }

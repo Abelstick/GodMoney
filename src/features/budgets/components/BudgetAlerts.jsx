@@ -1,86 +1,28 @@
-import { useMemo, useState } from 'react'
 import { IconBellRinging } from '@tabler/icons-react'
-import {
-  BUDGET_STATUS,
-  budgetStatusSeverity,
-  getBudgetAlertMessage,
-  getBudgetBadgeLabel,
-} from '@/lib/budgetStatus'
-import { CollapseToggle, useCollapsed } from '@/components/common/CollapseToggle/CollapseToggle'
+import { BUDGET_STATUS } from '@/lib/budgetStatus'
 import styles from './BudgetAlerts.module.css'
 
-const FILTERS = [
-  { value: 'all',                  label: 'Todas' },
-  { value: BUDGET_STATUS.WARNING,  label: 'Cerca' },
-  { value: BUDGET_STATUS.REACHED,  label: 'Alcanzadas' },
-  { value: BUDGET_STATUS.EXCEEDED, label: 'Excedidas' },
-]
-
+// Una sola línea: el detalle está en las tarjetas, ya ordenadas por urgencia.
 export function BudgetAlerts({ budgets }) {
-  const [filter, setFilter] = useState('all')
-  const [collapsed, setCollapsed] = useCollapsed('alerts:budgets')
+  const count = (status) => budgets.filter((b) => b.status === status).length
+  const exceeded = count(BUDGET_STATUS.EXCEEDED)
+  const reached = count(BUDGET_STATUS.REACHED)
+  const near = count(BUDGET_STATUS.WARNING)
+  const atRisk = budgets.filter((b) => b.status === BUDGET_STATUS.NORMAL && b.pace?.projectedOver).length
 
-  const alerts = useMemo(() => (
-    budgets
-      .filter((b) => b.status !== BUDGET_STATUS.NORMAL)
-      .sort((a, b) => budgetStatusSeverity(b.status) - budgetStatusSeverity(a.status) || b.percent - a.percent)
-  ), [budgets])
+  const parts = [
+    exceeded > 0 && `${exceeded} ${exceeded === 1 ? 'excedido' : 'excedidos'}`,
+    reached > 0 && `${reached} al límite`,
+    near > 0 && `${near} cerca del límite`,
+    atRisk > 0 && `${atRisk} ${atRisk === 1 ? 'podría pasarse' : 'podrían pasarse'}`,
+  ].filter(Boolean)
 
-  const counts = useMemo(() => {
-    const acc = { [BUDGET_STATUS.WARNING]: 0, [BUDGET_STATUS.REACHED]: 0, [BUDGET_STATUS.EXCEEDED]: 0 }
-    alerts.forEach((b) => { acc[b.status] += 1 })
-    return acc
-  }, [alerts])
-
-  if (!alerts.length) return null
-
-  const visible = filter === 'all' ? alerts : alerts.filter((b) => b.status === filter)
+  if (!parts.length) return null
 
   return (
-    <div className={`${styles.wrapper} ${collapsed ? styles.collapsed : ''}`}>
-      <div className={styles.header}>
-        <IconBellRinging size={16} stroke={1.75} className={styles.icon} />
-        <span className={styles.title}>Alertas de gasto</span>
-        <span className={styles.count}>{alerts.length}</span>
-        <CollapseToggle collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} controls="budget-alerts-body" />
-      </div>
-
-      {!collapsed && (
-        <div id="budget-alerts-body">
-          <div className={styles.filters}>
-            {FILTERS.map((f) => {
-              const count = f.value === 'all' ? alerts.length : counts[f.value]
-              return (
-                <button
-                  key={f.value}
-                  className={`${styles.filterChip} ${filter === f.value ? styles.filterChipActive : ''}`}
-                  onClick={() => setFilter(f.value)}
-                >
-                  {f.label}
-                  <span className={styles.filterCount}>{count}</span>
-                </button>
-              )
-            })}
-          </div>
-
-          {visible.length === 0 ? (
-            <div className={styles.empty}>Sin alertas en esta categoría</div>
-          ) : (
-            <div className={styles.list}>
-              {visible.map((b) => (
-                <div key={b.id} className={`${styles.alert} ${styles[b.status]}`}>
-                  <div className={styles.alertDot} />
-                  <div className={styles.alertBody}>
-                    <span className={styles.alertName}>{b.name}</span>
-                    <span className={styles.alertMsg}>{getBudgetAlertMessage(b)}</span>
-                  </div>
-                  <span className={styles.badge}>{getBudgetBadgeLabel(b)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    <p className={`${styles.line} ${exceeded > 0 ? styles.danger : ''}`}>
+      <IconBellRinging size={16} stroke={1.75} aria-hidden="true" className={styles.icon} />
+      {parts.join(' · ')}
+    </p>
   )
 }
