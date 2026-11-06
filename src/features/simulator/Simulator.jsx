@@ -222,65 +222,67 @@ export function Simulator() {
       />
 
       <div className={styles.layout}>
-        <div className={styles.builder} data-active={tab === 'build' || undefined}>
-          {hasEvents && (
-            <button type="button" className={styles.peek} onClick={() => setTab('results')}>
-              <span className={styles.peekItem}>
-                <span className={styles.peekLabel}>Al {formatDate(window.to)}</span>
-                <Money value={fromCents(summary.final)} tone={summary.final < 0 ? 'expense' : 'neutral'} className={styles.peekValue} />
-              </span>
-              <span className={styles.peekItem}>
-                <span className={styles.peekLabel}>Mínimo</span>
-                <Money value={fromCents(summary.min.balance)} tone={summary.min.balance < 0 ? 'expense' : 'neutral'} className={styles.peekValue} />
-              </span>
-              <span className={styles.peekGo}>Ver <IconArrowRight size={16} aria-hidden="true" /></span>
-            </button>
-          )}
+        <div className={styles.workspace}>
+          <div className={styles.builder} data-active={tab === 'build' || undefined}>
+            {hasEvents && (
+              <button type="button" className={styles.peek} onClick={() => setTab('results')}>
+                <span className={styles.peekItem}>
+                  <span className={styles.peekLabel}>Al {formatDate(window.to)}</span>
+                  <Money value={fromCents(summary.final)} tone={summary.final < 0 ? 'expense' : 'neutral'} className={styles.peekValue} />
+                </span>
+                <span className={styles.peekItem}>
+                  <span className={styles.peekLabel}>Mínimo</span>
+                  <Money value={fromCents(summary.min.balance)} tone={summary.min.balance < 0 ? 'expense' : 'neutral'} className={styles.peekValue} />
+                </span>
+                <span className={styles.peekGo}>Ver <IconArrowRight size={16} aria-hidden="true" /></span>
+              </button>
+            )}
 
-          <ScenarioConfig config={draft.config} accounts={accounts} loading={accountsLoading} onChange={setConfig} />
+            <ScenarioConfig config={draft.config} accounts={accounts} loading={accountsLoading} onChange={setConfig} />
 
-          <EventList
-            events={draft.events}
-            window={window}
-            accounts={accounts}
-            onAdd={() => setEventModal({})}
-            onImport={() => setImportOpen(true)}
-            onEdit={(event) => setEventModal({ event })}
-            onDuplicate={(id) => dispatch({ type: 'duplicate_event', id })}
-            onRemove={removeEvent}
-            onToggle={(id) => dispatch({ type: 'toggle_event', id })}
-          />
-        </div>
+            <EventList
+              events={draft.events}
+              window={window}
+              accounts={accounts}
+              onAdd={() => setEventModal({})}
+              onImport={() => setImportOpen(true)}
+              onEdit={(event) => setEventModal({ event })}
+              onDuplicate={(id) => dispatch({ type: 'duplicate_event', id })}
+              onRemove={removeEvent}
+              onToggle={(id) => dispatch({ type: 'toggle_event', id })}
+            />
+          </div>
 
-        <div className={styles.results} data-active={tab === 'results' || undefined}>
-          <ResultsHero summary={summary} window={window} />
+          <div className={styles.results} data-active={tab === 'results' || undefined}>
+            <ResultsHero summary={summary} window={window} />
 
-          <section aria-labelledby="sim-periods" className={styles.block}>
-            <h2 id="sim-periods" className={styles.blockTitle}>Saldo proyectado por período</h2>
-            <CheckpointStrip checkpoints={projection.checkpoints} thresholdCents={projection.thresholdCents} />
-          </section>
-
-          <Card>
-            <div className={styles.chartHead}>
-              <div>
-                <h2 className={styles.blockTitle}>Evolución del saldo</h2>
-                <p className={styles.blockSub}>{formatDate(window.from)} – {formatDate(window.to)}</p>
-              </div>
-              <HorizonPicker config={draft.config} windowEnd={window.to} onChange={setConfig} />
-            </div>
-            <BalanceChart points={projection.points} thresholdCents={projection.thresholdCents} />
-          </Card>
-
-          {insights.length > 0 && (
-            <section aria-labelledby="sim-insights" className={styles.block}>
-              <h2 id="sim-insights" className={styles.blockTitle}>Alertas y recomendaciones</h2>
-              <InsightsList insights={insights} />
+            <section aria-labelledby="sim-periods" className={styles.block}>
+              <h2 id="sim-periods" className={styles.blockTitle}>Saldo proyectado por período</h2>
+              <CheckpointStrip checkpoints={projection.checkpoints} thresholdCents={projection.thresholdCents} />
             </section>
-          )}
 
-          {usesAccounts && (
-            <Card><AccountBreakdown result={projection.result} accounts={accounts} /></Card>
-          )}
+            <Card>
+              <div className={styles.chartHead}>
+                <div>
+                  <h2 className={styles.blockTitle}>Evolución del saldo</h2>
+                  <p className={styles.blockSub}>{formatDate(window.from)} – {formatDate(window.to)}</p>
+                </div>
+                <HorizonPicker config={draft.config} windowEnd={window.to} onChange={setConfig} />
+              </div>
+              <BalanceChart points={projection.points} thresholdCents={projection.thresholdCents} />
+            </Card>
+
+            {insights.length > 0 && (
+              <section aria-labelledby="sim-insights" className={styles.block}>
+                <h2 id="sim-insights" className={styles.blockTitle}>Alertas y recomendaciones</h2>
+                <InsightsList insights={insights} />
+              </section>
+            )}
+
+            {usesAccounts && (
+              <Card><AccountBreakdown result={projection.result} accounts={accounts} /></Card>
+            )}
+          </div>
         </div>
 
         <div className={styles.compare} data-active={tab === 'compare' || undefined}>

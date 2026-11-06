@@ -5,6 +5,10 @@
 
 .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
 
+/* En móvil no genera caja: cada panel es una fila de .layout y las pestañas
+   ocultas no dejan huecos. */
+.workspace { display: contents; }
+
 .builder, .results, .compare { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 
 @media (max-width: 1023px) {
@@ -13,15 +17,16 @@
 
 @media (min-width: 1024px) {
   .tabs { display: none; }
-  .layout {
+  .layout { gap: var(--space-5); }
+  /* .results queda fijo solo dentro de .workspace: al ser su padre, lo suelta
+     al terminar esta fila y no se monta sobre la comparación de abajo. */
+  .workspace {
+    display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    grid-template-areas: 'builder results' 'compare compare';
     align-items: start;
     gap: var(--space-5);
   }
-  .builder { grid-area: builder; }
-  .results { grid-area: results; position: sticky; top: var(--space-4); }
-  .compare { grid-area: compare; }
+  .results { position: sticky; top: var(--space-4); }
   .peek { display: none !important; }
 }
 
