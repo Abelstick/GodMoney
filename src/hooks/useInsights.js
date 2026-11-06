@@ -4,10 +4,9 @@ import { expenseService } from '@/services/expenseService'
 import { incomeService }  from '@/services/incomeService'
 import { budgetService }  from '@/services/budgetService'
 import { getMonthRange }  from '@/lib/formatters'
-import { allBudgetCategoryIds } from '@/lib/budgetStatus'
+import { allBudgetCategoryIds, getBudgetsRange, withBudgetStatus } from '@/lib/budgetStatus'
 import { MONTHS_HISTORY } from '@/lib/constants'
 import {
-  buildBudgetsWithSpent,
   getMonthEndProjection,
   getDailyAvailable,
   getSmartAlerts,
@@ -51,9 +50,11 @@ export function useInsights() {
             budgetService.getAll(),
           ])
 
-        const categoryIds = allBudgetCategoryIds(budgets)
-        const spentByCategory = await budgetService.getSpentByCategory(categoryIds, from, to)
-        const budgetsWithSpent = buildBudgetsWithSpent(budgets, spentByCategory)
+        const range = getBudgetsRange(budgets, today)
+        const budgetRows = range
+          ? await budgetService.getExpenseRows(allBudgetCategoryIds(budgets), range.from, range.to)
+          : []
+        const budgetsWithSpent = budgets.map((b) => withBudgetStatus(b, budgetRows, today))
 
         const projection     = getMonthEndProjection({ today, expenses, incomes, historicalExpenses })
         const dailyAvailable = getDailyAvailable({ today, incomes, expenses, budgetsWithSpent })

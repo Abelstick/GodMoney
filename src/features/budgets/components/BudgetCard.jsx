@@ -1,28 +1,20 @@
-import { getDaysInMonth } from 'date-fns'
+import { Link } from 'react-router-dom'
 import { ActionIcon, Badge, Menu, Progress } from '@mantine/core'
-import { IconAlertTriangle, IconTrendingUp, IconDots, IconPencil, IconTrash } from '@tabler/icons-react'
-import { BUDGET_STATUS, BUDGET_STATUS_TONE } from '@/lib/budgetStatus'
+import { IconAlertTriangle, IconArrowRight, IconTrendingUp, IconDots, IconPencil, IconTrash } from '@tabler/icons-react'
+import { BUDGET_STATUS, BUDGET_STATUS_TONE, getBudgetMovementsUrl, getBudgetPeriodText } from '@/lib/budgetStatus'
 import { Money }       from '@/components/ui/Money/Money'
 import { StatusBadge } from '@/components/ui/StatusBadge/StatusBadge'
-import { BUDGET_PERIODS } from '@/lib/constants'
 import styles from './BudgetCard.module.css'
 
-function getMonthProjection(budget) {
-  if (budget.period !== 'monthly' || budget.spent === 0) return null
-  const today = new Date()
-  const dayOfMonth = today.getDate()
-  const daysInMonth = getDaysInMonth(today)
-  return (budget.spent / dayOfMonth) * daysInMonth
-}
+const PERIOD_END = { weekly: 'la semana', monthly: 'el mes', yearly: 'el año' }
 
-export function BudgetCard({ budget, onEdit, onDelete, isCurrentMonth }) {
-  const periodLabel = BUDGET_PERIODS.find((p) => p.value === budget.period)?.label ?? budget.period
-
+export function BudgetCard({ budget, onEdit, onDelete }) {
   const isExceeded = budget.status === BUDGET_STATUS.EXCEEDED
   const statusUi = BUDGET_STATUS_TONE[budget.status] ?? BUDGET_STATUS_TONE[BUDGET_STATUS.NORMAL]
 
-  const projected = isCurrentMonth ? getMonthProjection(budget) : null
-  const projectedOver = projected !== null && projected > budget.amount
+  const { pace } = budget
+  const projected = pace?.projected ?? null
+  const projectedOver = Boolean(pace?.projectedOver)
 
   return (
     <article
@@ -35,7 +27,7 @@ export function BudgetCard({ budget, onEdit, onDelete, isCurrentMonth }) {
             <span className={styles.dot} aria-hidden="true" />
             {budget.name}
           </h3>
-          <span className={styles.period}>{periodLabel}</span>
+          <span className={styles.period}>{getBudgetPeriodText(budget)}</span>
         </div>
         <StatusBadge tone={statusUi.tone} size="sm">{statusUi.label}</StatusBadge>
         <Menu position="bottom-end" withinPortal>
@@ -63,6 +55,13 @@ export function BudgetCard({ budget, onEdit, onDelete, isCurrentMonth }) {
             <Money value={budget.remaining} className={styles.mainValue} />
             <span className={styles.mainLabel}>disponibles</span>
           </>
+        )}
+        {pace?.perDay != null && (
+          <span className={styles.perDay}>
+            {pace.daysLeft === 1
+              ? 'Es lo que queda para hoy'
+              : <>Unos <Money value={pace.perDay} /> al día durante {pace.daysLeft} días</>}
+          </span>
         )}
       </div>
 
@@ -103,13 +102,20 @@ export function BudgetCard({ budget, onEdit, onDelete, isCurrentMonth }) {
             {projectedOver ? <IconAlertTriangle size={15} stroke={1.75} /> : <IconTrendingUp size={15} stroke={1.75} />}
           </span>
           <span className={styles.predictionText}>
-            A este ritmo cerrarías el mes en{' '}
+            A este ritmo cerrarías {PERIOD_END[budget.period]} en{' '}
             <strong><Money value={projected} /></strong>
             {projectedOver
               ? <> · te pasarías por <strong><Money value={projected - budget.amount} /></strong></>
               : ' · dentro del límite'}
           </span>
         </div>
+      )}
+
+      {budget.category_ids?.length > 0 && (
+        <Link to={getBudgetMovementsUrl(budget)} className={styles.movementsLink}>
+          Ver movimientos <IconArrowRight size={14} stroke={2} aria-hidden="true" />
+          <span className="sr-only"> de {budget.name}</span>
+        </Link>
       )}
     </article>
   )

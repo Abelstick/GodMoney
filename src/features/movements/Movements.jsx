@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { MultiSelect } from '@mantine/core'
 import {
   IconSearch, IconX, IconDownload, IconFileTypePdf, IconUpload,
@@ -52,6 +53,19 @@ const KINDS = [
 
 const PAGE_SIZE = 50
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+function linkedFilters(params) {
+  const from = params.get('desde')
+  const to = params.get('hasta')
+  const kindParam = params.get('tipo')
+  return {
+    range: ISO_DATE.test(from ?? '') && ISO_DATE.test(to ?? '') && from <= to ? { from, to } : null,
+    kind: KINDS.some((k) => k.id === kindParam) ? kindParam : 'all',
+    catIds: params.get('categorias')?.split(',').filter(Boolean) ?? [],
+  }
+}
+
 const FIELD_STYLES = {
   input: {
     backgroundColor: 'var(--color-surface)',
@@ -65,10 +79,14 @@ export function Movements() {
   const showToast = useStore((s) => s.showToast)
   const { categories } = useCategories()
 
-  const [preset, setPreset] = useState('month')
-  const [range, setRange]   = useState(() => presetRange('month'))
-  const [kind, setKind]     = useState('all')
-  const [catIds, setCatIds] = useState([])
+  // Filtros iniciales por URL: así llega "Ver movimientos" desde un presupuesto.
+  const [searchParams] = useSearchParams()
+  const [linked] = useState(() => linkedFilters(searchParams))
+
+  const [preset, setPreset] = useState(linked.range ? 'custom' : 'month')
+  const [range, setRange]   = useState(() => linked.range ?? presetRange('month'))
+  const [kind, setKind]     = useState(linked.kind)
+  const [catIds, setCatIds] = useState(linked.catIds)
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
   const [query, setQuery]   = useState('')

@@ -1,15 +1,17 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useStore } from '@/store'
 import { useMonthFilter } from './useMonthFilter'
-import { getBudgetStatus, sumBudgetSpent } from '@/lib/budgetStatus'
+import {
+  getBudgetReferenceDate, getBudgetsRange, summarizeBudgets, withBudgetStatus,
+} from '@/lib/budgetStatus'
 
 export function useBudgets() {
-  const { from, to } = useMonthFilter()
+  const { activeMonth } = useMonthFilter()
   const budgets             = useStore((s) => s.budgets)
-  const budgetsSpent        = useStore((s) => s.budgetsSpent)
+  const budgetExpenses      = useStore((s) => s.budgetExpenses)
   const loading             = useStore((s) => s.budgetsLoading)
   const fetchBudgets        = useStore((s) => s.fetchBudgets)
-  const fetchBudgetsSpent   = useStore((s) => s.fetchBudgetsSpent)
+  const fetchBudgetExpenses = useStore((s) => s.fetchBudgetExpenses)
   const addBudget           = useStore((s) => s.addBudget)
   const updateBudget        = useStore((s) => s.updateBudget)
   const removeBudget        = useStore((s) => s.removeBudget)
@@ -18,23 +20,26 @@ export function useBudgets() {
     fetchBudgets()
   }, [])
 
+  const refDate = useMemo(() => getBudgetReferenceDate(activeMonth), [activeMonth])
+  const range   = useMemo(() => getBudgetsRange(budgets, refDate), [budgets, refDate])
+
+  // Recarga también al editar un presupuesto (una categoría o un período nuevos
+  // necesitan gastos que aún no se han traído) y cuando cambian los gastos: el
+  // registro rápido o deshacer un borrado ocurren estando en esta misma pantalla.
+  const coverage = budgets.map((b) => `${b.period}:${[...(b.category_ids ?? [])].sort()}`).sort().join('|')
+  const expenses = useStore((s) => s.expenses)
   useEffect(() => {
-    if (budgets.length) fetchBudgetsSpent(from, to)
-  }, [budgets.length, from, to])
+    if (range) fetchBudgetExpenses(range.from, range.to)
+  }, [coverage, range?.from, range?.to, expenses])
 
-  const budgetsWithSpent = budgets.map((b) => {
-    const spent  = sumBudgetSpent(b, budgetsSpent)
-    const amount = Number(b.amount)
+  const budgetsWithStatus = useMemo(
+    () => budgets.map((b) => withBudgetStatus(b, budgetExpenses, refDate)),
+    [budgets, budgetExpenses, refDate],
+  )
+  const summary = useMemo(
+    () => summarizeBudgets(budgetsWithStatus, budgetExpenses),
+    [budgetsWithStatus, budgetExpenses],
+  )
 
-    return {
-      ...b,
-      spent,
-      remaining: Math.max(amount - spent, 0),
-      overBy:    Math.max(spent - amount, 0),
-      percent:   amount > 0 ? Math.round((spent / amount) * 100) : 0,
-      status:    getBudgetStatus(spent, amount),
-    }
-  })
-
-  return { budgets: budgetsWithSpent, loading, addBudget, updateBudget, removeBudget }
+  return { budgets: budgetsWithStatus, summary, loading, addBudget, updateBudget, removeBudget }
 }

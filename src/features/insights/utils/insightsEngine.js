@@ -1,6 +1,6 @@
 import { getDate, getDaysInMonth, format } from 'date-fns'
 import { groupByMonth, simpleMean, percentChange } from '@/features/predictions/utils/predictionAlgorithms'
-import { getBudgetStatus, BUDGET_STATUS, getBudgetAlertMessage, sumBudgetSpent } from '@/lib/budgetStatus'
+import { BUDGET_STATUS, getBudgetAlertMessage } from '@/lib/budgetStatus'
 import { formatCurrency } from '@/lib/formatters'
 import { isSavingsExpense, getSavingsRate } from '@/lib/savings'
 
@@ -10,22 +10,6 @@ function sum(rows) {
 
 function severityRank(severity) {
   return { danger: 2, warning: 1, info: 0 }[severity] ?? 0
-}
-
-// ── Presupuestos del mes actual con su estado (mismo cálculo que useBudgets) ─
-export function buildBudgetsWithSpent(budgets, spentByCategory) {
-  return budgets.map((b) => {
-    const spent  = sumBudgetSpent(b, spentByCategory)
-    const amount = Number(b.amount)
-    return {
-      ...b,
-      spent,
-      remaining: Math.max(amount - spent, 0),
-      overBy:    Math.max(spent - amount, 0),
-      percent:   amount > 0 ? Math.round((spent / amount) * 100) : 0,
-      status:    getBudgetStatus(spent, amount),
-    }
-  })
 }
 
 // ── 1. Proyección de fin de mes ───────────────────────────────────────────
@@ -75,9 +59,10 @@ export function getDailyAvailable({ today, incomes, expenses, budgetsWithSpent }
   const moneyLeft = sum(incomes) - sum(expenses)
   const availablePerDay = moneyLeft / (daysRemaining > 0 ? daysRemaining : 1)
 
-  const budgetsRemaining = budgetsWithSpent.reduce(
-    (acc, b) => acc + Math.max(Number(b.amount) - b.spent, 0), 0
-  )
+  // Solo mensuales: lo que queda de un límite anual no es dinero de este mes.
+  const budgetsRemaining = budgetsWithSpent
+    .filter((b) => b.period === 'monthly')
+    .reduce((acc, b) => acc + Math.max(Number(b.amount) - b.spent, 0), 0)
 
   return { daysRemaining, moneyLeft, availablePerDay, budgetsRemaining }
 }

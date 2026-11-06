@@ -7,6 +7,7 @@ async function getUserId() {
 }
 
 const SELECT = '*, budget_categories(category:categories(id,name,color,icon))'
+const PAGE = 1000
 
 // Aplana el join: cada presupuesto expone `categories` y `category_ids`.
 function normalize(row) {
@@ -71,20 +72,25 @@ export const budgetService = {
     if (error) throw error
   },
 
-  // Gasto por categoría en el rango; cada presupuesto suma las suyas (ver sumBudgetSpent).
-  async getSpentByCategory(categoryIds, from, to) {
-    if (!categoryIds.length) return {}
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('category_id, amount')
-      .in('category_id', categoryIds)
-      .gte('date', from)
-      .lte('date', to)
-    if (error) throw error
-
-    return data.reduce((acc, row) => {
-      acc[row.category_id] = (acc[row.category_id] ?? 0) + Number(row.amount)
-      return acc
-    }, {})
+  // Gastos de esas categorías en el rango; cada presupuesto se queda con los de su
+  // período (ver withBudgetStatus). Se pagina: un presupuesto anual puede pasar del
+  // límite de 1000 filas de PostgREST y el gasto saldría corto sin avisar.
+  async getExpenseRows(categoryIds, from, to) {
+    if (!categoryIds.length) return []
+    const rows = []
+    for (let offset = 0; ; offset += PAGE) {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('category_id, amount, date, is_fixed, category:categories(is_savings)')
+        .in('category_id', categoryIds)
+        .gte('date', from)
+        .lte('date', to)
+        .order('date')
+        .order('id')
+        .range(offset, offset + PAGE - 1)
+      if (error) throw error
+      rows.push(...data)
+      if (data.length < PAGE) return rows
+    }
   },
 }

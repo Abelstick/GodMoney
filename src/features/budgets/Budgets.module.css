@@ -1,3 +1,5 @@
+.periodRow { margin-bottom: var(--space-4); }
+
 .grid {
   display: grid;
   grid-template-columns: 1fr;

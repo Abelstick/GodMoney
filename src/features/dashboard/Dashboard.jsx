@@ -20,7 +20,7 @@ import { useMonthFilter } from '@/hooks/useMonthFilter'
 import { usePersistentState } from '@/hooks/usePersistentState'
 import { formatMonth } from '@/lib/formatters'
 import { splitSavings, isSavingsExpense, getSavingsRate } from '@/lib/savings'
-import { allBudgetCategoryIds, getBudgetStatus, BUDGET_STATUS_TONE } from '@/lib/budgetStatus'
+import { getBudgetStatus, BUDGET_STATUS_TONE } from '@/lib/budgetStatus'
 import { getPriorityAlert } from '@/lib/priorityAlert'
 import { upcomingOccasions } from '@/lib/giftPlanning'
 import { MONTHS_HISTORY } from '@/lib/constants'
@@ -56,12 +56,11 @@ export function Dashboard() {
     expenses, loading: expLoading, error: expError, refetch: refetchExpenses,
   } = useExpenses()
   const { goals, loading: goalsLoading }         = useGoals()
-  const { budgets, loading: budgetsLoading }     = useBudgets()
+  const { budgets, summary: budgetSummary, loading: budgetsLoading } = useBudgets()
   const { accounts, loading: accLoading }        = useAccounts()
   const { loans, loading: loansLoading }         = useLoans()
   const { alerts: loanAlerts, markLoanAlertRead } = useLoanAlerts()
   const { alerts: recurringAlerts, markAlertRead: markRecurringAlertRead } = useRecurringPaymentAlerts()
-  const budgetsSpent = useStore((s) => s.budgetsSpent)
 
   // Regalos: carga silenciosa (si la sección no se usa, la tarjeta no aparece).
   const giftOccasions = useStore((s) => s.giftOccasions)
@@ -168,13 +167,10 @@ export function Dashboard() {
   // de las categorías cubiertas (sin contar dos veces una categoría que esté
   // en dos presupuestos), para que el % no se infle con gastos sin presupuesto ──
   const budgetOverview = useMemo(() => {
-    const monthly = budgets.filter((b) => b.period === 'monthly')
-    if (!monthly.length) return null
-    const limit = monthly.reduce((acc, b) => acc + Number(b.amount), 0)
-    const spent = allBudgetCategoryIds(monthly).reduce((acc, id) => acc + (budgetsSpent[id] ?? 0), 0)
-    const status = getBudgetStatus(spent, limit)
-    return { limit, spent, percent: limit > 0 ? Math.round((spent / limit) * 100) : 0, ...BUDGET_STATUS_TONE[status] }
-  }, [budgets, budgetsSpent])
+    if (!budgetSummary) return null
+    const { limit, spent, percent } = budgetSummary
+    return { limit, spent, percent, ...BUDGET_STATUS_TONE[getBudgetStatus(spent, limit)] }
+  }, [budgetSummary])
 
   // ── Alerta prioritaria: pagos (siempre) y presupuestos (solo el mes en curso,
   // los de meses pasados ya son historia) ──

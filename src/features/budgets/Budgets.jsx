@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { format } from 'date-fns'
+import { useMemo, useState } from 'react'
 import { IconClipboardList } from '@tabler/icons-react'
 import { useBudgets }      from '@/hooks/useBudgets'
 import { useMonthFilter }  from '@/hooks/useMonthFilter'
@@ -7,8 +6,10 @@ import { Button }          from '@/components/ui/Button/Button'
 import { PageHeader }      from '@/components/ui/PageHeader/PageHeader'
 import { Modal }           from '@/components/common/Modal/Modal'
 import { EmptyState }      from '@/components/common/EmptyState/EmptyState'
+import { MonthPicker }     from '@/components/common/MonthPicker/MonthPicker'
 import { Skeleton }        from '@/components/common/Skeleton/Skeleton'
 import { exportBudgetCSV, printBudgets } from '@/lib/exportBudgets'
+import { sortBudgetsByUrgency } from '@/lib/budgetStatus'
 import { BudgetCard }      from './components/BudgetCard'
 import { BudgetForm }      from './components/BudgetForm'
 import { BudgetSummary }   from './components/BudgetSummary'
@@ -17,15 +18,15 @@ import { ConfirmDialog }   from '@/components/common/ConfirmDialog/ConfirmDialog
 import styles from './Budgets.module.css'
 
 export function Budgets() {
-  const { budgets, loading, addBudget, updateBudget, removeBudget } = useBudgets()
-  const { activeMonth } = useMonthFilter()
+  const { budgets, summary, loading, addBudget, updateBudget, removeBudget } = useBudgets()
+  const { activeMonth, setActiveMonth, months } = useMonthFilter()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editing,     setEditing]     = useState(null)
   const [saving,      setSaving]      = useState(false)
   const [deletingId,  setDeletingId]  = useState(null)
   const [deleting,    setDeleting]    = useState(false)
 
-  const isCurrentMonth = activeMonth === format(new Date(), 'yyyy-MM')
+  const sortedBudgets = useMemo(() => sortBudgetsByUrgency(budgets), [budgets])
   const deletingBudget = budgets.find((b) => b.id === deletingId)
 
   async function handleSubmit(payload) {
@@ -75,6 +76,12 @@ export function Budgets() {
         }
       />
 
+      {budgets.length > 0 && (
+        <div className={styles.periodRow}>
+          <MonthPicker value={activeMonth} onChange={setActiveMonth} months={months} />
+        </div>
+      )}
+
       {loading ? (
         <div className={styles.skeletonWrap}>
           <Skeleton className={styles.summarySkeleton} />
@@ -94,15 +101,14 @@ export function Budgets() {
         />
       ) : (
         <>
-          <BudgetSummary budgets={budgets} />
+          <BudgetSummary budgets={budgets} summary={summary} />
           <BudgetAlerts  budgets={budgets} />
 
           <div className={styles.grid}>
-            {budgets.map((budget) => (
+            {sortedBudgets.map((budget) => (
               <BudgetCard
                 key={budget.id}
                 budget={budget}
-                isCurrentMonth={isCurrentMonth}
                 onEdit={(b) => { setEditing(b); setModalOpen(true) }}
                 onDelete={(id) => setDeletingId(id)}
               />

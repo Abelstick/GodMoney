@@ -1,9 +1,12 @@
 import { budgetService } from '@/services/budgetService'
 import { allBudgetCategoryIds } from '@/lib/budgetStatus'
 
+// Al cambiar rápido de mes, una respuesta lenta no debe pisar a la más reciente.
+let lastExpensesRequest = 0
+
 export const createBudgetSlice = (set, get) => ({
   budgets: [],
-  budgetsSpent: {},
+  budgetExpenses: [],
   budgetsLoading: false,
 
   fetchBudgets: async () => {
@@ -17,10 +20,15 @@ export const createBudgetSlice = (set, get) => ({
     }
   },
 
-  fetchBudgetsSpent: async (from, to) => {
-    const categoryIds = allBudgetCategoryIds(get().budgets)
-    const spent = await budgetService.getSpentByCategory(categoryIds, from, to)
-    set({ budgetsSpent: spent })
+  fetchBudgetExpenses: async (from, to) => {
+    const request = ++lastExpensesRequest
+    try {
+      const categoryIds = allBudgetCategoryIds(get().budgets)
+      const rows = await budgetService.getExpenseRows(categoryIds, from, to)
+      if (request === lastExpensesRequest) set({ budgetExpenses: rows })
+    } catch (err) {
+      if (request === lastExpensesRequest) get().showToast(err.message, 'error')
+    }
   },
 
   addBudget: async (payload) => {

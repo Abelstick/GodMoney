@@ -1,26 +1,25 @@
 import { formatCurrency, formatCurrencyCompact } from '@/lib/formatters'
 import { ChartTooltip, AXIS_PROPS, GRID_PROPS, CURSOR } from '@/components/common/ChartTooltip/ChartTooltip'
-import { BUDGET_STATUS } from '@/lib/budgetStatus'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import styles from './BudgetSummary.module.css'
 
-export function BudgetSummary({ budgets }) {
-  const totals = budgets.reduce(
-    (acc, b) => ({
-      limit: acc.limit + Number(b.amount),
-      spent: acc.spent + Number(b.spent),
-      remaining: acc.remaining + Number(b.remaining),
-    }),
-    { limit: 0, spent: 0, remaining: 0 }
-  )
+const plural = (n, word) => `${n} ${word}${n !== 1 ? 's' : ''}`
 
-  const globalPercent =
-    totals.limit > 0 ? Math.min(Math.round((totals.spent / totals.limit) * 100), 100) : 0
-  const exceededCount = budgets.filter((b) => b.status === BUDGET_STATUS.EXCEEDED).length
+function SummaryNote({ summary }) {
+  const notes = []
+  if (summary.otherPeriodCount > 0) {
+    notes.push(`Los totales solo suman presupuestos mensuales; ${plural(summary.otherPeriodCount, 'presupuesto')} de otro período se ven abajo.`)
+  }
+  if (summary.hasSharedCategories) {
+    notes.push('Hay categorías en más de un presupuesto: su gasto se cuenta una vez, pero sus límites se suman.')
+  }
+  return notes.length > 0 ? <p className={styles.note}>{notes.join(' ')}</p> : null
+}
 
+export function BudgetSummary({ budgets, summary }) {
   const chartData = budgets.map((b) => ({
     name: b.name.length > 14 ? b.name.slice(0, 14) + '…' : b.name,
     Límite: Number(b.amount),
@@ -29,35 +28,38 @@ export function BudgetSummary({ budgets }) {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.statsGrid}>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>Total Límite</span>
-          <span className={styles.statValue}>{formatCurrency(totals.limit)}</span>
-          <span className={styles.statSub}>
-            {budgets.length} presupuesto{budgets.length !== 1 ? 's' : ''}
-          </span>
-        </div>
+      {summary && (
+        <>
+          <div className={styles.statsGrid}>
+            <div className={styles.stat}>
+              <span className={styles.statLabel}>Límite mensual</span>
+              <span className={styles.statValue}>{formatCurrency(summary.limit)}</span>
+              <span className={styles.statSub}>{plural(summary.monthlyCount, 'presupuesto')}</span>
+            </div>
 
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>Total Gastado</span>
-          <span className={`${styles.statValue} ${styles.spent}`}>
-            {formatCurrency(totals.spent)}
-          </span>
-          <span className={styles.statSub}>{globalPercent}% del límite total</span>
-        </div>
+            <div className={styles.stat}>
+              <span className={styles.statLabel}>Gastado</span>
+              <span className={`${styles.statValue} ${styles.spent}`}>
+                {formatCurrency(summary.spent)}
+              </span>
+              <span className={styles.statSub}>{summary.percent}% del límite</span>
+            </div>
 
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>Total Restante</span>
-          <span className={`${styles.statValue} ${styles.remaining}`}>
-            {formatCurrency(totals.remaining)}
-          </span>
-          {exceededCount > 0 && (
-            <span className={`${styles.statSub} ${styles.dangerText}`}>
-              {exceededCount} excedido{exceededCount !== 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
-      </div>
+            <div className={styles.stat}>
+              <span className={styles.statLabel}>{summary.net < 0 ? 'Por encima del límite' : 'Restante'}</span>
+              <span className={`${styles.statValue} ${summary.net < 0 ? styles.spent : styles.remaining}`}>
+                {formatCurrency(Math.abs(summary.net))}
+              </span>
+              {summary.exceededCount > 0 && (
+                <span className={`${styles.statSub} ${styles.dangerText}`}>
+                  {plural(summary.exceededCount, 'excedido')}
+                </span>
+              )}
+            </div>
+          </div>
+          <SummaryNote summary={summary} />
+        </>
+      )}
 
       {chartData.length > 0 && (
         <div className={styles.chart}>

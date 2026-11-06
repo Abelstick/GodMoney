@@ -43,6 +43,12 @@
   color: var(--color-text-muted);
 }
 
+.note {
+  margin: calc(var(--space-2) * -1) 0 var(--space-5);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
 .spent { color: var(--color-danger); }
 .remaining { color: var(--color-success); }
 .dangerText { color: var(--color-danger) !important; font-weight: var(--weight-semibold); }
