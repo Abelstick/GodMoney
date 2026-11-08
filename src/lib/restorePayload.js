@@ -5,7 +5,7 @@ const COMMON = ['category_id', 'amount', 'description', 'date', 'tags', 'notes',
 
 const FIELDS = {
   expense: [...COMMON, 'is_fixed', 'savings_account_id', 'paid_from_account_id', 'repay_to_savings'],
-  income:  [...COMMON, 'is_recurring'],
+  income:  [...COMMON, 'is_recurring', 'money_type', 'account_id'],
 }
 
 export function toRestorePayload(kind, row) {

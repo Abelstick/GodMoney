@@ -11,7 +11,9 @@ import { useAccounts } from '@/hooks/useAccounts'
 import { usePersistentState } from '@/hooks/usePersistentState'
 import { getRecentCategoryIds, rememberCategory } from '@/lib/recentCategories'
 import { formatCurrency } from '@/lib/formatters'
+import { accountKind } from '@/lib/moneyType'
 import { PaidFromField } from '@/components/common/PaidFromField/PaidFromField'
+import { ReceivedInField } from '@/components/common/ReceivedInField/ReceivedInField'
 import { EMPTY_EXTRAS, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './QuickAddSheet.module.css'
 
@@ -39,12 +41,16 @@ function QuickAddForm({ onDone }) {
   const [lastExpenseCats, setLastExpenseCats] = usePersistentState('gm.quickadd.recent.expense', [], isIdList)
   const [lastIncomeCats,  setLastIncomeCats]  = usePersistentState('gm.quickadd.recent.income', [], isIdList)
   const [savingsAccountId, setSavingsAccountId] = usePersistentState('gm.quickadd.savingsAccount', '', (v) => typeof v === 'string')
+  // La cuenta donde suelen entrar los ingresos se recuerda entre registros.
+  const [incomeAccountId, setIncomeAccountId] = usePersistentState('gm.quickadd.incomeAccount', '', (v) => typeof v === 'string')
+  const [moneyType, setMoneyType] = usePersistentState('gm.quickadd.moneyType', 'BANK', (v) => v === 'BANK' || v === 'CASH')
 
   const { categories: expenseCategories } = useCategories('expense')
   const { categories: incomeCategories }  = useCategories('income')
   const { accounts } = useAccounts()
 
   const isExpense  = type === 'expense'
+  const receivedIn = accounts.some((a) => a.id === incomeAccountId && !a.is_archived && accountKind(a) === moneyType) ? incomeAccountId : ''
   const categories = isExpense ? expenseCategories : incomeCategories
   const lastUsed   = isExpense ? lastExpenseCats : lastIncomeCats
 
@@ -111,7 +117,7 @@ function QuickAddForm({ onDone }) {
         })
         setLastExpenseCats((prev) => rememberCategory(prev, categoryId))
       } else {
-        await addIncome({ ...base, is_recurring: false })
+        await addIncome({ ...base, is_recurring: false, money_type: moneyType, account_id: receivedIn || null })
         setLastIncomeCats((prev) => rememberCategory(prev, categoryId))
       }
       onDone()
@@ -226,6 +232,17 @@ function QuickAddForm({ onDone }) {
           onChange={setPaidFrom}
           repay={repay}
           onRepayChange={setRepay}
+          amount={numericAmount}
+        />
+      )}
+
+      {!isExpense && (
+        <ReceivedInField
+          accounts={accounts}
+          moneyType={moneyType}
+          onMoneyTypeChange={setMoneyType}
+          value={receivedIn}
+          onChange={setIncomeAccountId}
           amount={numericAmount}
         />
       )}

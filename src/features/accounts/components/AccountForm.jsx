@@ -1,13 +1,15 @@
 import { useState } from 'react'
+import { SegmentedControl } from '@mantine/core'
 import { Input }  from '@/components/ui/Input/Input'
 import { Button } from '@/components/ui/Button/Button'
 import { CATEGORY_COLORS } from '@/lib/constants'
+import { MONEY_TYPES } from '@/lib/moneyType'
 import styles from './AccountForm.module.css'
 
-const EMPTY = { name: '', balance: '0', color: '#6366f1', icon: 'wallet', is_savings: false }
+const EMPTY = { name: '', balance: '0', color: '#6366f1', icon: 'wallet', is_savings: false, kind: 'BANK' }
 
 export function AccountForm({ initial, isEditing = false, onSubmit, onCancel, loading }) {
-  const [form, setForm]     = useState(initial ?? EMPTY)
+  const [form, setForm]     = useState(() => ({ ...EMPTY, ...initial }))
   const [errors, setErrors] = useState({})
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
@@ -23,7 +25,7 @@ export function AccountForm({ initial, isEditing = false, onSubmit, onCancel, lo
   function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
-    const payload = { name: form.name.trim(), color: form.color, icon: form.icon, is_savings: Boolean(form.is_savings) }
+    const payload = { name: form.name.trim(), color: form.color, icon: form.icon, is_savings: Boolean(form.is_savings), kind: form.kind }
     if (!isEditing) payload.balance = Number(form.balance)
     onSubmit(payload)
   }
@@ -32,6 +34,16 @@ export function AccountForm({ initial, isEditing = false, onSubmit, onCancel, lo
     <form className={styles.form} onSubmit={handleSubmit}>
       <Input label="Nombre de la cuenta" value={form.name} onChange={set('name')}
         error={errors.name} required placeholder="Ej: Efectivo, BCP Ahorros" />
+      <div>
+        <span className={styles.label} id="account-kind-label">Tipo de dinero</span>
+        <SegmentedControl
+          fullWidth
+          aria-labelledby="account-kind-label"
+          data={MONEY_TYPES.map((t) => ({ value: t.value, label: t.value === 'BANK' ? 'Banco / digital' : 'Efectivo' }))}
+          value={form.kind}
+          onChange={(v) => setForm((f) => ({ ...f, kind: v }))}
+        />
+      </div>
       <Input
         label="Saldo inicial" type="number" step="0.01" prefix="S/"
         value={form.balance} onChange={set('balance')} error={errors.balance}

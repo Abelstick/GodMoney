@@ -1,6 +1,12 @@
 import { incomeService } from '@/services/incomeService'
 import { offlineQueue, mergePending, isRetryableError } from '@/lib/offlineQueue'
 
+// Los ingresos con cuenta suman a su saldo vía trigger en BD; se refrescan las
+// cuentas para que objetivos y patrimonio reflejen el cambio al instante.
+async function refreshAccounts(get, ...incomes) {
+  if (incomes.some((i) => i?.account_id)) await get().fetchAccounts()
+}
+
 export const createIncomeSlice = (set, get) => ({
   incomes: [],
   incomesRange: null,
@@ -31,15 +37,18 @@ export const createIncomeSlice = (set, get) => ({
       throw err
     }
     set((s) => ({ incomes: [data, ...s.incomes] }))
-    get().showToast('Ingreso registrado', 'success')
+    await refreshAccounts(get, data)
+    get().showToast(data.account_id ? `Ingreso registrado y sumado a ${data.account?.name ?? 'la cuenta'}` : 'Ingreso registrado', 'success')
     return data
   },
 
   updateIncome: async (id, payload) => {
+    const previous = get().incomes.find((i) => i.id === id)
     const data = await incomeService.update(id, payload)
     set((s) => ({
       incomes: s.incomes.map((i) => (i.id === id ? data : i)),
     }))
+    await refreshAccounts(get, previous, data)
     get().showToast('Ingreso actualizado', 'success')
     return data
   },
@@ -69,6 +78,7 @@ export const createIncomeSlice = (set, get) => ({
     if (previous?._pending) return get().discardPending('income', id)
     await incomeService.remove(id)
     set((s) => ({ incomes: s.incomes.filter((i) => i.id !== id) }))
+    await refreshAccounts(get, previous)
     get().showToast('Ingreso eliminado', 'info', previous && {
       label: 'Deshacer',
       onClick: () => get().restoreIncomes([previous]),
@@ -79,6 +89,7 @@ export const createIncomeSlice = (set, get) => ({
     const previous = get().incomes.filter((i) => ids.includes(i.id))
     await incomeService.removeMany(ids)
     set((s) => ({ incomes: s.incomes.filter((i) => !ids.includes(i.id)) }))
+    await refreshAccounts(get, ...previous)
     get().showToast(`${previous.length} ingresos eliminados`, 'info', {
       label: 'Deshacer',
       onClick: () => get().restoreIncomes(previous),
@@ -93,6 +104,7 @@ export const createIncomeSlice = (set, get) => ({
       const range = get().incomesRange
       const visible = restored.filter((r) => !range || (r.date >= range.from && r.date <= range.to))
       set((s) => ({ incomes: [...visible, ...s.incomes] }))
+      await refreshAccounts(get, ...restored)
       get().showToast(restored.length > 1 ? `${restored.length} ingresos restaurados` : 'Ingreso restaurado', 'success')
     } catch (err) {
       get().showToast(`No se pudo deshacer: ${err.message}`, 'error')

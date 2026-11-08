@@ -3,7 +3,7 @@
 // tag: 'withdrawal' (salió del ahorro y queda por reponer) | 'repayment' | null
 
 export function buildAccountActivity(accountId, {
-  transfers = [], paidExpenses = [], savingsExpenses = [], debtTransferIds = [],
+  transfers = [], paidExpenses = [], savingsExpenses = [], incomes = [], debtTransferIds = [],
 } = {}) {
   const debtTransfers = new Set(debtTransferIds)
   const rows = []
@@ -45,6 +45,18 @@ export function buildAccountActivity(accountId, {
       label: e.description || 'Aporte de ahorro',
       detail: 'Ahorro',
       amount: Number(e.amount),
+      tag: null,
+    })
+  }
+
+  for (const i of incomes) {
+    rows.push({
+      id: `in-${i.id}`,
+      date: i.date,
+      created_at: i.created_at,
+      label: i.description || i.category?.name || 'Ingreso',
+      detail: i.category?.name && i.description ? `Ingreso · ${i.category.name}` : 'Ingreso',
+      amount: Number(i.amount),
       tag: null,
     })
   }

@@ -59,7 +59,7 @@
 }
 
 @media (min-width: 640px) {
-  .summary { grid-template-columns: repeat(3, 1fr); }
+  .summary { grid-template-columns: repeat(4, 1fr); }
 }
 
 /* ── List header ── */

@@ -3,16 +3,19 @@ import { Input }  from '@/components/ui/Input/Input'
 import { Select } from '@/components/ui/Select/Select'
 import { Button } from '@/components/ui/Button/Button'
 import { useCategories } from '@/hooks/useCategories'
+import { useAccounts }   from '@/hooks/useAccounts'
+import { ReceivedInField } from '@/components/common/ReceivedInField/ReceivedInField'
 import { toInputDate }   from '@/lib/formatters'
 import { TransactionExtras, EMPTY_EXTRAS, extrasFrom, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './IncomeForm.module.css'
 
-const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_recurring: false, ...EMPTY_EXTRAS }
+const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_recurring: false, money_type: 'BANK', account_id: '', ...EMPTY_EXTRAS }
 
 export function IncomeForm({ initial, submitLabel, onSubmit, onCancel, loading }) {
-  const [form, setForm] = useState(initial ?? EMPTY)
+  const [form, setForm] = useState(() => ({ ...EMPTY, ...initial }))
   const [errors, setErrors] = useState({})
   const { categories } = useCategories('income')
+  const { accounts } = useAccounts()
 
   const patchExtras = (patch) => setForm((f) => ({ ...f, ...patch }))
 
@@ -37,6 +40,8 @@ export function IncomeForm({ initial, submitLabel, onSubmit, onCancel, loading }
       category_id:  form.category_id || null,
       date:         form.date,
       is_recurring: form.is_recurring,
+      money_type:   form.money_type,
+      account_id:   form.account_id || null,
       ...extrasPayload(form),
     })
   }
@@ -72,6 +77,14 @@ export function IncomeForm({ initial, submitLabel, onSubmit, onCancel, loading }
         options={catOptions}
         value={form.category_id}
         onChange={set('category_id')}
+      />
+      <ReceivedInField
+        accounts={accounts}
+        moneyType={form.money_type}
+        onMoneyTypeChange={(v) => setForm((f) => ({ ...f, money_type: v }))}
+        value={form.account_id}
+        onChange={(v) => setForm((f) => ({ ...f, account_id: v }))}
+        amount={form.amount}
       />
       <Input
         label="Fecha"

@@ -33,6 +33,13 @@ describe('buildAccountActivity', () => {
     expect(byId['se-e2']).toMatchObject({ label: 'Aporte de ahorro', tag: null })
   })
 
+  it('incluye los ingresos recibidos en la cuenta como entradas', () => {
+    const withIncome = buildAccountActivity(SAV, {
+      incomes: [{ id: 'i1', date: '2026-10-15', amount: '1200', description: 'Sueldo', category: { name: 'Salario' } }],
+    })
+    expect(withIncome).toEqual([expect.objectContaining({ id: 'in-i1', amount: 1200, label: 'Sueldo', detail: 'Ingreso · Salario', tag: null })])
+  })
+
   it('totaliza entradas y salidas, opcionalmente por mes', () => {
     expect(activityTotals(rows)).toEqual({ incoming: 500, outgoing: 1300, net: -800 })
     expect(activityTotals(rows, '2026-10')).toEqual({ incoming: 200, outgoing: 1300, net: -1100 })

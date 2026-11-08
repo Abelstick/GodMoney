@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { IconCoin, IconRepeat, IconBolt } from '@tabler/icons-react'
+import { IconCoin, IconRepeat, IconBuildingBank, IconCash } from '@tabler/icons-react'
+import { totalsByMoneyType } from '@/lib/moneyType'
 import { useStore } from '@/store'
 import { useIncome }      from '@/hooks/useIncome'
 import { useMonthFilter } from '@/hooks/useMonthFilter'
@@ -106,13 +107,15 @@ export function Income() {
       category_id:  source.category_id ?? '',
       date:         editing ? source.date : toInputDate(new Date()),
       is_recurring: source.is_recurring,
+      money_type:   source.money_type ?? source.account?.kind ?? 'BANK',
+      account_id:   source.account_id ?? '',
       ...extrasFrom(source),
       ...(editing ? {} : { attachments: [] }),
     }
   }
 
   const recurring = incomes.filter((i) => i.is_recurring)
-  const oneTime   = incomes.filter((i) => !i.is_recurring)
+  const byType    = totalsByMoneyType(incomes)
 
   return (
     <div>
@@ -157,6 +160,7 @@ export function Income() {
             <Skeleton className={styles.statSkeleton} />
             <Skeleton className={styles.statSkeleton} />
             <Skeleton className={styles.statSkeleton} />
+            <Skeleton className={styles.statSkeleton} />
           </div>
           <Skeleton className={styles.listSkeleton} />
         </>
@@ -165,8 +169,9 @@ export function Income() {
           {/* Stats */}
           <div className={styles.summary}>
             <StatCard label="Total ingresos" amount={formatCurrency(totalIncome)} icon={<IconCoin size={20} stroke={1.75} />} iconBg="var(--color-success-light)" />
-            <StatCard label="Recurrentes" amount={formatCurrency(recurring.reduce((a, i) => a + Number(i.amount), 0))} icon={<IconRepeat size={20} stroke={1.75} />} iconBg="var(--color-info-light)" />
-            <StatCard label="Únicos" amount={oneTime.length} icon={<IconBolt size={20} stroke={1.75} />} iconBg="var(--color-warning-light)" />
+            <StatCard label="Recurrentes" amount={formatCurrency(recurring.reduce((a, i) => a + Number(i.amount), 0))} icon={<IconRepeat size={20} stroke={1.75} />} iconBg="var(--color-primary-alpha)" />
+            <StatCard label="Bancario" amount={formatCurrency(byType.BANK)} icon={<IconBuildingBank size={20} stroke={1.75} />} iconBg="var(--color-info-light)" />
+            <StatCard label="Efectivo" amount={formatCurrency(byType.CASH)} icon={<IconCash size={20} stroke={1.75} />} iconBg="var(--color-warning-light)" />
           </div>
 
           <Card padded={false}>

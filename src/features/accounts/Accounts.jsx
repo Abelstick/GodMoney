@@ -186,6 +186,7 @@ export function Accounts() {
             color:   editing.color,
             icon:    editing.icon,
             is_savings: Boolean(editing.is_savings),
+            kind:    editing.kind ?? 'BANK',
           } : undefined}
           isEditing={!!editing}
           onSubmit={handleSubmit}

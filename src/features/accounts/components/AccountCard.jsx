@@ -29,6 +29,7 @@ export function AccountCard({
             <IconWallet size={20} stroke={1.75} />
           </div>
           <div className={styles.name}>{account.name}</div>
+          {account.kind === 'CASH' && <Badge color="var(--color-warning)">Efectivo</Badge>}
           {account.is_savings && <Badge color="var(--color-success)">Ahorro</Badge>}
           <IconChevronRight size={18} stroke={1.75} className={styles.chevron} />
         </div>

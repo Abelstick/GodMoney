@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import { BulkBar } from '@/components/common/BulkBar/BulkBar'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
+import { MONEY_TYPE_LABEL } from '@/lib/moneyType'
 import styles from './IncomeList.module.css'
 
 const PAGE_SIZE = 8
@@ -49,6 +50,11 @@ function IncomeItem({ income, onEdit, onDelete, onDuplicate, selecting, selected
           <span>{formatDate(income.date)}</span>
           {income.category && (
             <Badge color={income.category.color}>{income.category.name}</Badge>
+          )}
+          {(income.money_type || income.account) && (
+            <Badge color={income.money_type === 'CASH' ? 'var(--color-warning)' : 'var(--color-info)'}>
+              {[MONEY_TYPE_LABEL[income.money_type], income.account && `En ${income.account.name}`].filter(Boolean).join(' · ')}
+            </Badge>
           )}
           {income.is_recurring && (
             <Badge color="var(--color-info)">Recurrente</Badge>

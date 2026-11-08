@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { toRestorePayload } from '@/lib/restorePayload'
 
-const SELECT = '*, category:categories(id,name,color,icon)'
+const SELECT = '*, category:categories(id,name,color,icon), account:accounts(id,name,is_savings,kind)'
 
 async function getUserId() {
   const { data: { session } } = await supabase.auth.getSession()
