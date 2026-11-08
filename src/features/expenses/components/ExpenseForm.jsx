@@ -71,7 +71,7 @@ export function ExpenseForm({ initial, editingId, submitLabel, onSubmit, onCance
       { ...payload, savings_account_id: form.savings_account_id || null },
       split.parts,
       split.mode,
-      { groupId: split.groupId ?? crypto.randomUUID(), newId: (p) => p.id ?? crypto.randomUUID(), isSavingsCategory },
+      { groupId: split.groupId, newId: (p) => p.id ?? p.key, isSavingsCategory },
     ))
   }
 

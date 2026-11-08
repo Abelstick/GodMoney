@@ -124,7 +124,7 @@ function QuickAddForm({ onDone }) {
           { ...base, is_fixed: false, savings_account_id: savingsAccountId || null, paid_from_account_id: paidFrom || null, repay_to_savings: repay },
           split.parts,
           split.mode,
-          { groupId: crypto.randomUUID(), newId: () => crypto.randomUUID(), isSavingsCategory },
+          { groupId: split.groupId, newId: (p) => p.id ?? p.key, isSavingsCategory },
         ))
         split.parts.forEach((p) => p.category_id && setLastExpenseCats((prev) => rememberCategory(prev, p.category_id)))
       } else if (isExpense) {

@@ -13,6 +13,16 @@ async function getUserId() {
   return session.user.id
 }
 
+// Columnas que acepta save_expense_split_group.
+const SPLIT_FIELDS = [
+  'id', 'category_id', 'amount', 'description', 'date', 'is_fixed', 'savings_account_id',
+  'paid_from_account_id', 'repay_to_savings', 'tags', 'notes', 'attachments', 'split_group_id',
+]
+
+function pickSplitFields(row) {
+  return Object.fromEntries(SPLIT_FIELDS.filter((f) => row[f] !== undefined).map((f) => [f, row[f]]))
+}
+
 export const expenseService = {
   async getByMonth(from, to) {
     const { data, error } = await supabase
@@ -58,12 +68,29 @@ export const expenseService = {
     return data
   },
 
-  // Varios gastos en un solo insert (todo o nada): las partes de un gasto dividido.
-  async createMany(rows) {
-    const user_id = await getUserId()
+  // Deja el grupo formado exactamente por `rows` (crear, editar o quitar la
+  // división). Corre en una transacción en BD y es idempotente: reintentar la
+  // misma llamada tras un corte de conexión no duplica ni deja nada a medias.
+  async saveSplitGroup(groupId, rows) {
+    const { error } = await supabase.rpc('save_expense_split_group', {
+      p_group_id: groupId,
+      p_rows: rows.map(pickSplitFields),
+    })
+    if (error) throw error
+    const { data, error: readError } = await supabase
+      .from('expenses')
+      .select(SELECT)
+      .in('id', rows.map((r) => r.id))
+    if (readError) throw readError
+    return data
+  },
+
+  // Borra todas las partes de un gasto dividido en una sola sentencia.
+  async removeGroup(groupId) {
     const { data, error } = await supabase
       .from('expenses')
-      .insert(rows.map((r) => ({ ...r, user_id })))
+      .delete()
+      .eq('split_group_id', groupId)
       .select(SELECT)
     if (error) throw error
     return data

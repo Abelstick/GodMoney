@@ -17,6 +17,9 @@ export function initialSplit(categoryId = '', firstId) {
   const [a, b] = evenPercents(2)
   return {
     mode: SPLIT_MODES.PERCENT,
+    // Grupo y partes (key) con id desde ya: si el guardado falla y se reintenta,
+    // se envía exactamente lo mismo y no se duplica nada.
+    groupId: newKey(),
     parts: [
       { key: newKey(), id: firstId, category_id: categoryId || '', value: a },
       { key: newKey(), category_id: '', value: b },
@@ -34,11 +37,11 @@ export function SplitEditor({ total, value, onChange, categories }) {
   const status = resolveSplit(total, parts, mode)
   const hasTotal = Number(total) > 0
 
-  const setParts = (next) => onChange({ mode, parts: next })
+  const setParts = (next) => onChange({ ...value, parts: next })
   const patchPart = (key, patch) => setParts(parts.map((p) => (p.key === key ? { ...p, ...patch } : p)))
 
   function changeMode(next) {
-    onChange({ mode: next, parts: convertParts(total, parts, mode, next) })
+    onChange({ ...value, mode: next, parts: convertParts(total, parts, mode, next) })
   }
 
   function addPart() {

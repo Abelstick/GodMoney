@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { SPLIT_MODES, evenPercents, resolveSplit, fillRemaining, convertParts, buildSplitExpenses, splitFromGroup, groupTotal, diffSplitGroup } from './expenseSplit'
+import { SPLIT_MODES, evenPercents, resolveSplit, fillRemaining, convertParts, buildSplitExpenses, splitFromGroup, groupTotal } from './expenseSplit'
 
 const { PERCENT, AMOUNT } = SPLIT_MODES
 const parts = (...values) => values.map((value, i) => ({ category_id: `c${i}`, value }))
@@ -95,16 +95,10 @@ describe('editar un gasto dividido', () => {
     expect(groupTotal(group)).toBe(60.5)
   })
 
-  it('al duplicar no conserva ids ni grupo', () => {
+  it('al duplicar crea un grupo nuevo y no conserva ids', () => {
     const split = splitFromGroup(group, { keepIds: false })
-    expect(split.groupId).toBeNull()
-    expect(split.parts.every((p) => p.id === undefined)).toBe(true)
-  })
-
-  it('calcula qué actualizar, insertar y borrar', () => {
-    const diff = diffSplitGroup(group, [{ id: 'a', amount: 40 }, { id: 'n', amount: 20 }])
-    expect(diff.toUpdate.map((r) => r.id)).toEqual(['a'])
-    expect(diff.toInsert.map((r) => r.id)).toEqual(['n'])
-    expect(diff.toDelete).toEqual(['b'])
+    expect(split.groupId).toBeTruthy()
+    expect(split.groupId).not.toBe('g')
+    expect(split.parts.every((p) => p.id === undefined && p.key)).toBe(true)
   })
 })

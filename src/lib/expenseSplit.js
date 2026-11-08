@@ -122,7 +122,9 @@ export function splitFromGroup(rows, { keepIds = true } = {}) {
   const sorted = [...rows].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? '') || Number(b.amount) - Number(a.amount))
   return {
     mode: SPLIT_MODES.AMOUNT,
-    groupId: keepIds ? sorted[0]?.split_group_id ?? null : null,
+    // Ids estables desde que se abre el formulario: reintentar el guardado
+    // envía exactamente lo mismo y no duplica nada.
+    groupId: keepIds ? sorted[0]?.split_group_id : globalThis.crypto.randomUUID(),
     parts: sorted.map((r) => ({
       key: keepIds ? r.id : globalThis.crypto.randomUUID(),
       id: keepIds ? r.id : undefined,
@@ -134,16 +136,4 @@ export function splitFromGroup(rows, { keepIds = true } = {}) {
 
 export function groupTotal(rows) {
   return fromCents(rows.reduce((sum, r) => sum + toCents(r.amount), 0))
-}
-
-// Qué hacer para pasar de las partes guardadas a las nuevas: actualizar las
-// que siguen, insertar las nuevas y borrar las que se quitaron.
-export function diffSplitGroup(oldRows, newRows) {
-  const oldIds = new Set(oldRows.map((r) => r.id))
-  const newIds = new Set(newRows.map((r) => r.id))
-  return {
-    toUpdate: newRows.filter((r) => oldIds.has(r.id)),
-    toInsert: newRows.filter((r) => !oldIds.has(r.id)),
-    toDelete: oldRows.filter((r) => !newIds.has(r.id)).map((r) => r.id),
-  }
 }

@@ -102,12 +102,18 @@ export function Expenses() {
       if (editing && (splitRows || group)) {
         // Editar un gasto dividido (o dividir uno que no lo estaba) toca todas sus partes.
         // Si se quita la división, queda solo este gasto con el monto total.
-        await saveSplitGroup(group ?? [editing], splitRows ?? [{ ...payload, id: editing.id, split_group_id: null }])
+        const oldRows = group ?? [editing]
+        if (splitRows) await saveSplitGroup(splitRows[0].split_group_id, oldRows, splitRows)
+        else await saveSplitGroup(group[0].split_group_id, oldRows, [{ ...payload, id: editing.id, split_group_id: null }])
       }
       else if (editing)   await updateExpense(editing.id, payload)
       else if (splitRows) await addSplitExpense(splitRows)
       else                await addExpense(payload)
       closeModal()
+    } catch (err) {
+      // El formulario queda abierto con los mismos datos (y los mismos ids):
+      // volver a guardar es seguro.
+      showToast(err.message ?? 'No se pudo guardar el gasto', 'error')
     } finally {
       setSaving(false)
     }
