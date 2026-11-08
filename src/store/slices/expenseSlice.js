@@ -1,5 +1,6 @@
 import { expenseService } from '@/services/expenseService'
 import { offlineQueue, mergePending, isRetryableError } from '@/lib/offlineQueue'
+import { diffSplitGroup } from '@/lib/expenseSplit'
 
 // Los gastos con cuenta (destino del ahorro o "pagado desde") mueven saldos
 // vía trigger en BD; se refrescan las cuentas para que objetivos y patrimonio
@@ -63,6 +64,47 @@ export const createExpenseSlice = (set, get) => ({
     return data
   },
 
+  // Gasto dividido entre categorías: `rows` son las partes ya armadas (con id y
+  // split_group_id). Se insertan juntas para que no quede una división a medias.
+  addSplitExpense: async (rows) => {
+    const queueAll = () => {
+      rows.forEach((r) => get().queueOffline('expense', r))
+      return rows
+    }
+    if (globalThis.navigator?.onLine === false) return queueAll()
+    let data
+    try {
+      data = await expenseService.createMany(rows)
+    } catch (err) {
+      if (isRetryableError(err)) return queueAll()
+      throw err
+    }
+    set((s) => ({ expenses: [...data, ...s.expenses] }))
+    await refreshAccounts(get, ...data)
+    get().showToast(`Gasto dividido en ${data.length} categorías`, 'success')
+    return data
+  },
+
+  // Guarda la edición de un gasto dividido: `oldRows` son las partes que había y
+  // `newRows` las que quedan (con id las que siguen). Si queda una sola parte
+  // sin grupo, el gasto deja de estar dividido.
+  saveSplitGroup: async (oldRows, newRows) => {
+    const { toUpdate, toInsert, toDelete } = diffSplitGroup(oldRows, newRows)
+    const updated = await Promise.all(toUpdate.map(({ id, ...payload }) => expenseService.update(id, payload)))
+    const inserted = toInsert.length ? await expenseService.createMany(toInsert) : []
+    if (toDelete.length) await expenseService.removeMany(toDelete)
+
+    const byId = new Map(updated.map((r) => [r.id, r]))
+    set((s) => ({
+      expenses: [
+        ...inserted,
+        ...s.expenses.filter((e) => !toDelete.includes(e.id)).map((e) => byId.get(e.id) ?? e),
+      ],
+    }))
+    await refreshAccounts(get, ...oldRows, ...updated, ...inserted)
+    get().showToast(newRows.length > 1 ? `Gasto dividido actualizado (${newRows.length} partes)` : 'Gasto actualizado', 'success')
+  },
+
   updateExpense: async (id, payload) => {
     const previous = get().expenses.find((e) => e.id === id)
     const data = await expenseService.update(id, payload)
@@ -98,13 +140,33 @@ export const createExpenseSlice = (set, get) => ({
   removeExpense: async (id) => {
     const previous = get().expenses.find((e) => e.id === id)
     // Un gasto pendiente nunca llegó al servidor: basta con quitarlo de la cola.
-    if (previous?._pending) return get().discardPending('expense', id)
+    if (previous?._pending) {
+      const pendingGroup = previous.split_group_id
+        ? get().expenses.filter((e) => e._pending && e.split_group_id === previous.split_group_id)
+        : [previous]
+      pendingGroup.forEach((e) => get().discardPending('expense', e.id))
+      return
+    }
+    // Una parte de un gasto dividido se elimina junto con las demás.
+    if (previous?.split_group_id) return get().removeSplitGroup(previous.split_group_id)
     await expenseService.remove(id)
     set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) }))
     await refreshAccounts(get, previous)
     get().showToast('Gasto eliminado', 'info', previous && {
       label: 'Deshacer',
       onClick: () => get().restoreExpenses([previous]),
+    })
+  },
+
+  removeSplitGroup: async (groupId) => {
+    const rows = await expenseService.getByGroup(groupId)
+    const ids = rows.map((r) => r.id)
+    await expenseService.removeMany(ids)
+    set((s) => ({ expenses: s.expenses.filter((e) => e.split_group_id !== groupId) }))
+    await refreshAccounts(get, ...rows)
+    get().showToast(`Gasto dividido eliminado (${rows.length} partes)`, 'info', {
+      label: 'Deshacer',
+      onClick: () => get().restoreExpenses(rows),
     })
   },
 

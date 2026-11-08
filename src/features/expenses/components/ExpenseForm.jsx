@@ -6,19 +6,31 @@ import { useCategories } from '@/hooks/useCategories'
 import { useAccounts }   from '@/hooks/useAccounts'
 import { toInputDate, formatCurrency } from '@/lib/formatters'
 import { PaidFromField } from '@/components/common/PaidFromField/PaidFromField'
+import { SplitEditor, initialSplit } from '@/components/common/SplitEditor/SplitEditor'
+import { buildSplitExpenses, resolveSplit } from '@/lib/expenseSplit'
 import { TransactionExtras, EMPTY_EXTRAS, extrasFrom, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './ExpenseForm.module.css'
 
 const EMPTY = { amount: '', description: '', category_id: '', date: toInputDate(new Date()), is_fixed: false, savings_account_id: '', paid_from_account_id: '', repay_to_savings: true, ...EMPTY_EXTRAS }
 
-export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading }) {
-  const [form, setForm] = useState(() => ({ ...EMPTY, ...initial }))
+// `allowSplit`: se puede repartir el monto entre varias categorías; entonces
+// onSubmit recibe además las partes listas para guardar. `initial.split` trae
+// las partes de un gasto ya dividido; `editingId`, el gasto que se edita.
+export function ExpenseForm({ initial, editingId, submitLabel, onSubmit, onCancel, loading, allowSplit = false }) {
+  const [form, setForm] = useState(() => {
+    const { split: _split, ...rest } = initial ?? {}
+    return { ...EMPTY, ...rest }
+  })
   const [errors, setErrors] = useState({})
+  // null = gasto en una sola categoría; si no, { mode, parts, groupId? }.
+  const [split, setSplit] = useState(() => initial?.split ?? null)
   const { categories } = useCategories('expense')
   const { accounts } = useAccounts()
 
-  const selectedCategory = categories.find((c) => c.id === form.category_id)
-  const isSavings = Boolean(selectedCategory?.is_savings)
+  const isSavingsCategory = (id) => Boolean(categories.find((c) => c.id === id)?.is_savings)
+  const isSavings = split
+    ? split.parts.some((p) => isSavingsCategory(p.category_id))
+    : isSavingsCategory(form.category_id)
 
   const patchExtras = (patch) => setForm((f) => ({ ...f, ...patch }))
 
@@ -30,6 +42,10 @@ export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading 
     if (!form.amount || isNaN(form.amount) || Number(form.amount) <= 0)
       errs.amount = 'Ingresa un monto válido'
     if (!form.date) errs.date = 'La fecha es obligatoria'
+    if (split && !errs.amount) {
+      const status = resolveSplit(form.amount, split.parts, split.mode)
+      if (!status.valid) errs.split = status.error
+    }
     setErrors(errs)
     return !Object.keys(errs).length
   }
@@ -37,7 +53,7 @@ export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading 
   function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
-    onSubmit({
+    const payload = {
       amount:      Number(form.amount),
       description: form.description || null,
       category_id: form.category_id || null,
@@ -49,7 +65,14 @@ export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading 
       savings_account_id: isSavings ? (form.savings_account_id || null) : null,
       paid_from_account_id: form.paid_from_account_id || null,
       repay_to_savings: form.repay_to_savings !== false,
-    })
+    }
+    if (!split) return onSubmit(payload)
+    onSubmit(payload, buildSplitExpenses(
+      { ...payload, savings_account_id: form.savings_account_id || null },
+      split.parts,
+      split.mode,
+      { groupId: split.groupId ?? crypto.randomUUID(), newId: (p) => p.id ?? crypto.randomUUID(), isSavingsCategory },
+    ))
   }
 
   const accountOptions = [
@@ -85,12 +108,34 @@ export function ExpenseForm({ initial, submitLabel, onSubmit, onCancel, loading 
         onChange={set('description')}
         placeholder="Ej: Supermercado"
       />
-      <Select
-        label="Categoría"
-        options={catOptions}
-        value={form.category_id}
-        onChange={set('category_id')}
-      />
+      {split ? (
+        <div className={styles.splitWrap}>
+          <SplitEditor
+            total={form.amount}
+            value={split}
+            onChange={(next) => { setSplit(next); setErrors((e) => ({ ...e, split: undefined })) }}
+            categories={categories}
+          />
+          {errors.split && <p className={styles.error}>{errors.split}</p>}
+          <button type="button" className={styles.linkBtn} onClick={() => setSplit(null)}>
+            No dividir: usar una sola categoría
+          </button>
+        </div>
+      ) : (
+        <div className={styles.splitWrap}>
+          <Select
+            label="Categoría"
+            options={catOptions}
+            value={form.category_id}
+            onChange={set('category_id')}
+          />
+          {allowSplit && (
+            <button type="button" className={styles.linkBtn} onClick={() => setSplit(initialSplit(form.category_id, editingId))}>
+              Dividir entre varias categorías (p. ej. una parte para ti y otra para tu pareja)
+            </button>
+          )}
+        </div>
+      )}
       {isSavings && (
         <div className={styles.savingsBox}>
           <Select

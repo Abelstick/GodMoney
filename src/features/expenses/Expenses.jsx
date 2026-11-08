@@ -19,6 +19,8 @@ import { RecurringTransactionsModal } from '@/components/common/RecurringTransac
 import { Modal }    from '@/components/common/Modal/Modal'
 import { Skeleton } from '@/components/common/Skeleton/Skeleton'
 import { ExpenseForm } from './components/ExpenseForm'
+import { expenseService } from '@/services/expenseService'
+import { groupTotal, splitFromGroup } from '@/lib/expenseSplit'
 import { ExpenseList } from './components/ExpenseList'
 import { extrasFrom } from '@/components/common/TransactionExtras/TransactionExtras'
 import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
@@ -75,7 +77,7 @@ export function Expenses() {
   const [range, setRange] = useState(null)
   const {
     expenses, loading, error, totalExpense, from, to,
-    addExpense, updateExpense, removeExpense, updateManyExpenses, addTagToExpenses, removeManyExpenses, refetch,
+    addExpense, addSplitExpense, saveSplitGroup, updateExpense, removeExpense, updateManyExpenses, addTagToExpenses, removeManyExpenses, refetch,
   } = useExpenses(range)
   const showToast = useStore((s) => s.showToast)
   const previous = usePreviousPeriodTotals(from, to)
@@ -87,16 +89,24 @@ export function Expenses() {
   // Gasto que se está duplicando: el formulario se abre prellenado pero guarda uno nuevo.
   const [duplicating, setDuplicating] = useState(null)
   const [saving,    setSaving]    = useState(false)
+  // Todas las partes del gasto dividido que se edita o duplica (null si no lo es).
+  const [group,     setGroup]     = useState(null)
 
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   useMemo(() => { if (!loading) setHasLoadedOnce(true) }, [loading])
   const showSkeleton = loading && !hasLoadedOnce
 
-  async function handleSubmit(payload) {
+  async function handleSubmit(payload, splitRows) {
     setSaving(true)
     try {
-      if (editing) await updateExpense(editing.id, payload)
-      else         await addExpense(payload)
+      if (editing && (splitRows || group)) {
+        // Editar un gasto dividido (o dividir uno que no lo estaba) toca todas sus partes.
+        // Si se quita la división, queda solo este gasto con el monto total.
+        await saveSplitGroup(group ?? [editing], splitRows ?? [{ ...payload, id: editing.id, split_group_id: null }])
+      }
+      else if (editing)   await updateExpense(editing.id, payload)
+      else if (splitRows) await addSplitExpense(splitRows)
+      else                await addExpense(payload)
       closeModal()
     } finally {
       setSaving(false)
@@ -107,9 +117,28 @@ export function Expenses() {
     setModalOpen(false)
     setEditing(null)
     setDuplicating(null)
+    setGroup(null)
   }
 
-  function openNew()         { setEditing(null); setDuplicating(null); setModalOpen(true) }
+  function openNew()         { setEditing(null); setDuplicating(null); setGroup(null); setModalOpen(true) }
+
+  // Un gasto dividido se abre con todas sus partes (se piden al servidor por si
+  // alguna quedó fuera del periodo que se está viendo).
+  async function openWithGroup(expense, mode) {
+    let parts = null
+    if (expense.split_group_id && !expense._pending) {
+      try {
+        parts = await expenseService.getByGroup(expense.split_group_id)
+      } catch (err) {
+        showToast(err.message ?? 'No se pudo cargar el gasto dividido', 'error')
+        return
+      }
+    }
+    setGroup(parts?.length ? parts : null)
+    setEditing(mode === 'edit' ? expense : null)
+    setDuplicating(mode === 'duplicate' ? expense : null)
+    setModalOpen(true)
+  }
 
   // Desde el registro rápido ("Agregar notas, etiquetas o adjuntos") se llega
   // con ?nuevo=1: abre el formulario completo y limpia la URL.
@@ -119,8 +148,8 @@ export function Expenses() {
     openNew()
     setSearchParams({}, { replace: true })
   }, [searchParams])
-  function openEdit(expense) { setEditing(expense); setDuplicating(null); setModalOpen(true) }
-  function openDuplicate(expense) { setEditing(null); setDuplicating(expense); setModalOpen(true) }
+  function openEdit(expense) { openWithGroup(expense, 'edit') }
+  function openDuplicate(expense) { openWithGroup(expense, 'duplicate') }
 
   // Se elimina de inmediato; el aviso con "Deshacer" reemplaza al diálogo de confirmación.
   async function handleDelete(id) {
@@ -141,8 +170,8 @@ export function Expenses() {
   }
 
   let modalTitle = 'Nuevo gasto'
-  if (editing) modalTitle = 'Editar gasto'
-  else if (duplicating) modalTitle = 'Duplicar gasto'
+  if (editing) modalTitle = group ? 'Editar gasto dividido' : 'Editar gasto'
+  else if (duplicating) modalTitle = group ? 'Duplicar gasto dividido' : 'Duplicar gasto'
 
   // Valores iniciales del formulario: edición exacta, o copia con fecha de hoy y sin adjuntos.
   let formInitial
@@ -159,6 +188,11 @@ export function Expenses() {
       repay_to_savings: source.repay_to_savings !== false,
       ...extrasFrom(source),
       ...(editing ? {} : { attachments: [] }),
+    }
+    if (group) {
+      formInitial.amount = String(groupTotal(group))
+      formInitial.savings_account_id = group.find((e) => e.savings_account_id)?.savings_account_id ?? ''
+      formInitial.split = splitFromGroup(group, { keepIds: Boolean(editing) })
     }
   }
 
@@ -316,6 +350,8 @@ export function Expenses() {
         <ExpenseForm
           initial={formInitial}
           submitLabel={duplicating ? 'Crear copia' : undefined}
+          allowSplit
+          editingId={editing?.id}
           onSubmit={handleSubmit}
           onCancel={closeModal}
           loading={saving}

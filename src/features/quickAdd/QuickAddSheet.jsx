@@ -14,6 +14,8 @@ import { formatCurrency } from '@/lib/formatters'
 import { accountKind } from '@/lib/moneyType'
 import { PaidFromField } from '@/components/common/PaidFromField/PaidFromField'
 import { ReceivedInField } from '@/components/common/ReceivedInField/ReceivedInField'
+import { SplitEditor, initialSplit } from '@/components/common/SplitEditor/SplitEditor'
+import { buildSplitExpenses, resolveSplit } from '@/lib/expenseSplit'
 import { EMPTY_EXTRAS, extrasPayload } from '@/components/common/TransactionExtras/TransactionExtras'
 import styles from './QuickAddSheet.module.css'
 
@@ -32,6 +34,7 @@ const yesterday = () => format(subDays(new Date(), 1), 'yyyy-MM-dd')
 function QuickAddForm({ onDone }) {
   const navigate    = useNavigate()
   const addExpense  = useStore((s) => s.addExpense)
+  const addSplitExpense = useStore((s) => s.addSplitExpense)
   const addIncome   = useStore((s) => s.addIncome)
   const showToast   = useStore((s) => s.showToast)
   const expenses    = useStore((s) => s.expenses)
@@ -69,13 +72,19 @@ function QuickAddForm({ onDone }) {
   const [customDate, setCustomDate]   = useState(today())
   const [paidFrom, setPaidFrom]       = useState('')
   const [repay, setRepay]             = useState(true)
+  // null = una sola categoría; si no, el gasto se reparte entre varias.
+  const [split, setSplit]             = useState(null)
   const [error, setError]             = useState(null)
   const [saving, setSaving]           = useState(false)
 
   const defaultCategory = lastUsed.find((id) => categories.some((c) => c.id === id)) ?? null
   const categoryId = pickedCategory === undefined ? defaultCategory : pickedCategory
   const category   = categories.find((c) => c.id === categoryId)
-  const isSavings  = isExpense && Boolean(category?.is_savings)
+  const isSavingsCategory = (id) => Boolean(expenseCategories.find((c) => c.id === id)?.is_savings)
+  const isSplit    = isExpense && split !== null
+  const isSavings  = isExpense && (isSplit
+    ? split.parts.some((p) => isSavingsCategory(p.category_id))
+    : Boolean(category?.is_savings))
 
   // Si la categoría elegida no está entre los chips, se muestra igual al frente.
   const chipIds = categoryId && !recentIds.includes(categoryId)
@@ -86,17 +95,20 @@ function QuickAddForm({ onDone }) {
   const date = dateMode === 'today' ? today() : dateMode === 'yesterday' ? yesterday() : customDate
   const numericAmount = Number(amount)
   const validAmount = numericAmount > 0
+  const splitStatus = isSplit ? resolveSplit(amount, split.parts, split.mode) : null
 
   function changeType(next) {
     setType(next)
     setPickedCategory(undefined)
     setShowAllCategories(false)
+    setSplit(null)
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!validAmount) { setError('Ingresa un monto mayor a cero'); return }
     if (!date) { setError('Elige una fecha'); return }
+    if (splitStatus && !splitStatus.valid) { showToast(splitStatus.error, 'error'); return }
 
     setSaving(true)
     try {
@@ -107,7 +119,15 @@ function QuickAddForm({ onDone }) {
         date,
         ...extrasPayload(EMPTY_EXTRAS),
       }
-      if (isExpense) {
+      if (isSplit) {
+        await addSplitExpense(buildSplitExpenses(
+          { ...base, is_fixed: false, savings_account_id: savingsAccountId || null, paid_from_account_id: paidFrom || null, repay_to_savings: repay },
+          split.parts,
+          split.mode,
+          { groupId: crypto.randomUUID(), newId: () => crypto.randomUUID(), isSavingsCategory },
+        ))
+        split.parts.forEach((p) => p.category_id && setLastExpenseCats((prev) => rememberCategory(prev, p.category_id)))
+      } else if (isExpense) {
         await addExpense({
           ...base,
           is_fixed: false,
@@ -166,6 +186,14 @@ function QuickAddForm({ onDone }) {
         size="xl"
       />
 
+      {isSplit ? (
+        <div className={styles.field}>
+          <SplitEditor total={amount} value={split} onChange={setSplit} categories={expenseCategories} />
+          <Anchor component="button" type="button" size="sm" onClick={() => setSplit(null)} className={styles.back}>
+            No dividir: usar una sola categoría
+          </Anchor>
+        </div>
+      ) : (
       <div className={styles.field}>
         <span className={styles.label} id="qa-category-label">Categoría</span>
         {showAllCategories ? (
@@ -210,7 +238,13 @@ function QuickAddForm({ onDone }) {
             </div>
           </Chip.Group>
         )}
+        {isExpense && (
+          <Anchor component="button" type="button" size="sm" onClick={() => setSplit(initialSplit(categoryId))} className={styles.back}>
+            Dividir entre varias categorías
+          </Anchor>
+        )}
       </div>
+      )}
 
       {isSavings && (
         <Select
@@ -281,9 +315,11 @@ function QuickAddForm({ onDone }) {
         fullWidth
         color={isExpense ? 'expense' : 'income'}
         loading={saving}
-        disabled={!validAmount}
+        disabled={!validAmount || (splitStatus && !splitStatus.valid)}
       >
-        {validAmount
+        {isSplit && validAmount
+          ? `Guardar gasto dividido de ${formatCurrency(numericAmount)}`
+          : validAmount
           ? `Guardar ${isExpense ? 'gasto' : 'ingreso'} de ${formatCurrency(numericAmount)}`
           : `Guardar ${isExpense ? 'gasto' : 'ingreso'}`}
       </Button>

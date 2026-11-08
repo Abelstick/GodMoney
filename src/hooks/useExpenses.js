@@ -14,6 +14,8 @@ export function useExpenses(range) {
   const totalExpense   = useStore(selectTotalExpense)
   const fetchExpenses  = useStore((s) => s.fetchExpenses)
   const addExpense     = useStore((s) => s.addExpense)
+  const addSplitExpense = useStore((s) => s.addSplitExpense)
+  const saveSplitGroup  = useStore((s) => s.saveSplitGroup)
   const updateExpense  = useStore((s) => s.updateExpense)
   const removeExpense  = useStore((s) => s.removeExpense)
   const updateManyExpenses = useStore((s) => s.updateManyExpenses)
@@ -28,6 +30,6 @@ export function useExpenses(range) {
 
   return {
     expenses, loading, error, totalExpense, from, to,
-    addExpense, updateExpense, removeExpense, updateManyExpenses, addTagToExpenses, removeManyExpenses, refetch,
+    addExpense, addSplitExpense, saveSplitGroup, updateExpense, removeExpense, updateManyExpenses, addTagToExpenses, removeManyExpenses, refetch,
   }
 }

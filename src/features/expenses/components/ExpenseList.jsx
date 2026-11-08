@@ -49,6 +49,7 @@ function ExpenseItem({ expense, onEdit, onDelete, onDuplicate, selecting, select
           <span>{formatDate(expense.date)}</span>
           {expense.category && <Badge color={expense.category.color}>{expense.category.name}</Badge>}
           {expense.is_fixed && <Badge color="var(--color-warning)">Fijo</Badge>}
+          {expense.split_group_id && <Badge color="var(--color-text-muted)">Dividido</Badge>}
           {expense.category?.is_savings && (
             <Badge color="var(--color-primary)">
               {expense.savings_account ? `Ahorro → ${expense.savings_account.name}` : 'Ahorro'}

@@ -48,6 +48,27 @@ export const expenseService = {
     return data
   },
 
+  // Todas las partes de un gasto dividido.
+  async getByGroup(groupId) {
+    const { data, error } = await supabase
+      .from('expenses')
+      .select(SELECT)
+      .eq('split_group_id', groupId)
+    if (error) throw error
+    return data
+  },
+
+  // Varios gastos en un solo insert (todo o nada): las partes de un gasto dividido.
+  async createMany(rows) {
+    const user_id = await getUserId()
+    const { data, error } = await supabase
+      .from('expenses')
+      .insert(rows.map((r) => ({ ...r, user_id })))
+      .select(SELECT)
+    if (error) throw error
+    return data
+  },
+
   async update(id, payload) {
     const { data, error } = await supabase
       .from('expenses')
