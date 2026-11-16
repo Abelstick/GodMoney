@@ -50,6 +50,90 @@
   color: var(--color-hero-muted);
 }
 
+.heading { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
+
+/* Ojo: muestra u oculta los montos del panel */
+.eye {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-hero-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.eye:hover { background: var(--color-hero-chip); color: var(--color-hero-text); }
+.eye:focus-visible { outline: 2px solid var(--color-hero-text); outline-offset: 2px; }
+
+/* Monto oculto: mismo espacio que una cifra, sin revelar nada */
+.masked {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+  color: var(--color-hero-muted);
+}
+.maskedXl {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 2.25rem;
+  line-height: 1.05;
+  color: var(--color-hero-text);
+}
+@media (min-width: 768px) {
+  .maskedXl { font-size: var(--type-amount-hero); }
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Desglose por cuenta ── */
+.accounts { display: flex; flex-direction: column; margin-top: var(--space-2); }
+.accountsToggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  margin-left: calc(var(--space-3) * -1);
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  font: inherit;
+  font-size: var(--type-meta);
+  font-weight: var(--weight-semibold);
+  color: var(--color-hero-text);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.accountsToggle:hover { background: var(--color-hero-chip); }
+.accountsToggle:focus-visible { outline: 2px solid var(--color-hero-text); outline-offset: 2px; }
+.chevron { transition: transform var(--transition-fast); }
+.chevronOpen { transform: rotate(180deg); }
+
+.account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: inherit;
+}
+.account:hover { color: var(--color-hero-text); }
+.account:focus-visible { outline-color: var(--color-hero-text); }
+.accountName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.accountKind { padding-left: calc(8px + var(--space-2)); }
+.dot { width: 8px; height: 8px; border-radius: var(--radius-full); flex-shrink: 0; }
+
 .link {
   display: inline-flex;
   align-items: center;

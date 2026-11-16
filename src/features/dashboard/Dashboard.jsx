@@ -248,6 +248,7 @@ export function Dashboard() {
               payable={payable}
               accountsCount={accounts.length}
               pendingRepay={pendingRepay}
+              accounts={accounts}
             />
             <MonthSummary
               monthLabel={activeMonthLabel}
