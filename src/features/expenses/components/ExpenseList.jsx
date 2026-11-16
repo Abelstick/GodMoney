@@ -15,6 +15,7 @@ import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import { BulkBar } from '@/components/common/BulkBar/BulkBar'
+import { FilterPanel } from '@/components/common/FilterPanel/FilterPanel'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import styles from './ExpenseList.module.css'
 
@@ -253,6 +254,11 @@ export function ExpenseList({
 
       {/* Filtros dinámicos */}
       {(categories.length > 1 || hasFixed || tags.length > 0) && (
+        <FilterPanel
+          id="expenses"
+          activeCount={activeCats.size + activeTags.size + (onlyFixed ? 1 : 0)}
+          onClear={clearAll}
+        >
         <div className={styles.filters}>
           {categories.length > 1 && categories.map((cat) => {
             const active = activeCats.has(cat.name)
@@ -298,6 +304,7 @@ export function ExpenseList({
             </button>
           )}
         </div>
+        </FilterPanel>
       )}
 
       {/* Ordenamiento */}

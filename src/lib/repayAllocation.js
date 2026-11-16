@@ -59,6 +59,23 @@ export function checkAllocation(debts, values, amount) {
   }
 }
 
+/**
+ * Recorta un reparto a lo que hay disponible (p. ej. el saldo de la cuenta de
+ * origen): respeta lo marcado, de la más antigua a la más nueva, hasta agotar
+ * el presupuesto. La última que alcanza queda parcial y el resto sin monto.
+ */
+export function fitToBudget(debts, values, budget) {
+  let left = Math.max(0, toCents(budget))
+  const result = {}
+  for (const d of debts) {
+    const wanted = Math.min(Math.max(0, toCents(values[d.id])), Math.max(0, toCents(d.pending)))
+    const cents = Math.min(wanted, left)
+    result[d.id] = cents > 0 ? String(fromCents(cents)) : ''
+    left -= cents
+  }
+  return result
+}
+
 /** Marca o desmarca una deuda: al marcar se propone completa (se puede bajar para pagarla en parte). */
 export function toggleDebt(debts, values, id, checked) {
   if (!checked) return { ...values, [id]: '' }

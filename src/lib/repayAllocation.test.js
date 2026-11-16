@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { autoAllocate, checkAllocation, toggleDebt } from './repayAllocation'
+import { autoAllocate, checkAllocation, toggleDebt, fitToBudget } from './repayAllocation'
 
 // Tres deudas de 10, 20 y 30 (la más antigua primero).
 const DEBTS = [
@@ -67,6 +67,25 @@ describe('checkAllocation', () => {
 
   it('no es válido sin monto', () => {
     expect(checkAllocation(DEBTS, {}, '').valid).toBe(false)
+  })
+})
+
+describe('fitToBudget', () => {
+  it('deja parcial la deuda marcada cuando el saldo no alcanza', () => {
+    const debts = [{ id: 'balanza', pending: 100 }, { id: 'otra', pending: 40 }]
+    expect(fitToBudget(debts, { balanza: '100' }, 1.97)).toEqual({ balanza: '1.97', otra: '' })
+  })
+
+  it('cubre las marcadas en orden hasta agotar el saldo', () => {
+    expect(fitToBudget(DEBTS, { a: '10', b: '20', c: '30' }, 35)).toEqual({ a: '10', b: '20', c: '5' })
+  })
+
+  it('no toca un reparto que ya cabe', () => {
+    expect(fitToBudget(DEBTS, { b: '20' }, 50)).toEqual({ a: '', b: '20', c: '' })
+  })
+
+  it('sin saldo no queda nada marcado', () => {
+    expect(fitToBudget(DEBTS, { a: '10' }, 0)).toEqual({ a: '', b: '', c: '' })
   })
 })
 

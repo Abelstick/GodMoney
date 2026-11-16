@@ -15,6 +15,7 @@ import { Badge }      from '@/components/ui/Badge/Badge'
 import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import { BulkBar } from '@/components/common/BulkBar/BulkBar'
+import { FilterPanel } from '@/components/common/FilterPanel/FilterPanel'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { MONEY_TYPE_LABEL } from '@/lib/moneyType'
 import styles from './IncomeList.module.css'
@@ -249,6 +250,11 @@ export function IncomeList({
 
       {/* Filtros dinámicos */}
       {(categories.length > 1 || hasRecurring || tags.length > 0) && (
+        <FilterPanel
+          id="income"
+          activeCount={activeCats.size + activeTags.size + (onlyRecurring ? 1 : 0)}
+          onClear={clearAll}
+        >
         <div className={styles.filters}>
           {categories.length > 1 && categories.map((cat) => {
             const active = activeCats.has(cat.name)
@@ -294,6 +300,7 @@ export function IncomeList({
             </button>
           )}
         </div>
+        </FilterPanel>
       )}
 
       {/* Ordenamiento */}

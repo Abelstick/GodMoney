@@ -4,7 +4,7 @@ import { Select } from '@/components/ui/Select/Select'
 import { Button } from '@/components/ui/Button/Button'
 import { formatCurrency, formatDate, toInputDate } from '@/lib/formatters'
 import { toCents } from '@/lib/simulation/money'
-import { autoAllocate, checkAllocation, toggleDebt } from '@/lib/repayAllocation'
+import { autoAllocate, checkAllocation, toggleDebt, fitToBudget } from '@/lib/repayAllocation'
 import styles from './AccountForm.module.css'
 
 const round2 = (n) => String(Math.round(n * 100) / 100)
@@ -42,6 +42,22 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
   const check = manual ? checkAllocation(debts, values, selected) : null
   const amount = manual ? selected : Number(form.amount)
   const balance = Number(from?.balance ?? 0)
+
+  // Lo máximo que se puede reponer hoy sin dejar la cuenta de origen en negativo.
+  const affordable = Math.max(0, Math.min(balance, pending))
+  const short = Boolean(from) && amount > balance
+
+  // "Reponer solo lo que tengo": baja el monto (o recorta lo marcado) al saldo.
+  function fitBalance() {
+    if (manual) setValues((v) => fitToBudget(debts, v, balance))
+    else setForm((f) => ({ ...f, amount: round2(affordable) }))
+    setErrors((e) => ({ ...e, amount: undefined, alloc: undefined }))
+  }
+  const useBalanceButton = short && affordable > 0 && (
+    <Button type="button" size="sm" variant="secondary" onClick={fitBalance}>
+      Reponer solo lo que hay en {from.name}: {formatCurrency(affordable)}
+    </Button>
+  )
 
   function toggleManual(on) {
     setManual(on)
@@ -95,8 +111,11 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
       {!manual && (
         <Input label="Monto a reponer" type="number" min="0" step="0.01" prefix="S/" placeholder="0.00"
           value={form.amount} onChange={set('amount')} error={errors.amount} required
-          hint={from && amount > balance ? `Supera el saldo de ${from.name} (quedará en negativo)` : hint} />
+          hint={short
+            ? `${from.name} solo tiene ${formatCurrency(balance)}: te faltan ${formatCurrency(amount - balance)} (quedaría en negativo).`
+            : hint} />
       )}
+      {!manual && useBalanceButton}
 
       {canChoose && (
         <div className={styles.allocBox}>
@@ -152,6 +171,7 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
                     : `Te alcanza: ${from.name} tiene ${formatCurrency(balance)} y le quedarían ${formatCurrency(balance - selected)}.`}
                 </p>
               )}
+              {useBalanceButton}
               {selected > 0 && selected < pending && (
                 <p className={styles.allocStatus}>Quedarán {formatCurrency(pending - selected)} por reponer.</p>
               )}

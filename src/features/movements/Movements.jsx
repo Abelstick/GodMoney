@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/common/EmptyState/EmptyState'
 import { Modal } from '@/components/common/Modal/Modal'
 import { AttachmentStrip } from '@/components/common/Attachments/AttachmentStrip'
 import { PageHeader } from '@/components/ui/PageHeader/PageHeader'
+import { FilterPanel } from '@/components/common/FilterPanel/FilterPanel'
 import { ImportModal } from './components/ImportModal'
 import { DeficitCoverageCard } from './components/DeficitCoverageCard'
 import styles from './Movements.module.css'
@@ -166,6 +167,9 @@ export function Movements() {
   }
 
   const periodLabel = `${formatDate(range.from)} – ${formatDate(range.to)}`
+  // Lo que se ve con los filtros contraídos: el periodo y cuántos hay activos.
+  const activeFilters = [kind !== 'all', catIds.length > 0, minAmount, maxAmount, query, tag].filter(Boolean).length
+  const filterSummary = preset === 'custom' ? periodLabel : PRESETS.find((p) => p.id === preset)?.label
   const fileBase = `movimientos-${range.from}_${range.to}`
 
   function handleCSV() {
@@ -221,6 +225,7 @@ export function Movements() {
 
       {/* ── Filtros ── */}
       <Card padded>
+        <FilterPanel id="movements" activeCount={activeFilters} summary={filterSummary} onClear={clearFilters}>
         <div className={styles.chips} role="group" aria-label="Periodo">
           {PRESETS.map((p) => (
             <button key={p.id} type="button" aria-pressed={preset === p.id}
@@ -293,6 +298,7 @@ export function Movements() {
             ))}
           </div>
         )}
+        </FilterPanel>
       </Card>
 
       {/* ── Totales del filtro ── */}
