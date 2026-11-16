@@ -65,8 +65,24 @@ export const savingsWithdrawalService = {
    * Repone a una cuenta de ahorro repartiendo el monto entre sus deudas
    * abiertas (la más antigua primero). Lo que sobre entra como aporte normal.
    * Devuelve el monto aplicado a deudas. Ver repay_savings() en 018.
+   *
+   * Con allocations ([{ withdrawal_id, amount }]) el reparto lo decide el
+   * usuario y extra es lo que entra como aporte normal. Ver
+   * repay_savings_allocated() en 026.
    */
-  async repay({ savings_account_id, from_account_id, amount, date, note }) {
+  async repay({ savings_account_id, from_account_id, amount, date, note, allocations, extra = 0 }) {
+    if (allocations) {
+      const { data, error } = await supabase.rpc('repay_savings_allocated', {
+        p_savings_account_id: savings_account_id,
+        p_from_account_id: from_account_id,
+        p_allocations: allocations,
+        p_extra: extra,
+        p_date: date,
+        p_note: note || null,
+      })
+      if (error) throw error
+      return Number(data)
+    }
     const { data, error } = await supabase.rpc('repay_savings', {
       p_savings_account_id: savings_account_id,
       p_from_account_id: from_account_id,

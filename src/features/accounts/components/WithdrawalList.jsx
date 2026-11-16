@@ -12,7 +12,7 @@ const STATUS = {
   FORGIVEN: { label: 'No repuesto', color: 'var(--color-text-muted)' },
 }
 
-function title(w) {
+export function withdrawalTitle(w) {
   if (w.reason) return w.reason
   if (w.origin === 'DEFICIT') return `Déficit ${w.period_label ?? ''}`.trim()
   if (w.origin === 'MANUAL') return 'Retiro anterior'
@@ -35,7 +35,7 @@ export function WithdrawalList({ withdrawals, onRepay, onForgive, onReopen, onDe
           <li key={w.id} className={`${styles.item} ${w.status !== 'OPEN' ? styles.closed : ''}`}>
             <div className={styles.head}>
               <div className={styles.info}>
-                <div className={styles.title}>{title(w)}</div>
+                <div className={styles.title}>{withdrawalTitle(w)}</div>
                 <div className={styles.meta}>
                   {w.savings_account?.name ?? 'Cuenta eliminada'}
                   {w.target_date && (

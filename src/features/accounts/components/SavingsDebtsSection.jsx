@@ -15,7 +15,8 @@ import styles from './SavingsDebtsSection.module.css'
 /**
  * Lista de deudas con el ahorro + registrar / cerrar / reabrir / eliminar.
  * - withdrawals: las deudas a mostrar (todas o las de una cuenta)
- * - onRepay(account): abre el formulario de reposición de esa cuenta de ahorro
+ * - onRepay(account, withdrawal): abre el formulario de reposición de esa cuenta,
+ *   con esa deuda ya elegida
  * - savingsAccountId: si se indica, el formulario de registro arranca con esa cuenta
  */
 export function SavingsDebtsSection({ accounts, withdrawals, onRepay, savingsAccountId = null, title = 'Por reponer' }) {
@@ -46,7 +47,7 @@ export function SavingsDebtsSection({ accounts, withdrawals, onRepay, savingsAcc
 
   function repay(w) {
     const account = accounts.find((a) => a.id === w.savings_account_id)
-    if (account) onRepay(account)
+    if (account) onRepay(account, w)
   }
 
   return (
