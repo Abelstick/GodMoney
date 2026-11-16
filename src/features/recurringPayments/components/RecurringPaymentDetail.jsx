@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input/Input'
 import { Select } from '@/components/ui/Select/Select'
 import { useCategories } from '@/hooks/useCategories'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { currentPeriodDueDate } from '@/lib/recurringPaymentSchedule'
+import { currentPeriodDueDate, isPeriodPaid } from '@/lib/recurringPaymentSchedule'
 import { evaluatePeriod } from '@/lib/recurringPaymentMatch'
 import { recurringPaymentService } from '@/services/recurringPaymentService'
 import { getEffectiveRecurringStatus, RECURRING_STATUS, RECURRING_STATUS_META } from '@/lib/recurringPaymentStatus'
@@ -66,7 +66,8 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
   const statusMeta = RECURRING_STATUS_META[status]
   const canPay = status !== RECURRING_STATUS.PAUSED && status !== RECURRING_STATUS.UP_TO_DATE
   const dueDate = currentPeriodDueDate(payment)
-  const paidThisPeriod = ledger.some((l) => l.recurring_payment_id === payment.id && l.period_date === dueDate)
+  const paidThisPeriod = isPeriodPaid(payment, ledger)
+  const isMonthly = payment.schedule_type === 'FIXED_DAY'
 
   async function handlePay(payload) {
     setPaying(true)
@@ -160,13 +161,13 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
               <span className={styles.amountValue}>{payment.amount ? formatCurrency(payment.amount) : 'Variable'}</span>
             </div>
             <div className={styles.amountItem}>
-              <span className={styles.amountLabel}>Próximo vencimiento</span>
+              <span className={styles.amountLabel}>{isMonthly ? 'Vence este mes el' : 'Próximo vencimiento'}</span>
               <span className={`${styles.amountValue} ${styles.emphasis}`}>{formatDate(dueDate)}</span>
             </div>
             <div className={styles.amountItem}>
               <span className={styles.amountLabel}>Programación</span>
               <span className={styles.amountValue}>
-                {payment.schedule_type === 'FIXED_DAY' ? `Día ${payment.due_day_of_month} de cada mes` : 'Fecha manual'}
+                {isMonthly ? `Una vez al mes (día ${payment.due_day_of_month})` : 'Fecha manual'}
               </span>
             </div>
             <div className={styles.amountItem}>
@@ -181,15 +182,15 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
 
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>
-              Periodo vigente: del {formatDate(period.from)} al {formatDate(period.until)}
+              {isMonthly ? 'Este mes' : 'Periodo vigente'}: del {formatDate(period.from)} al {formatDate(period.until)}
             </h3>
             <p className={styles.description}>
               {status === RECURRING_STATUS.PAUSED
                 ? 'Pausado: no se vincula con gastos.'
                 : paidThisPeriod
-                  ? 'Este periodo ya está pagado.'
+                  ? (isMonthly ? 'Ya está pagado este mes.' : 'Este periodo ya está pagado.')
                   : period.byCategory
-                    ? `Cuentan los gastos de "${payment.category.name}" con fecha dentro de este periodo.`
+                    ? `Cuentan todos los gastos de "${payment.category.name}" ${isMonthly ? 'de este mes, sin importar el día en que pagues' : 'con fecha dentro de este periodo'}.`
                     : period.sharedWith.length
                       ? `${period.sharedWith.map((p) => `"${p.name}"`).join(', ')} también usa la categoría "${payment.category.name}", así que solo cuentan los gastos cuya descripción contenga "${payment.name}".`
                       : `Sin categoría: solo cuentan los gastos cuya descripción contenga "${payment.name}". Edítalo y asígnale una categoría.`}
@@ -198,9 +199,9 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
               <>
                 <p className={styles.description}>
                   {period.counted.length === 0
-                    ? 'Todavía no hay gastos que cuenten en este periodo.'
+                    ? `Todavía no hay gastos que cuenten ${isMonthly ? 'este mes' : 'en este periodo'}.`
                     : period.expected
-                      ? `Llevas ${formatCurrency(period.total)} de ${formatCurrency(period.expected)}; se marca como pagado desde ${formatCurrency(period.needed)}.`
+                      ? `Llevas ${formatCurrency(period.total)} de ${formatCurrency(period.expected)}. Queda al día cuando la suma llegue a ${formatCurrency(period.needed)} o más.`
                       : `Llevas ${formatCurrency(period.total)}.`}
                 </p>
                 {period.counted.length > 0 && (
@@ -276,7 +277,7 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
               onChange={(e) => setEditForm((f) => ({ ...f, category_id: e.target.value }))} />
             {payment.schedule_type === 'FIXED_DAY' ? (
               <Input label="Día del mes en que vence" type="number" min="1" max="31" step="1" required
-                hint="El periodo va del día siguiente al vencimiento anterior hasta este día"
+                hint="Solo se usa para avisarte y marcarlo vencido; cuentan los gastos de todo el mes"
                 value={editForm.due_day_of_month}
                 onChange={(e) => setEditForm((f) => ({ ...f, due_day_of_month: e.target.value }))} />
             ) : (

@@ -6,7 +6,7 @@
 // y escribir datos de todos los usuarios (bypassa RLS a propósito).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import * as webpush from 'jsr:@negrel/webpush'
-import { currentPeriodDueDate, daysUntil, type RecurringPaymentRow } from '../_shared/recurringPaymentSchedule.ts'
+import { currentPeriodDueDate, daysUntil, isSamePeriod, type RecurringPaymentRow } from '../_shared/recurringPaymentSchedule.ts'
 
 interface ActiveRecurringPayment extends RecurringPaymentRow {
   user_id: string
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
   if (ledgerError) return new Response(ledgerError.message, { status: 500 })
 
   const isPeriodPaid = (payment: RecurringPaymentRow, due: string) =>
-    ledger.some((l) => l.recurring_payment_id === payment.id && l.period_date === due)
+    ledger.some((l) => l.recurring_payment_id === payment.id && isSamePeriod(payment, l.period_date, due))
 
   type DesiredAlert = { user_id: string; recurring_payment_id: string; period_date: string; type: 'DUE_SOON' | 'OVERDUE'; severity: string; message: string }
   const desired: DesiredAlert[] = []

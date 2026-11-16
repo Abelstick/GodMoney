@@ -3,7 +3,7 @@ import { currentPeriodDueDate, isPeriodPaid, todayISO } from './recurringPayment
 
 // "Monto aproximado": el periodo se da por pagado cuando los gastos suman al
 // menos esta fracción del monto.
-const AMOUNT_TOLERANCE = 0.25
+const AMOUNT_TOLERANCE = 0.1
 
 const ISO = 'yyyy-MM-dd'
 
@@ -11,25 +11,24 @@ function normalize(text) {
   return (text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
-/** Vencimiento anterior al vigente: los gastos posteriores a él cuentan para este periodo. */
-function previousDueDate(payment, due) {
-  if (payment.schedule_type !== 'FIXED_DAY') return format(addMonths(parseISO(due), -1), ISO)
-  const [year, month] = due.split('-').map(Number)
-  const prevYear = month === 1 ? year - 1 : year
-  const prevMonth = month === 1 ? 12 : month - 1
-  const day = Math.min(payment.due_day_of_month, new Date(prevYear, prevMonth, 0).getDate())
-  return `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-}
-
 /**
  * Periodo vigente: los gastos con fecha entre `from` y `until` (inclusive)
- * pagan el vencimiento `due`. Empieza el día siguiente al vencimiento
- * anterior (`after`) y termina en el vigente, o en hoy si ya venció.
+ * pagan el vencimiento `due`; `after` es el día anterior a `from`.
+ *
+ * - FIXED_DAY (una vez al mes): el mes calendario completo, sin importar en
+ *   qué día se pague.
+ * - MANUAL: el mes anterior al vencimiento, o hasta hoy si ya venció.
  */
 export function periodWindow(payment, fromDate = new Date()) {
   const due = currentPeriodDueDate(payment, fromDate)
+  if (payment.schedule_type === 'FIXED_DAY') {
+    const [year, month] = due.split('-').map(Number)
+    const from = `${due.slice(0, 7)}-01`
+    const until = `${due.slice(0, 7)}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
+    return { due, after: format(addDays(parseISO(from), -1), ISO), from, until }
+  }
   const today = todayISO(fromDate)
-  const after = previousDueDate(payment, due)
+  const after = format(addMonths(parseISO(due), -1), ISO)
   return { due, after, from: format(addDays(parseISO(after), 1), ISO), until: due > today ? due : today }
 }
 

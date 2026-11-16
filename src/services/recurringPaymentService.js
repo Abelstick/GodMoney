@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { currentPeriodDueDate } from '@/lib/recurringPaymentSchedule'
 
 export const recurringPaymentService = {
   async getAll() {
@@ -58,9 +57,8 @@ export const recurringPaymentService = {
     return data
   },
 
-  // `previous` es el pago antes de editar. Si cambia el día de vencimiento y
-  // el periodo vigente ya estaba pagado, el pago registrado se mueve a la
-  // nueva fecha del mismo mes (`movedEntry`) para que siga contando.
+  // `previous` es el pago antes de editar: el tipo de programación no cambia,
+  // solo su día (FIXED_DAY) o su próxima fecha (MANUAL).
   async update(id, payload, previous) {
     const patch = {
       name: payload.name,
@@ -80,23 +78,7 @@ export const recurringPaymentService = {
       .select('*, category:categories(id,name,color,icon)')
       .single()
     if (error) throw error
-
-    let movedEntry = null
-    if (previous?.schedule_type === 'FIXED_DAY' && data.due_day_of_month !== previous.due_day_of_month) {
-      const oldDue = currentPeriodDueDate(previous)
-      const newDue = currentPeriodDueDate(data)
-      if (oldDue !== newDue && oldDue.slice(0, 7) === newDue.slice(0, 7)) {
-        const { data: moved, error: moveError } = await supabase
-          .from('recurring_payment_payments')
-          .update({ period_date: newDue })
-          .eq('recurring_payment_id', id)
-          .eq('period_date', oldDue)
-          .select('*')
-        if (moveError) throw moveError
-        movedEntry = moved?.[0] ?? null
-      }
-    }
-    return { recurringPayment: data, movedEntry }
+    return data
   },
 
   async setActive(id, isActive) {

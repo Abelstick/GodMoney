@@ -36,18 +36,32 @@ export function nextFixedDayDueDate(dueDayOfMonth, fromDate = new Date()) {
 }
 
 /**
- * Fecha de vencimiento vigente ("periodo actual") de un pago recurrente,
- * usada tanto para decidir si está pagado como para calcular alertas.
+ * Fecha de vencimiento vigente de un pago recurrente, usada tanto para
+ * decidir si está pagado como para calcular alertas.
+ *
+ * Un pago FIXED_DAY se paga una vez por mes calendario: su vencimiento es el
+ * día configurado del mes en curso, aunque ya haya pasado (entonces queda
+ * vencido hasta que se pague o empiece el mes siguiente).
  */
 export function currentPeriodDueDate(payment, fromDate = new Date()) {
   if (payment.schedule_type === 'MANUAL') return payment.next_due_date
-  return nextFixedDayDueDate(payment.due_day_of_month, fromDate)
+  const year = fromDate.getFullYear()
+  const month = fromDate.getMonth() + 1
+  const day = Math.min(payment.due_day_of_month, lastDayOfMonth(year, month))
+  return `${year}-${pad2(month)}-${pad2(day)}`
 }
 
-/** ¿Existe un pago registrado para el periodo vigente? */
+/**
+ * ¿Existe un pago registrado para el periodo vigente? En FIXED_DAY basta un
+ * pago en el mismo mes del vencimiento, sin importar el día exacto (así
+ * sigue contando si luego se cambia el día de vencimiento).
+ */
 export function isPeriodPaid(payment, payments, fromDate = new Date()) {
   const due = currentPeriodDueDate(payment, fromDate)
-  return payments.some((p) => p.recurring_payment_id === payment.id && p.period_date === due)
+  const samePeriod = payment.schedule_type === 'MANUAL'
+    ? (date) => date === due
+    : (date) => date.slice(0, 7) === due.slice(0, 7)
+  return payments.some((p) => p.recurring_payment_id === payment.id && samePeriod(p.period_date))
 }
 
 export function daysUntil(dateStr, fromDate = new Date()) {

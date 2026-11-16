@@ -34,9 +34,20 @@ export function nextFixedDayDueDate(dueDayOfMonth: number, fromDate = new Date()
   return `${nextYear}-${pad2(nextMonth)}-${pad2(clampedNextMonth)}`
 }
 
+// FIXED_DAY se paga una vez por mes calendario: el vencimiento es el día
+// configurado del mes en curso, aunque ya haya pasado.
 export function currentPeriodDueDate(payment: RecurringPaymentRow, fromDate = new Date()): string {
   if (payment.schedule_type === 'MANUAL') return payment.next_due_date as string
-  return nextFixedDayDueDate(payment.due_day_of_month as number, fromDate)
+  const year = fromDate.getFullYear()
+  const month = fromDate.getMonth() + 1
+  const day = Math.min(payment.due_day_of_month as number, lastDayOfMonth(year, month))
+  return `${year}-${pad2(month)}-${pad2(day)}`
+}
+
+// En FIXED_DAY basta un pago registrado en el mismo mes del vencimiento.
+export function isSamePeriod(payment: RecurringPaymentRow, periodDate: string, due: string): boolean {
+  if (payment.schedule_type === 'MANUAL') return periodDate === due
+  return periodDate.slice(0, 7) === due.slice(0, 7)
 }
 
 export function daysUntil(dateStr: string, fromDate = new Date()): number {

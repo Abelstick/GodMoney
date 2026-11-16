@@ -70,13 +70,8 @@ export const createRecurringPaymentSlice = (set, get) => ({
 
   updateRecurringPayment: async (id, payload) => {
     const previous = get().recurringPayments.find((p) => p.id === id)
-    const { recurringPayment: data, movedEntry } = await recurringPaymentService.update(id, payload, previous)
-    set((s) => ({
-      recurringPayments: s.recurringPayments.map((p) => (p.id === id ? data : p)),
-      recurringPaymentLedger: movedEntry
-        ? s.recurringPaymentLedger.map((l) => (l.id === movedEntry.id ? movedEntry : l))
-        : s.recurringPaymentLedger,
-    }))
+    const data = await recurringPaymentService.update(id, payload, previous)
+    set((s) => ({ recurringPayments: s.recurringPayments.map((p) => (p.id === id ? data : p)) }))
     get().showToast('Pago recurrente actualizado', 'success')
     // Al cambiar la categoría o el vencimiento puede que un gasto ya registrado lo pague.
     const linked = await get().reconcileRecurringPayments()

@@ -75,7 +75,7 @@ export function RecurringPaymentForm({ initial, onSubmit, onCancel, loading }) {
           value={form.amount} onChange={set('amount')} error={errors.amount}
           hint="Déjalo vacío si el monto varía cada mes" />
         <Select label="Categoría" options={categoryOptions} value={form.category_id} onChange={set('category_id')}
-          description="Un gasto en esta categoría lo marca como pagado" />
+          description="Cuando los gastos del mes en esta categoría suman el monto, queda al día" />
       </div>
 
       <div className={styles.scheduleToggle}>
@@ -84,8 +84,8 @@ export function RecurringPaymentForm({ initial, onSubmit, onCancel, loading }) {
           className={`${styles.scheduleBtn} ${isFixedDay ? styles.scheduleActive : ''}`}
           onClick={() => setForm((f) => ({ ...f, schedule_type: SCHEDULE_TYPE.FIXED_DAY }))}
         >
-          <span className={styles.scheduleLabel}><IconCalendar size={16} stroke={1.75} /> Día fijo del mes</span>
-          <span className={styles.scheduleHint}>Ej: siempre vence el día 15</span>
+          <span className={styles.scheduleLabel}><IconCalendar size={16} stroke={1.75} /> Una vez al mes</span>
+          <span className={styles.scheduleHint}>Se paga cada mes; indicas el día límite</span>
         </button>
         <button
           type="button"
@@ -98,9 +98,9 @@ export function RecurringPaymentForm({ initial, onSubmit, onCancel, loading }) {
       </div>
 
       {isFixedDay ? (
-        <Input label="Día del mes" type="number" min="1" max="31" step="1"
+        <Input label="Día límite del mes" type="number" min="1" max="31" step="1"
           value={form.due_day_of_month} onChange={set('due_day_of_month')} error={errors.due_day_of_month} required
-          hint="Si el mes no tiene ese día (ej. 31 en febrero), se usa el último día del mes" />
+          hint="Puedes pagar cualquier día del mes; pasado este día sin pagar, queda vencido. Si el mes no tiene ese día, se usa el último" />
       ) : (
         <Input label="Próxima fecha de vencimiento" type="date"
           value={form.next_due_date} onChange={set('next_due_date')} error={errors.next_due_date} required />
