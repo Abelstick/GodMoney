@@ -59,14 +59,9 @@ export function checkAllocation(debts, values, amount) {
   }
 }
 
-/** Marca o desmarca una deuda: al marcar recibe lo que quede por repartir (hasta su saldo). */
-export function toggleDebt(debts, values, amount, id, checked) {
+/** Marca o desmarca una deuda: al marcar se propone completa (se puede bajar para pagarla en parte). */
+export function toggleDebt(debts, values, id, checked) {
   if (!checked) return { ...values, [id]: '' }
   const debt = debts.find((d) => d.id === id)
-  const others = debts.reduce((acc, d) => acc + (d.id === id ? 0 : Math.max(0, toCents(values[d.id]))), 0)
-  const pending = Math.max(0, toCents(debt?.pending))
-  const left = toCents(amount) - others
-  // Sin monto libre se propone la deuda completa: el usuario ajusta el total.
-  const cents = left > 0 ? Math.min(left, pending) : pending
-  return { ...values, [id]: String(fromCents(cents)) }
+  return { ...values, [id]: String(fromCents(Math.max(0, toCents(debt?.pending)))) }
 }

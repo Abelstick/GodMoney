@@ -36,9 +36,19 @@
 .allocNone { color: var(--color-text-muted); }
 .allocStatus { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; }
 .allocError { color: var(--color-danger); }
-.linkBtn {
-  padding: 0; border: none; background: none; cursor: pointer;
-  font: inherit; color: var(--color-primary); text-decoration: underline;
+.allocOk { color: var(--color-success); }
+.allocSummary {
+  display: flex; flex-direction: column; gap: var(--space-1);
+  padding-top: var(--space-3); border-top: 1px solid var(--color-border);
+}
+.allocTotal {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3);
+  font-size: var(--text-sm); color: var(--color-text-secondary);
+}
+.allocTotal small { font-size: var(--text-xs); color: var(--color-text-muted); }
+.allocTotal strong {
+  font-size: var(--text-base); font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
 }
 
 .colorRow { display: flex; flex-wrap: wrap; gap: var(--space-2); }

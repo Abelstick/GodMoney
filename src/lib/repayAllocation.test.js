@@ -71,16 +71,18 @@ describe('checkAllocation', () => {
 })
 
 describe('toggleDebt', () => {
-  it('al marcar asigna lo que queda por repartir, hasta el saldo de la deuda', () => {
-    expect(toggleDebt(DEBTS, { b: '20' }, 50, 'c', true)).toEqual({ b: '20', c: '30' })
-    expect(toggleDebt(DEBTS, { c: '30' }, 35, 'b', true)).toEqual({ c: '30', b: '5' })
-  })
-
-  it('si no queda monto libre propone la deuda completa', () => {
-    expect(toggleDebt(DEBTS, { c: '30' }, 30, 'a', true)).toEqual({ c: '30', a: '10' })
+  it('al marcar propone la deuda completa', () => {
+    expect(toggleDebt(DEBTS, { b: '20' }, 'c', true)).toEqual({ b: '20', c: '30' })
   })
 
   it('al desmarcar la deja vacía', () => {
-    expect(toggleDebt(DEBTS, { a: '10', b: '20' }, 30, 'a', false)).toEqual({ a: '', b: '20' })
+    expect(toggleDebt(DEBTS, { a: '10', b: '20' }, 'a', false)).toEqual({ a: '', b: '20' })
+  })
+
+  it('el total de las marcadas es lo que se repone', () => {
+    const values = toggleDebt(DEBTS, toggleDebt(DEBTS, {}, 'b', true), 'c', true)
+    const total = checkAllocation(DEBTS, values, 0).assigned
+    expect(total).toBe(50)
+    expect(checkAllocation(DEBTS, values, total).valid).toBe(true)
   })
 })

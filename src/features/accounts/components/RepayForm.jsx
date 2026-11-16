@@ -17,7 +17,8 @@ function autoValues(debts, amount) {
 
 // Reponer a una cuenta: cualquier monto. Por defecto se reparte entre las
 // deudas abiertas de la más antigua a la más nueva; con "Elegir a qué deudas
-// va" el usuario decide cuánto recibe cada una.
+// va" el usuario marca las deudas (y ajusta cuánto recibe cada una) y el monto
+// a reponer es la suma de las marcadas, comparada con el saldo de origen.
 // debts: [{ id, pending, label, target_date }] de la más antigua a la más nueva.
 // focusId: deuda desde la que se abrió el formulario (arranca ya elegida).
 export function RepayForm({ savingsAccount, accounts, pending, debts = [], focusId = null, onSubmit, onCancel, loading }) {
@@ -34,23 +35,29 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
   const [values, setValues] = useState(() => (focus ? { [focus.id]: round2(focus.pending) } : {}))
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
   const from = sources.find((a) => a.id === form.from_account_id)
-  const amount = Number(form.amount)
   const canChoose = debts.length > 1
   const auto = autoAllocate(debts, form.amount)
-  const check = manual ? checkAllocation(debts, values, form.amount) : null
+  // A mano, el monto no se escribe: es la suma de las deudas marcadas.
+  const selected = manual ? checkAllocation(debts, values, 0).assigned : 0
+  const check = manual ? checkAllocation(debts, values, selected) : null
+  const amount = manual ? selected : Number(form.amount)
+  const balance = Number(from?.balance ?? 0)
 
   function toggleManual(on) {
     setManual(on)
     if (on) setValues(autoValues(debts, form.amount))
-    setErrors((e) => ({ ...e, alloc: undefined }))
+    else if (selected > 0) setForm((f) => ({ ...f, amount: round2(selected) }))
+    setErrors((e) => ({ ...e, amount: undefined, alloc: undefined }))
   }
 
   function validate() {
     const errs = {}
     if (!form.from_account_id) errs.from = 'Elige de qué cuenta sale el dinero'
-    if (!amount || amount <= 0) errs.amount = 'Ingresa un monto válido'
+    if (manual) {
+      if (!check.allocations.length) errs.alloc = 'Marca al menos una deuda para reponer'
+      else if (!check.valid) errs.alloc = 'Corrige los montos marcados en rojo'
+    } else if (!amount || amount <= 0) errs.amount = 'Ingresa un monto válido'
     if (!form.date) errs.date = 'La fecha es obligatoria'
-    if (check && !errs.amount && !check.valid) errs.alloc = true
     setErrors(errs)
     return !Object.keys(errs).length
   }
@@ -74,25 +81,6 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
     ? `Cubre toda la deuda y ${formatCurrency(amount - pending)} queda como aporte extra.`
     : 'Con esto repones todo lo que debías.'
 
-  // Estado del reparto a mano: qué falta o sobra para que cuadre con el monto.
-  let status = null
-  if (check) {
-    const fix = (
-      <button type="button" className={styles.linkBtn}
-        onClick={() => setForm((f) => ({ ...f, amount: round2(check.assigned) }))}>
-        Usar {formatCurrency(check.assigned)} como monto
-      </button>
-    )
-    if (check.overIds.length) status = { bad: true, text: 'Hay una deuda con más de lo que le falta reponer.' }
-    else if (check.excess > 0) status = { bad: true, text: <>Asignaste {formatCurrency(check.excess)} más que el monto a reponer. {fix}</> }
-    else if (check.missing > 0) status = {
-      bad: true,
-      text: <>Te falta asignar {formatCurrency(check.missing)}. {check.assigned > 0 && fix}</>,
-    }
-    else if (check.extra > 0) status = { text: `Cubre todas las deudas y ${formatCurrency(check.extra)} queda como aporte extra.` }
-    else if (amount > 0) status = { text: `Reparto completo: ${formatCurrency(check.assigned)} asignados.` }
-  }
-
   if (!sources.length) {
     return <p className={styles.hint}>Necesitas otra cuenta (de donde saldrá el dinero) para reponer.</p>
   }
@@ -104,9 +92,11 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
         options={sources.map((a) => ({ value: a.id, label: `${a.name} (${formatCurrency(a.balance)})` }))}
         value={form.from_account_id} onChange={set('from_account_id')} error={errors.from}
       />
-      <Input label="Monto a reponer" type="number" min="0" step="0.01" prefix="S/" placeholder="0.00"
-        value={form.amount} onChange={set('amount')} error={errors.amount} required
-        hint={from && amount > Number(from.balance) ? `Supera el saldo de ${from.name} (quedará en negativo)` : hint} />
+      {!manual && (
+        <Input label="Monto a reponer" type="number" min="0" step="0.01" prefix="S/" placeholder="0.00"
+          value={form.amount} onChange={set('amount')} error={errors.amount} required
+          hint={from && amount > balance ? `Supera el saldo de ${from.name} (quedará en negativo)` : hint} />
+      )}
 
       {canChoose && (
         <div className={styles.allocBox}>
@@ -123,7 +113,7 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
                 <li key={d.id} className={styles.allocRow}>
                   {manual && (
                     <input type="checkbox" id={inputId} checked={checked}
-                      onChange={(e) => setValues((v) => toggleDebt(debts, v, form.amount, d.id, e.target.checked))} />
+                      onChange={(e) => setValues((v) => toggleDebt(debts, v, d.id, e.target.checked))} />
                   )}
                   <label className={styles.allocInfo} htmlFor={manual ? inputId : undefined}>
                     <span className={styles.allocTitle}>{d.label}</span>
@@ -146,13 +136,28 @@ export function RepayForm({ savingsAccount, accounts, pending, debts = [], focus
               )
             })}
           </ul>
-          {manual
-            ? status && (
-              <p className={`${styles.allocStatus} ${status.bad && errors.alloc ? styles.allocError : ''}`} role="status">
-                {status.text}
-              </p>
-            )
-            : <p className={styles.allocStatus}>Se reparte de la más antigua a la más nueva.</p>}
+          {manual ? (
+            <div className={styles.allocSummary} role="status">
+              <div className={styles.allocTotal}>
+                <span>
+                  Total a reponer
+                  <small> · {check.allocations.length} de {debts.length} deudas</small>
+                </span>
+                <strong>{formatCurrency(selected)}</strong>
+              </div>
+              {from && selected > 0 && (
+                <p className={`${styles.allocStatus} ${selected > balance ? styles.allocError : styles.allocOk}`}>
+                  {selected > balance
+                    ? `No te alcanza: ${from.name} tiene ${formatCurrency(balance)}, te faltan ${formatCurrency(selected - balance)} (quedaría en negativo).`
+                    : `Te alcanza: ${from.name} tiene ${formatCurrency(balance)} y le quedarían ${formatCurrency(balance - selected)}.`}
+                </p>
+              )}
+              {selected > 0 && selected < pending && (
+                <p className={styles.allocStatus}>Quedarán {formatCurrency(pending - selected)} por reponer.</p>
+              )}
+              {errors.alloc && <p className={`${styles.allocStatus} ${styles.allocError}`}>{errors.alloc}</p>}
+            </div>
+          ) : <p className={styles.allocStatus}>Se reparte de la más antigua a la más nueva.</p>}
         </div>
       )}
       <Input label="Fecha" type="date" value={form.date} onChange={set('date')} error={errors.date} required />
