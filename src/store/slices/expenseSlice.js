@@ -21,6 +21,8 @@ async function refreshAccounts(get, ...expenses) {
   ])
 }
 
+// Tras guardar un gasto, `reconcileRecurringPayments` (sin esperar) marca como
+// pagado el pago recurrente al que corresponda.
 function addedMessage(e) {
   if (e.paid_from_account_id && e.repay_to_savings) return `Gasto registrado y sumado a lo que falta reponer a ${e.paid_from_account?.name ?? 'la cuenta'}`
   if (e.paid_from_account_id) return `Gasto registrado y descontado de ${e.paid_from_account?.name ?? 'la cuenta'}`
@@ -60,6 +62,7 @@ export const createExpenseSlice = (set, get) => ({
     set((s) => ({ expenses: [data, ...s.expenses] }))
     await refreshAccounts(get, data)
     get().showToast(addedMessage(data), 'success')
+    get().reconcileRecurringPayments({ reload: true })
     return data
   },
 
@@ -84,6 +87,7 @@ export const createExpenseSlice = (set, get) => ({
     set((s) => ({ expenses: [...data, ...s.expenses.filter((e) => !ids.has(e.id))] }))
     await refreshAccounts(get, ...data)
     get().showToast(`Gasto dividido en ${data.length} categorías`, 'success')
+    get().reconcileRecurringPayments({ reload: true })
     return data
   },
 
@@ -119,6 +123,7 @@ export const createExpenseSlice = (set, get) => ({
     }))
     await refreshAccounts(get, previous, data)
     get().showToast('Gasto actualizado', 'success')
+    get().reconcileRecurringPayments({ reload: true })
     return data
   },
 
@@ -130,6 +135,7 @@ export const createExpenseSlice = (set, get) => ({
     set((s) => ({ expenses: s.expenses.map((e) => byId.get(e.id) ?? e) }))
     await refreshAccounts(get, ...previous, ...rows)
     get().showToast(message ?? `${rows.length} gastos actualizados`, 'success')
+    get().reconcileRecurringPayments({ reload: true })
   },
 
   // Agrega una etiqueta a cada gasto conservando las que ya tiene.

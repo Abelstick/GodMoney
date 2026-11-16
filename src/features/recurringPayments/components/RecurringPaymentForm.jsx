@@ -74,7 +74,8 @@ export function RecurringPaymentForm({ initial, onSubmit, onCancel, loading }) {
         <Input label="Monto aproximado (opcional)" type="number" min="0" step="0.01" prefix="S/"
           value={form.amount} onChange={set('amount')} error={errors.amount}
           hint="Déjalo vacío si el monto varía cada mes" />
-        <Select label="Categoría" options={categoryOptions} value={form.category_id} onChange={set('category_id')} />
+        <Select label="Categoría" options={categoryOptions} value={form.category_id} onChange={set('category_id')}
+          description="Un gasto en esta categoría lo marca como pagado" />
       </div>
 
       <div className={styles.scheduleToggle}>

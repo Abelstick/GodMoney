@@ -91,6 +91,33 @@ export const recurringPaymentService = {
     if (error) throw error
   },
 
+  // Gastos candidatos a vincularse solos con un pago recurrente pendiente.
+  async getExpensesSince(since) {
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('id, amount, description, date, category_id')
+      .gt('date', since)
+    if (error) throw error
+    return data
+  },
+
+  // Deshace el último pago registrado. En los pagos MANUAL el vencimiento
+  // vuelve al periodo que se había marcado como pagado.
+  async removePayment(entry, recurringPayment) {
+    const { error } = await supabase.from('recurring_payment_payments').delete().eq('id', entry.id)
+    if (error) throw error
+    if (recurringPayment.schedule_type !== 'MANUAL') return recurringPayment
+
+    const { data, error: rpError } = await supabase
+      .from('recurring_payments')
+      .update({ next_due_date: entry.period_date, updated_at: new Date().toISOString() })
+      .eq('id', recurringPayment.id)
+      .select('*, category:categories(id,name,color,icon)')
+      .single()
+    if (rpError) throw rpError
+    return data
+  },
+
   async pay(payload) {
     const { data: payment, error } = await supabase.rpc('pay_recurring_payment', {
       p_recurring_payment_id: payload.recurring_payment_id,

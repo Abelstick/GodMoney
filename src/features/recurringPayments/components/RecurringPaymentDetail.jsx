@@ -4,6 +4,8 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { Button } from '@/components/ui/Button/Button'
 import { Badge } from '@/components/ui/Badge/Badge'
 import { Input } from '@/components/ui/Input/Input'
+import { Select } from '@/components/ui/Select/Select'
+import { useCategories } from '@/hooks/useCategories'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { currentPeriodDueDate } from '@/lib/recurringPaymentSchedule'
 import { getEffectiveRecurringStatus, RECURRING_STATUS, RECURRING_STATUS_META } from '@/lib/recurringPaymentStatus'
@@ -15,7 +17,9 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
   const {
     fetchRecurringPaymentDetail, paymentsByRecurringPayment,
     updateRecurringPayment, setRecurringPaymentActive, removeRecurringPayment, payRecurringPayment, ledger,
+    removeRecurringPaymentEntry,
   } = useRecurringPayments()
+  const { categories } = useCategories('expense')
 
   const [payOpen, setPayOpen] = useState(false)
   const [paying, setPaying] = useState(false)
@@ -26,6 +30,8 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
   const [pausing, setPausing] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [undoEntry, setUndoEntry] = useState(null)
+  const [undoing, setUndoing] = useState(false)
 
   useEffect(() => {
     if (isOpen && payment) fetchRecurringPaymentDetail(payment.id)
@@ -55,6 +61,7 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
       name: payment.name,
       description: payment.description ?? '',
       amount: payment.amount ?? '',
+      category_id: payment.category_id ?? '',
       reminder_days_before: String(payment.reminder_days_before),
     })
     setEditOpen(true)
@@ -68,12 +75,24 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
         name: editForm.name.trim(),
         description: editForm.description.trim() || null,
         amount: editForm.amount !== '' ? Number(editForm.amount) : null,
-        category_id: payment.category_id,
+        category_id: editForm.category_id || null,
         reminder_days_before: Number(editForm.reminder_days_before),
       })
+      // Con la nueva categoría puede haberse vinculado un gasto ya registrado.
+      await fetchRecurringPaymentDetail(payment.id)
       setEditOpen(false)
     } finally {
       setEditSaving(false)
+    }
+  }
+
+  async function handleUndo() {
+    setUndoing(true)
+    try {
+      await removeRecurringPaymentEntry(undoEntry)
+      setUndoEntry(null)
+    } finally {
+      setUndoing(false)
     }
   }
 
@@ -127,7 +146,17 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
               <span className={styles.amountLabel}>Aviso anticipado</span>
               <span className={styles.amountValue}>{payment.reminder_days_before} día(s) antes</span>
             </div>
+            <div className={styles.amountItem}>
+              <span className={styles.amountLabel}>Categoría</span>
+              <span className={styles.amountValue}>{payment.category?.name ?? 'Sin categoría'}</span>
+            </div>
           </div>
+
+          <p className={styles.description}>
+            {payment.category
+              ? `Se marca como pagado solo cuando registras un gasto en "${payment.category.name}" dentro del periodo.`
+              : `Sin categoría, solo se marca solo si la descripción del gasto contiene "${payment.name}". Edítalo y asígnale una categoría.`}
+          </p>
 
           <div className={styles.actions}>
             {canPay && <Button onClick={() => setPayOpen(true)}>Marcar pagado</Button>}
@@ -147,13 +176,16 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
               <p className={styles.emptyText}>Sin pagos registrados todavía</p>
             ) : (
               <div className={styles.paymentList}>
-                {history.map((p) => (
+                {history.map((p, index) => (
                   <div key={p.id} className={styles.paymentRow}>
                     <div className={styles.paymentDate}>{formatDate(p.period_date)}</div>
                     <div className={styles.paymentAmounts}>
                       {p.expense ? `Vinculado a "${p.expense.description || 'gasto'}"` : 'Marcado manualmente'}
                     </div>
                     <div className={styles.paymentTotal}>{formatCurrency(p.amount)}</div>
+                    {index === 0 && (
+                      <Button size="sm" variant="secondary" onClick={() => setUndoEntry(p)}>Deshacer</Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -177,6 +209,11 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
               onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} />
             <Input label="Monto aproximado" type="number" min="0" step="0.01" prefix="S/" value={editForm.amount}
               onChange={(e) => setEditForm((f) => ({ ...f, amount: e.target.value }))} />
+            <Select label="Categoría"
+              description="Al registrar un gasto en esta categoría, el pago se marca como pagado automáticamente"
+              options={[{ value: '', label: 'Sin categoría' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+              value={editForm.category_id}
+              onChange={(e) => setEditForm((f) => ({ ...f, category_id: e.target.value }))} />
             <Input label="Avisar con cuántos días de anticipación" type="number" min="0" step="1"
               value={editForm.reminder_days_before}
               onChange={(e) => setEditForm((f) => ({ ...f, reminder_days_before: e.target.value }))} required />
@@ -200,6 +237,16 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
             : `"${payment.name}" volverá a generar alertas y notificaciones según su vencimiento.`
         }
         confirmLabel={payment.is_active ? 'Pausar' : 'Reactivar'}
+      />
+
+      <ConfirmDialog
+        isOpen={!!undoEntry}
+        onClose={() => setUndoEntry(null)}
+        onConfirm={handleUndo}
+        loading={undoing}
+        title="Deshacer pago"
+        description={`"${payment.name}" volverá a quedar pendiente para ese periodo. El gasto vinculado no se borra ni se volverá a vincular solo.`}
+        confirmLabel="Deshacer pago"
       />
 
       <ConfirmDialog

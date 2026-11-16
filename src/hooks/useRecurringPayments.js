@@ -13,6 +13,7 @@ export function useRecurringPayments() {
   const removeRecurringPayment   = useStore((s) => s.removeRecurringPayment)
   const payRecurringPayment      = useStore((s) => s.payRecurringPayment)
   const fetchRecurringPaymentDetail = useStore((s) => s.fetchRecurringPaymentDetail)
+  const removeRecurringPaymentEntry = useStore((s) => s.removeRecurringPaymentEntry)
 
   useEffect(() => {
     fetchRecurringPayments()
@@ -29,5 +30,6 @@ export function useRecurringPayments() {
     removeRecurringPayment,
     payRecurringPayment,
     fetchRecurringPaymentDetail,
+    removeRecurringPaymentEntry,
   }
 }
