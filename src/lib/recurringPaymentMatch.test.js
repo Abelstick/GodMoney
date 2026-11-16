@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { matchExpensesToRecurringPayments, periodWindow, unlinkKey } from './recurringPaymentMatch'
+import { evaluatePeriod, matchExpensesToRecurringPayments, periodWindow, unlinkKey } from './recurringPaymentMatch'
 
 const NOW = new Date(2026, 10, 15) // 15 nov 2026
 
@@ -10,7 +10,7 @@ const match = (payments, ledger, expenses, opts) =>
 
 describe('periodWindow', () => {
   it('va del vencimiento anterior al vigente', () => {
-    expect(periodWindow(internet, NOW)).toEqual({ due: '2026-11-20', after: '2026-10-20', until: '2026-11-20' })
+    expect(periodWindow(internet, NOW)).toEqual({ due: '2026-11-20', after: '2026-10-20', from: '2026-10-21', until: '2026-11-20' })
   })
 
   it('respeta el día 31 en meses cortos', () => {
@@ -19,7 +19,7 @@ describe('periodWindow', () => {
 
   it('un pago manual vencido acepta gastos hasta hoy', () => {
     const manual = { ...internet, schedule_type: 'MANUAL', next_due_date: '2026-11-05' }
-    expect(periodWindow(manual, NOW)).toEqual({ due: '2026-11-05', after: '2026-10-05', until: '2026-11-15' })
+    expect(periodWindow(manual, NOW)).toEqual({ due: '2026-11-05', after: '2026-10-05', from: '2026-10-06', until: '2026-11-15' })
   })
 })
 
@@ -41,16 +41,27 @@ describe('matchExpensesToRecurringPayments', () => {
     expect(match([{ ...internet, is_active: false }], [], [expense()])).toEqual([])
   })
 
-  it('solo por categoría exige un monto parecido; por nombre no', () => {
-    expect(match([internet], [], [expense({ amount: 300 })])).toEqual([])
-    expect(match([internet], [], [expense({ amount: 300, description: 'INTERNÉT fibra' })])).toHaveLength(1)
-    expect(match([{ ...internet, amount: null }], [], [expense({ amount: 300 })])).toHaveLength(1)
+  it('un pago parcial no alcanza; con monto variable basta cualquier gasto', () => {
+    expect(match([internet], [], [expense({ amount: 40 })])).toEqual([])
+    expect(match([{ ...internet, amount: null }], [], [expense({ amount: 40 })])).toHaveLength(1)
+  })
+
+  it('suma varios gastos de la categoría hechos en el periodo', () => {
+    const parts = [expense({ amount: 60, date: '2026-11-03' }), expense({ id: 'e2', amount: 40, date: '2026-11-12' })]
+    const [m] = match([internet], [], parts)
+    expect(m.amount).toBe(100)
+    expect(m.expense.id).toBe('e2')
+    expect(m.expenses).toHaveLength(2)
+  })
+
+  it('un pago creado hoy toma el gasto hecho antes en el mismo periodo', () => {
+    expect(match([internet], [], [expense({ date: '2026-11-03' })])).toHaveLength(1)
   })
 
   it('sin categoría, vincula solo por nombre', () => {
     const sinCategoria = { ...internet, category_id: null }
     expect(match([sinCategoria], [], [expense()])).toEqual([])
-    expect(match([sinCategoria], [], [expense({ description: 'internet casa' })])).toHaveLength(1)
+    expect(match([sinCategoria], [], [expense({ description: 'INTERNÉT casa' })])).toHaveLength(1)
   })
 
   it('si dos pagos comparten categoría, exige el nombre y no reutiliza el gasto', () => {
@@ -60,13 +71,15 @@ describe('matchExpensesToRecurringPayments', () => {
     expect(result.map((m) => m.payment.id)).toEqual(['rp2'])
   })
 
-  it('prefiere el gasto que nombra al pago', () => {
-    const [m] = match([internet], [], [expense(), expense({ id: 'e2', amount: 110, description: 'Internet' })])
-    expect(m.expense.id).toBe('e2')
+  it('respeta los periodos que se dejaron pendientes a mano', () => {
+    expect(match([internet], [], [expense()], { excluded: new Set([unlinkKey('rp1', '2026-11-20')]) })).toEqual([])
   })
 
-  it('respeta los gastos desvinculados a mano', () => {
-    expect(match([internet], [], [expense()], { excluded: new Set([unlinkKey('rp1', 'e1')]) })).toEqual([])
+  it('evaluatePeriod explica cuánto falta y con quién comparte categoría', () => {
+    const period = evaluatePeriod(internet, [internet], [expense({ amount: 40 })], { fromDate: NOW })
+    expect(period).toMatchObject({ total: 40, needed: 75, satisfied: false, byCategory: true })
+    const luz = { ...internet, id: 'rp2', name: 'Luz' }
+    expect(evaluatePeriod(internet, [internet, luz], [expense()], { fromDate: NOW }).sharedWith).toEqual([luz])
   })
 
   it('en pagos manuales propone el siguiente vencimiento', () => {

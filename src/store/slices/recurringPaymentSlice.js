@@ -4,8 +4,8 @@ import {
   matchExpensesToRecurringPayments, pendingRecurringPayments, periodWindow, unlinkKey,
 } from '@/lib/recurringPaymentMatch'
 
-// Pares pago:gasto que el usuario desvinculó a mano, para que la vinculación
-// automática no los vuelva a unir. Se guarda por dispositivo.
+// Periodos (pago:vencimiento) que el usuario dejó pendientes con "Deshacer",
+// para que la vinculación automática no los vuelva a marcar. Se guarda por dispositivo.
 const UNLINKED_KEY = 'godmoney:recurring-unlinked'
 
 function readUnlinked() {
@@ -69,10 +69,16 @@ export const createRecurringPaymentSlice = (set, get) => ({
   },
 
   updateRecurringPayment: async (id, payload) => {
-    const data = await recurringPaymentService.update(id, payload)
-    set((s) => ({ recurringPayments: s.recurringPayments.map((p) => (p.id === id ? data : p)) }))
+    const previous = get().recurringPayments.find((p) => p.id === id)
+    const { recurringPayment: data, movedEntry } = await recurringPaymentService.update(id, payload, previous)
+    set((s) => ({
+      recurringPayments: s.recurringPayments.map((p) => (p.id === id ? data : p)),
+      recurringPaymentLedger: movedEntry
+        ? s.recurringPaymentLedger.map((l) => (l.id === movedEntry.id ? movedEntry : l))
+        : s.recurringPaymentLedger,
+    }))
     get().showToast('Pago recurrente actualizado', 'success')
-    // Al cambiar la categoría puede que un gasto ya registrado lo pague.
+    // Al cambiar la categoría o el vencimiento puede que un gasto ya registrado lo pague.
     const linked = await get().reconcileRecurringPayments()
     if (!linked) get().syncRecurringPaymentAlerts()
     return data
@@ -149,7 +155,7 @@ export const createRecurringPaymentSlice = (set, get) => ({
           const { payment, recurringPayment } = await recurringPaymentService.pay({
             recurring_payment_id: m.payment.id,
             period_date: m.period_date,
-            amount: m.expense.amount,
+            amount: m.amount,
             expense_id: m.expense.id,
             next_due_date: m.next_due_date,
           })
@@ -183,13 +189,13 @@ export const createRecurringPaymentSlice = (set, get) => ({
     return linked.length
   },
 
-  // Deshace el último pago del historial. Si venía de un gasto, se recuerda
-  // para que la vinculación automática no lo vuelva a unir.
+  // Deshace el último pago del historial y recuerda ese periodo para que la
+  // vinculación automática no lo vuelva a marcar.
   removeRecurringPaymentEntry: async (entry) => {
     const current = get().recurringPayments.find((p) => p.id === entry.recurring_payment_id)
     if (!current) return
     const recurringPayment = await recurringPaymentService.removePayment(entry, current)
-    if (entry.expense_id) rememberUnlinked(unlinkKey(current.id, entry.expense_id))
+    rememberUnlinked(unlinkKey(current.id, entry.period_date))
     set((s) => ({
       recurringPayments: s.recurringPayments.map((p) => (p.id === recurringPayment.id ? recurringPayment : p)),
       recurringPaymentLedger: s.recurringPaymentLedger.filter((l) => l.id !== entry.id),

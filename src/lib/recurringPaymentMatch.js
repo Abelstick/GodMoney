@@ -1,9 +1,11 @@
-import { addMonths, format, parseISO } from 'date-fns'
+import { addDays, addMonths, format, parseISO } from 'date-fns'
 import { currentPeriodDueDate, isPeriodPaid, todayISO } from './recurringPaymentSchedule'
 
-// Un gasto cuyo monto se aleja más que esto del "monto aproximado" del pago
-// recurrente no se vincula solo por categoría (sí por nombre).
+// "Monto aproximado": el periodo se da por pagado cuando los gastos suman al
+// menos esta fracción del monto.
 const AMOUNT_TOLERANCE = 0.25
+
+const ISO = 'yyyy-MM-dd'
 
 function normalize(text) {
   return (text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
@@ -11,7 +13,7 @@ function normalize(text) {
 
 /** Vencimiento anterior al vigente: los gastos posteriores a él cuentan para este periodo. */
 function previousDueDate(payment, due) {
-  if (payment.schedule_type !== 'FIXED_DAY') return format(addMonths(parseISO(due), -1), 'yyyy-MM-dd')
+  if (payment.schedule_type !== 'FIXED_DAY') return format(addMonths(parseISO(due), -1), ISO)
   const [year, month] = due.split('-').map(Number)
   const prevYear = month === 1 ? year - 1 : year
   const prevMonth = month === 1 ? 12 : month - 1
@@ -20,13 +22,15 @@ function previousDueDate(payment, due) {
 }
 
 /**
- * Rango de fechas de gasto que pagan el periodo vigente: después del
- * vencimiento anterior y hasta el vigente (o hasta hoy si ya venció).
+ * Periodo vigente: los gastos con fecha entre `from` y `until` (inclusive)
+ * pagan el vencimiento `due`. Empieza el día siguiente al vencimiento
+ * anterior (`after`) y termina en el vigente, o en hoy si ya venció.
  */
 export function periodWindow(payment, fromDate = new Date()) {
   const due = currentPeriodDueDate(payment, fromDate)
   const today = todayISO(fromDate)
-  return { due, after: previousDueDate(payment, due), until: due > today ? due : today }
+  const after = previousDueDate(payment, due)
+  return { due, after, from: format(addDays(parseISO(after), 1), ISO), until: due > today ? due : today }
 }
 
 /** Pagos activos cuyo periodo vigente aún no está pagado. */
@@ -34,58 +38,62 @@ export function pendingRecurringPayments(payments, ledger, fromDate = new Date()
   return payments.filter((p) => p.is_active && !isPeriodPaid(p, ledger, fromDate))
 }
 
-export function unlinkKey(recurringPaymentId, expenseId) {
-  return `${recurringPaymentId}:${expenseId}`
+/** Clave de un periodo que el usuario dejó pendiente a mano ("Deshacer"). */
+export function unlinkKey(recurringPaymentId, periodDate) {
+  return `${recurringPaymentId}:${periodDate}`
+}
+
+/**
+ * Qué gastos cuentan para el periodo vigente de un pago y si ya lo cubren.
+ *
+ * - Con categoría que ningún otro pago activo usa: cuentan todos los gastos
+ *   de esa categoría en el periodo.
+ * - Con categoría compartida (`sharedWith`) o sin categoría: solo los gastos
+ *   cuya descripción contiene el nombre del pago.
+ *
+ * Está cubierto (`satisfied`) cuando esos gastos suman al menos el monto
+ * aproximado (con tolerancia), o hay alguno si el monto es variable.
+ * `used` son gastos ya vinculados a otro pago.
+ */
+export function evaluatePeriod(payment, payments, expenses, { fromDate = new Date(), used = new Set() } = {}) {
+  const window = periodWindow(payment, fromDate)
+  const name = normalize(payment.name)
+  const expected = Number(payment.amount) || null
+  const sharedWith = payment.category_id
+    ? payments.filter((p) => p.id !== payment.id && p.is_active && p.category_id === payment.category_id)
+    : []
+  const byCategory = Boolean(payment.category_id) && !sharedWith.length
+
+  const counted = expenses
+    .filter((e) => !used.has(e.id) && e.date >= window.from && e.date <= window.until)
+    .filter((e) => !payment.category_id || e.category_id === payment.category_id)
+    .filter((e) => byCategory || (Boolean(name) && normalize(e.description).includes(name)))
+    .sort((a, b) => b.date.localeCompare(a.date))
+
+  const total = Math.round(counted.reduce((sum, e) => sum + Number(e.amount), 0) * 100) / 100
+  const needed = expected ? Math.round(expected * (1 - AMOUNT_TOLERANCE) * 100) / 100 : 0
+  return { ...window, expected, needed, sharedWith, byCategory, counted, total, satisfied: counted.length > 0 && total >= needed }
 }
 
 /**
  * Empareja gastos ya registrados con los pagos recurrentes pendientes.
- *
- * Un gasto paga un pago recurrente si cae en su periodo vigente y:
- * - su descripción contiene el nombre del pago (y, si el pago tiene
- *   categoría, el gasto es de esa categoría), o
- * - es de la categoría del pago, ningún otro pago activo usa esa categoría
- *   y el monto se parece al monto aproximado (si lo tiene).
- *
- * `excluded` son pares pago:gasto que el usuario desvinculó a mano.
- * Cada gasto paga como mucho un pago recurrente.
+ * El pago queda vinculado al gasto más reciente y por el total de los gastos
+ * que cuentan. `excluded` son periodos que el usuario dejó pendientes a mano.
  */
 export function matchExpensesToRecurringPayments(payments, ledger, expenses, { fromDate = new Date(), excluded = new Set() } = {}) {
   const used = new Set(ledger.map((l) => l.expense_id).filter(Boolean))
-  const categoryUse = new Map()
-  for (const p of payments) {
-    if (p.is_active && p.category_id) categoryUse.set(p.category_id, (categoryUse.get(p.category_id) ?? 0) + 1)
-  }
-
   const matches = []
   for (const payment of pendingRecurringPayments(payments, ledger, fromDate)) {
-    const { due, after, until } = periodWindow(payment, fromDate)
-    const name = normalize(payment.name)
-    const expected = Number(payment.amount) || null
-    const categoryIsExclusive = payment.category_id && categoryUse.get(payment.category_id) === 1
-
-    const candidates = []
-    for (const expense of expenses) {
-      if (used.has(expense.id) || excluded.has(unlinkKey(payment.id, expense.id))) continue
-      if (expense.date <= after || expense.date > until) continue
-      if (payment.category_id && expense.category_id !== payment.category_id) continue
-
-      const nameMatch = Boolean(name) && normalize(expense.description).includes(name)
-      const distance = expected ? Math.abs(Number(expense.amount) - expected) / expected : 0
-      const categoryMatch = categoryIsExclusive && distance <= AMOUNT_TOLERANCE
-      if (nameMatch || categoryMatch) candidates.push({ expense, nameMatch, distance })
-    }
-    if (!candidates.length) continue
-
-    candidates.sort((a, b) =>
-      (b.nameMatch - a.nameMatch) || (a.distance - b.distance) || b.expense.date.localeCompare(a.expense.date))
-    const { expense } = candidates[0]
-    used.add(expense.id)
+    const period = evaluatePeriod(payment, payments, expenses, { fromDate, used })
+    if (!period.satisfied || excluded.has(unlinkKey(payment.id, period.due))) continue
+    period.counted.forEach((e) => used.add(e.id))
     matches.push({
       payment,
-      expense,
-      period_date: due,
-      next_due_date: payment.schedule_type === 'MANUAL' ? format(addMonths(parseISO(due), 1), 'yyyy-MM-dd') : null,
+      expense: period.counted[0],
+      expenses: period.counted,
+      amount: period.total,
+      period_date: period.due,
+      next_due_date: payment.schedule_type === 'MANUAL' ? format(addMonths(parseISO(period.due), 1), ISO) : null,
     })
   }
   return matches

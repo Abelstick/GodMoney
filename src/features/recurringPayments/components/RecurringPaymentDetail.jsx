@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modal } from '@/components/common/Modal/Modal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog'
 import { Button } from '@/components/ui/Button/Button'
@@ -8,6 +8,8 @@ import { Select } from '@/components/ui/Select/Select'
 import { useCategories } from '@/hooks/useCategories'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { currentPeriodDueDate } from '@/lib/recurringPaymentSchedule'
+import { evaluatePeriod } from '@/lib/recurringPaymentMatch'
+import { recurringPaymentService } from '@/services/recurringPaymentService'
 import { getEffectiveRecurringStatus, RECURRING_STATUS, RECURRING_STATUS_META } from '@/lib/recurringPaymentStatus'
 import { useRecurringPayments } from '@/hooks/useRecurringPayments'
 import { MarkPaidModal } from './MarkPaidModal'
@@ -17,7 +19,7 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
   const {
     fetchRecurringPaymentDetail, paymentsByRecurringPayment,
     updateRecurringPayment, setRecurringPaymentActive, removeRecurringPayment, payRecurringPayment, ledger,
-    removeRecurringPaymentEntry,
+    removeRecurringPaymentEntry, recurringPayments,
   } = useRecurringPayments()
   const { categories } = useCategories('expense')
 
@@ -37,6 +39,26 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
     if (isOpen && payment) fetchRecurringPaymentDetail(payment.id)
   }, [isOpen, payment?.id])
 
+  // Gastos recientes, para mostrar cuáles cuentan para el periodo vigente.
+  const [periodExpenses, setPeriodExpenses] = useState([])
+  const paidCount = ledger.length
+  useEffect(() => {
+    if (!isOpen || !payment) return
+    let cancelled = false
+    const since = new Date()
+    since.setMonth(since.getMonth() - 2)
+    recurringPaymentService.getExpensesSince(since.toISOString().slice(0, 10))
+      .then((rows) => { if (!cancelled) setPeriodExpenses(rows) })
+      .catch(() => { if (!cancelled) setPeriodExpenses([]) })
+    return () => { cancelled = true }
+  }, [isOpen, payment?.id, payment?.category_id, paidCount])
+
+  const period = useMemo(() => {
+    if (!payment) return null
+    const used = new Set(ledger.map((l) => l.expense_id).filter(Boolean))
+    return evaluatePeriod(payment, recurringPayments, periodExpenses, { used })
+  }, [payment, recurringPayments, periodExpenses, ledger])
+
   if (!payment) return null
 
   const history = paymentsByRecurringPayment[payment.id] ?? []
@@ -44,6 +66,7 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
   const statusMeta = RECURRING_STATUS_META[status]
   const canPay = status !== RECURRING_STATUS.PAUSED && status !== RECURRING_STATUS.UP_TO_DATE
   const dueDate = currentPeriodDueDate(payment)
+  const paidThisPeriod = ledger.some((l) => l.recurring_payment_id === payment.id && l.period_date === dueDate)
 
   async function handlePay(payload) {
     setPaying(true)
@@ -62,6 +85,8 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
       description: payment.description ?? '',
       amount: payment.amount ?? '',
       category_id: payment.category_id ?? '',
+      due_day_of_month: payment.due_day_of_month ?? '',
+      next_due_date: payment.next_due_date ?? '',
       reminder_days_before: String(payment.reminder_days_before),
     })
     setEditOpen(true)
@@ -76,6 +101,8 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
         description: editForm.description.trim() || null,
         amount: editForm.amount !== '' ? Number(editForm.amount) : null,
         category_id: editForm.category_id || null,
+        due_day_of_month: editForm.due_day_of_month,
+        next_due_date: editForm.next_due_date,
         reminder_days_before: Number(editForm.reminder_days_before),
       })
       // Con la nueva categoría puede haberse vinculado un gasto ya registrado.
@@ -152,11 +179,44 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
             </div>
           </div>
 
-          <p className={styles.description}>
-            {payment.category
-              ? `Se marca como pagado solo cuando registras un gasto en "${payment.category.name}" dentro del periodo.`
-              : `Sin categoría, solo se marca solo si la descripción del gasto contiene "${payment.name}". Edítalo y asígnale una categoría.`}
-          </p>
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
+              Periodo vigente: del {formatDate(period.from)} al {formatDate(period.until)}
+            </h3>
+            <p className={styles.description}>
+              {status === RECURRING_STATUS.PAUSED
+                ? 'Pausado: no se vincula con gastos.'
+                : paidThisPeriod
+                  ? 'Este periodo ya está pagado.'
+                  : period.byCategory
+                    ? `Cuentan los gastos de "${payment.category.name}" con fecha dentro de este periodo.`
+                    : period.sharedWith.length
+                      ? `${period.sharedWith.map((p) => `"${p.name}"`).join(', ')} también usa la categoría "${payment.category.name}", así que solo cuentan los gastos cuya descripción contenga "${payment.name}".`
+                      : `Sin categoría: solo cuentan los gastos cuya descripción contenga "${payment.name}". Edítalo y asígnale una categoría.`}
+            </p>
+            {!paidThisPeriod && status !== RECURRING_STATUS.PAUSED && (
+              <>
+                <p className={styles.description}>
+                  {period.counted.length === 0
+                    ? 'Todavía no hay gastos que cuenten en este periodo.'
+                    : period.expected
+                      ? `Llevas ${formatCurrency(period.total)} de ${formatCurrency(period.expected)}; se marca como pagado desde ${formatCurrency(period.needed)}.`
+                      : `Llevas ${formatCurrency(period.total)}.`}
+                </p>
+                {period.counted.length > 0 && (
+                  <div className={styles.paymentList}>
+                    {period.counted.map((e) => (
+                      <div key={e.id} className={styles.paymentRow}>
+                        <div className={styles.paymentDate}>{formatDate(e.date)}</div>
+                        <div className={styles.paymentAmounts}>{e.description || 'Gasto'}</div>
+                        <div className={styles.paymentTotal}>{formatCurrency(e.amount)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
           <div className={styles.actions}>
             {canPay && <Button onClick={() => setPayOpen(true)}>Marcar pagado</Button>}
@@ -214,6 +274,16 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
               options={[{ value: '', label: 'Sin categoría' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
               value={editForm.category_id}
               onChange={(e) => setEditForm((f) => ({ ...f, category_id: e.target.value }))} />
+            {payment.schedule_type === 'FIXED_DAY' ? (
+              <Input label="Día del mes en que vence" type="number" min="1" max="31" step="1" required
+                hint="El periodo va del día siguiente al vencimiento anterior hasta este día"
+                value={editForm.due_day_of_month}
+                onChange={(e) => setEditForm((f) => ({ ...f, due_day_of_month: e.target.value }))} />
+            ) : (
+              <Input label="Próxima fecha de vencimiento" type="date" required
+                value={editForm.next_due_date}
+                onChange={(e) => setEditForm((f) => ({ ...f, next_due_date: e.target.value }))} />
+            )}
             <Input label="Avisar con cuántos días de anticipación" type="number" min="0" step="1"
               value={editForm.reminder_days_before}
               onChange={(e) => setEditForm((f) => ({ ...f, reminder_days_before: e.target.value }))} required />
@@ -245,7 +315,7 @@ export function RecurringPaymentDetail({ payment, isOpen, onClose }) {
         onConfirm={handleUndo}
         loading={undoing}
         title="Deshacer pago"
-        description={`"${payment.name}" volverá a quedar pendiente para ese periodo. El gasto vinculado no se borra ni se volverá a vincular solo.`}
+        description={`"${payment.name}" volverá a quedar pendiente para ese periodo. Tus gastos no se borran, y este periodo ya no se marcará solo: tendrás que usar "Marcar pagado".`}
         confirmLabel="Deshacer pago"
       />
 
